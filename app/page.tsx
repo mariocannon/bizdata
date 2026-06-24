@@ -99,14 +99,15 @@ export default function Dashboard() {
 
   // Velocity: pivot last 8 weeks, top 5 industries
   const top5 = Object.entries(byIndustry).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k]) => k)
-const weeks = Array.from(new Set(velocity /* ... */));
-  const velocityChart = weeks.map(w => {
-    const row: Record<string, string | number> = { week: w.slice(5) }
-    top5.forEach(ind => {
-      row[ind] = velocity.find(v => v.week === w && v.industry === ind)?.new_listings || 0
-    })
-    return row
+const top5 = Object.entries(byIndustry).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k]) => k)
+const weeks = Array.from(new Set(velocity.map(v => v.week)))
+const velocityChart = weeks.map(w => {
+  const row: Record<string, string | number> = { week: w.slice(5) }
+  top5.forEach(ind => {
+    row[ind] = velocity.find(v => v.week === w && v.industry === ind)?.new_listings || 0
   })
+  return row
+})
 
   // Price brackets for this week
   const brackets = [
