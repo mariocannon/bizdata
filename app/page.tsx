@@ -98,7 +98,7 @@ export default function Dashboard() {
     .map(([industry, count]) => ({ industry: industry.replace('/', '/\n'), count }))
 
   // Velocity: pivot last 8 weeks, top 5 industries
-  const top5 = Object.entries(byIndustry).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k]) => k)
+
 const top5 = Object.entries(byIndustry).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k]) => k)
 const weeks = Array.from(new Set(velocity.map(v => v.week)))
 const velocityChart = weeks.map(w => {
