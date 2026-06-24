@@ -99,7 +99,7 @@ export default function Dashboard() {
 
   // Velocity: pivot last 8 weeks, top 5 industries
   const top5 = Object.entries(byIndustry).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k]) => k)
-  const weeks = [...new Set(velocity.map(v => v.week))].slice(-8)
+const weeks = Array.from(new Set(velocity /* ... */));
   const velocityChart = weeks.map(w => {
     const row: Record<string, string | number> = { week: w.slice(5) }
     top5.forEach(ind => {
