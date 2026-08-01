@@ -1,19 +1,23 @@
 // The Tide — Ad Manager
 //
-// SQLite doesn't support Prisma enums, so enumerated values are modelled as
-// String and constrained in the app with Zod + TypeScript unions (lib/enums.ts).
+// Enumerated values are modelled as String and constrained in the app with Zod
+// + TypeScript unions (lib/enums.ts). This keeps the schema portable across
+// engines and keeps one source of truth for the allowed values.
 //
-// Swap to Postgres: change the datasource provider to "postgresql" and point
-// url at env("DATABASE_URL"), then re-run `prisma migrate dev`. No app code
-// changes required — nothing outside this file knows which engine is in use.
+// Postgres (Supabase in production). Nothing outside this file knows which
+// engine is in use, so swapping providers never touches application code.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  // The app connects through Supabase's transaction pooler; migrations need a
+  // direct connection, which the pooler can't carry. Locally both point at the
+  // same database.
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 model Advertiser {

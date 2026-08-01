@@ -15,9 +15,7 @@ yarn-error.log*
 next-env.d.ts
 tsconfig.tsbuildinfo
 
-# Local SQLite database
-prisma/dev.db
-prisma/dev.db-journal
+# Local database files (if you run one alongside the repo)
 *.db
 *.db-journal
 
