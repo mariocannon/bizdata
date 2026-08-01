@@ -104,6 +104,13 @@ Serverless functions open many short-lived connections, which is what the
 transaction pooler is for. Migrations can't run through transaction mode, which
 is what `DIRECT_URL` is for.
 
+`pgbouncer=true` is not optional on the transaction pooler. It hands each query
+whichever backend is free, while Prisma's prepared statements live on one
+backend, so without it the second query fails with Postgres 26000,
+`prepared statement "s1" does not exist`. The app repairs the URL at startup if
+the parameter is missing (`lib/db-url.ts`) and logs a warning, but set it on the
+variable so the configuration is explicit.
+
 Use the **session pooler** for `DIRECT_URL`, not the `db.<ref>.supabase.co`
 direct connection. That host is IPv6-only unless you've bought the IPv4 add-on,
 and Netlify's build container is IPv4 — `prisma migrate deploy` would fail at

@@ -99,7 +99,7 @@ function checkConnectionString(name, expectedPort, purpose) {
 
   if (name === 'DATABASE_URL' && !raw.includes('pgbouncer=true')) {
     warnings.push(
-      'DATABASE_URL has no ?pgbouncer=true&connection_limit=1. Add it, or serverless functions will exhaust the pooler.'
+      'DATABASE_URL has no ?pgbouncer=true&connection_limit=1. The app adds both at runtime, but set them on the variable so the configuration is explicit.'
     )
   }
 
