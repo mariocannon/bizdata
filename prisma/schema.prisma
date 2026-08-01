@@ -9,6 +9,10 @@
 
 generator client {
   provider = "prisma-client-js"
+  // "native" is this machine; Netlify Functions run on Amazon Linux, which
+  // needs the rhel engine. Without it the deployed app throws at the first
+  // query — Prisma finds no engine it can load.
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
 }
 
 datasource db {
