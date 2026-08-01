@@ -1,0 +1,19 @@
+import { getSettings } from '@/lib/settings'
+import { PageHeader } from '@/components/page-header'
+import { SettingsForm } from './settings-form'
+
+export const dynamic = 'force-dynamic'
+
+export default async function SettingsPage() {
+  const settings = await getSettings()
+
+  return (
+    <>
+      <PageHeader
+        title="Settings"
+        description="Defaults used across inventory and the booking form."
+      />
+      <SettingsForm settings={settings} />
+    </>
+  )
+}

@@ -1,0 +1,77 @@
+// The Tide — Ad Manager
+//
+// SQLite doesn't support Prisma enums, so enumerated values are modelled as
+// String and constrained in the app with Zod + TypeScript unions (lib/enums.ts).
+//
+// Swap to Postgres: change the datasource provider to "postgresql" and point
+// url at env("DATABASE_URL"), then re-run `prisma migrate dev`. No app code
+// changes required — nothing outside this file knows which engine is in use.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Advertiser {
+  id             String    @id @default(cuid())
+  name           String
+  category       String // AdvertiserCategory union
+  status         String    @default("PROSPECT") // AdvertiserStatus union
+  contactName    String?
+  email          String?
+  phone          String?
+  website        String?
+  reviewsChecked Boolean   @default(false)
+  lastContacted  DateTime?
+  notes          String?
+  bookings       Booking[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+}
+
+model Issue {
+  id          String    @id @default(cuid())
+  title       String // e.g. "The Tide — 14 Aug 2025"
+  publishDate DateTime
+  status      String    @default("PLANNING") // IssueStatus union
+  theme       String?
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Booking {
+  id           String     @id @default(cuid())
+  label        String // "Example Realty – Headline – 14 Aug"
+  advertiser   Advertiser @relation(fields: [advertiserId], references: [id])
+  advertiserId String
+  issue        Issue      @relation(fields: [issueId], references: [id])
+  issueId      String
+  adType       String // AdType union
+  section      String? // SectionSlot union — required when adType = SECTION_SPONSOR
+  price        Float      @default(0)
+  status       String     @default("RESERVED") // BookingStatus union
+  paid         String     @default("UNPAID") // PaidStatus union
+  ctaUrl       String?
+  copy         String?
+  creativeUrl  String? // path/URL to uploaded image
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([issueId])
+  @@index([advertiserId])
+}
+
+// Single-row settings (id is always "settings").
+model Settings {
+  id               String   @id @default("settings")
+  bulletinCapacity Int      @default(3)
+  soldOutTarget    Int      @default(10)
+  defaultPrices    String   @default("{}") // JSON: Record<AdType, number>
+  updatedAt        DateTime @updatedAt
+}
