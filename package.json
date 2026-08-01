@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "test": "node --import tsx --test lib/*.test.ts"
+    "test": "node --import tsx --test lib/*.test.ts",
+    "preflight": "node scripts/preflight.mjs"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

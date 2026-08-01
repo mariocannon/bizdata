@@ -1,11 +1,12 @@
 [build]
   # `prisma migrate deploy` applies any pending migrations to Supabase before
   # the app is built, so a schema change ships with the deploy that needs it.
-  command = "npx prisma migrate deploy && npm run build"
+  command = "node scripts/preflight.mjs && npx prisma migrate deploy && npm run build"
   publish = ".next"
 
 [build.environment]
-  NODE_VERSION = "20"
+  # Must satisfy @netlify/plugin-nextjs, which requires Node 22+.
+  NODE_VERSION = "22"
   # Secrets scanning would otherwise flag the DB URL that Prisma reads at build.
   SECRETS_SCAN_OMIT_KEYS = "DATABASE_URL,DIRECT_URL,SUPABASE_SERVICE_ROLE_KEY,AUTH_PASSWORD,AUTH_SECRET"
 

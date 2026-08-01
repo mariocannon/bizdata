@@ -48,6 +48,7 @@ off in development and creative uploads fall back to `./public/uploads`.
 | `npm test` | Inventory rule tests (`node --test`) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run db:reset` | Drop, re-migrate and re-seed the database |
+| `npm run preflight` | Check deployment env vars are well-formed |
 
 Deployment lives on Netlify with Supabase for Postgres and creative storage —
 see [Deploying](#deploying-to-netlify--supabase).
@@ -136,7 +137,18 @@ The service-role key bypasses row-level security. It is only ever read in
 `lib/upload.ts`, which is marked `server-only`, so it never reaches the browser —
 but keep it out of any `NEXT_PUBLIC_` variable.
 
-**5. Deploy.** The build runs `prisma migrate deploy` first, which creates the
+**5. Deploy.** The build runs `node scripts/preflight.mjs` first, which checks
+the environment variables and names anything wrong — a connection string wrapped
+in quotes, the API URL pasted into `DATABASE_URL`, an unreplaced
+`[YOUR-PASSWORD]` placeholder, a missing `AUTH_PASSWORD` — rather than letting
+Prisma fail with a bare `P1013`. It prints connection strings with the password
+redacted. You can run it locally too:
+
+```bash
+npm run preflight
+```
+
+Then `prisma migrate deploy` runs, which creates the
 four tables (`Advertiser`, `Issue`, `Booking`, `Settings`) in your Supabase
 database and enables row-level security on each. If the project already holds
 other tables, these sit alongside them — Prisma only touches what's in this
