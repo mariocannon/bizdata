@@ -123,8 +123,17 @@ but keep it out of any `NEXT_PUBLIC_` variable.
 
 **5. Deploy.** The build runs `prisma migrate deploy` first, which creates the
 four tables (`Advertiser`, `Issue`, `Booking`, `Settings`) in your Supabase
-database. If the project already holds other tables, these sit alongside them —
-Prisma only touches what's in this schema.
+database and enables row-level security on each. If the project already holds
+other tables, these sit alongside them — Prisma only touches what's in this
+schema.
+
+Supabase exposes every `public` table through PostgREST, reachable with the anon
+key that ships in client bundles. The migration turns RLS on with no policies,
+which denies the `anon` and `authenticated` roles outright; the app is
+unaffected because Prisma connects as the table owner, and a Postgres table
+owner bypasses RLS. Access control for this app lives in `middleware.ts`, not in
+Supabase Auth, so there is no legitimate PostgREST caller to write a policy for.
+If you later add one, that is where the policies would go.
 
 **6. Seed (optional).** To load the sample data once, run locally with the
 Supabase URLs in `.env`:
