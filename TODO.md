@@ -39,7 +39,8 @@ Coverage today is `lib/inventory.test.ts` and `lib/db-url.test.ts` only.
 
 ## Product — v2 candidates
 
-Carried over from "Not in v1" in the README.
+Carried over from "Not in v1" in the README. Longer-range ideas live in
+[ROADMAP.md](ROADMAP.md); an item moves here once it's decided and scoped.
 
 - [ ] **Multi-date booking packages.** Sell one advertiser into N issues in a
       single flow, with a package price split across the bookings.
