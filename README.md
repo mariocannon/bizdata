@@ -53,6 +53,11 @@ off in development and creative uploads fall back to `./public/uploads`.
 Deployment lives on Netlify with Supabase for Postgres and creative storage —
 see [Deploying](#deploying-to-netlify--supabase).
 
+**Using the app day to day is documented separately in
+[docs/MANUAL.md](docs/MANUAL.md)** — pages, business rules, workflows and
+troubleshooting, written for the person running ad sales rather than for a
+developer.
+
 ## Tech
 
 - **Next.js 14 (App Router) + TypeScript**, Server Actions for all writes
