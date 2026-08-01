@@ -91,14 +91,29 @@ session, and vice versa.
 
 ## Deploying to Netlify + Supabase
 
-**1. Supabase — database.** In your project, Settings → Database → Connection
-string → URI. You need two: the **pooled** one (port 6543) for `DATABASE_URL`,
-and the **direct** one (port 5432) for `DIRECT_URL`. Serverless functions open
-many short-lived connections, which is what the pooler is for; migrations can't
-run through it, which is what the direct URL is for.
+**1. Supabase — database.** Settings → Database → Connection string. You need
+two URIs, and **both come from the pooler**:
+
+| Variable | Which connection | Port |
+|---|---|---|
+| `DATABASE_URL` | Transaction pooler, plus `?pgbouncer=true&connection_limit=1` | 6543 |
+| `DIRECT_URL` | Session pooler | 5432 |
+
+Serverless functions open many short-lived connections, which is what the
+transaction pooler is for. Migrations can't run through transaction mode, which
+is what `DIRECT_URL` is for.
+
+Use the **session pooler** for `DIRECT_URL`, not the `db.<ref>.supabase.co`
+direct connection. That host is IPv6-only unless you've bought the IPv4 add-on,
+and Netlify's build container is IPv4 — `prisma migrate deploy` would fail at
+build time with a connection error. Both pooler hostnames look like
+`aws-N-ap-southeast-2.pooler.supabase.com`; copy them exactly from the dashboard
+rather than typing them, since the `aws-N` prefix varies by project.
 
 **2. Supabase — storage.** Storage → New bucket → name it `creative` and mark it
-**public**. Creative images are ads; they're meant to be publicly fetchable.
+**public**. Creative images are ads; they're meant to be publicly fetchable. No
+bucket policies are needed: uploads use the service-role key, which bypasses
+RLS, and reads are public.
 
 **3. Netlify — connect the repo.** Add new site → Import from Git → pick this
 repo. `netlify.toml` already sets the build command, the Next.js plugin and the
