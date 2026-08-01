@@ -19,14 +19,25 @@ Things worth doing next, roughly in order.
       bookings — don't run it against production once real data is in.
 - [ ] **Back up the database.** Confirm Supabase's automatic backups are on for
       the project, and note the restore steps somewhere findable.
+- [ ] **Test Stripe end to end before going live.** With `sk_test_…`: mark a
+      booking Ran, raise an invoice, pay it with card `4242 4242 4242 4242`,
+      confirm the webhook flips it to Paid. Only then swap in the live key.
+- [ ] **Add the Stripe webhook endpoint** at `/api/stripe/webhook` for the
+      `invoice.*` events, and set `STRIPE_WEBHOOK_SECRET`. Without it invoices
+      go out but never get marked paid.
+- [ ] **Decide on GST.** Invoices currently carry no tax line — see ROADMAP §7.
 - [ ] **CI on push.** No `.github/workflows` yet — add one that runs
       `npm run typecheck`, `npm test` and `npm run lint` so a broken build is
       caught before Netlify does it.
 
 ## Testing
 
-Coverage today is `lib/inventory.test.ts` and `lib/db-url.test.ts` only.
+Coverage today is `lib/inventory.test.ts`, `lib/db-url.test.ts`,
+`lib/money.test.ts` and `lib/invoice-rules.test.ts`.
 
+- [ ] An integration test for the webhook route — a signed payload marks a
+      booking paid, a tampered one is rejected with 400. Needs the route's
+      `server-only` imports stubbed, so it wants a real test harness.
 - [ ] Tests for `lib/rollups.ts` — total booked vs total paid, per advertiser.
 - [ ] Tests for `lib/period.ts` — month/quarter/year/all boundaries, especially
       the edges (first and last day of a period).
@@ -101,3 +112,7 @@ Carried over from "Not in v1" in the README. Longer-range ideas live in
 - [x] Inventory rules and capacity report in `lib/inventory.ts`, shared by the
       issue detail and the dashboard so the numbers can't disagree.
 - [x] CSV export for advertisers, bookings and issues.
+- [x] Stripe invoicing — raise, email, void and auto-reconcile an invoice per
+      booking, with the webhook authenticated by signature rather than the
+      shared password.
+- [x] Money stored as integer cents throughout, replacing the `Float` price.

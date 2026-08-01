@@ -64,7 +64,7 @@ see [Deploying](#deploying-to-netlify--supabase).
 
 ### Storage seams
 
-Two drivers, chosen by environment, both behind one function each:
+Drivers chosen by environment, each behind one module:
 
 - **Database** — `prisma/schema.prisma` only. Nothing outside that file knows
   which engine is in use.
@@ -72,6 +72,8 @@ Two drivers, chosen by environment, both behind one function each:
   `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` set they go to Supabase
   Storage; otherwise to `./public/uploads`. Callers only ever see the returned
   URL string, stored on `Booking.creativeUrl`.
+- **Payments** — `lib/stripe.ts`. With `STRIPE_SECRET_KEY` set, invoicing is
+  available; without it the feature is simply off and nothing else changes.
 
 ## Authentication
 
@@ -89,6 +91,76 @@ The session is a signed, HttpOnly, SameSite=Lax cookie valid for 30 days, signed
 with `AUTH_SECRET` (HMAC-SHA256 via Web Crypto, so it runs on the edge). Setting
 `AUTH_SECRET` separately means rotating the password doesn't invalidate every
 session, and vice versa.
+
+## Stripe invoicing
+
+Bookings are invoiced through Stripe from the booking page. Optional: with no
+`STRIPE_SECRET_KEY` the app runs exactly as it did before and the invoicing
+panel says it isn't configured.
+
+**The flow.** Invoices are raised **after the ad has run**, which is how local
+ad sales normally work — the advertiser pays for something delivered:
+
+1. Mark the booking `RAN`. Until then the panel explains why it can't invoice.
+2. **Raise invoice** creates a Stripe invoice for the booking's price and
+   finalises it, which produces a hosted payment page and a PDF. The booking
+   moves to `INVOICED`. Nothing is emailed at this point.
+3. **Email to advertiser** sends it through Stripe, after a confirmation step —
+   it reaches a real customer, so it's never a side effect of step 2. Or copy
+   the payment link and send it yourself.
+4. When the advertiser pays, Stripe calls the webhook and the booking flips to
+   `PAID`, dropping off the chase list on its own.
+
+**Void invoice** cancels it in Stripe and returns the booking to `UNPAID` so a
+corrected invoice can be raised. A paid invoice can't be voided — refund it in
+Stripe instead.
+
+One advertiser is one Stripe Customer, created on first invoice and reused
+after that. One booking gets at most one invoice: `Booking.stripeInvoiceId` is
+unique in the database, so a double-billing bug fails at the constraint rather
+than reaching an advertiser.
+
+### Setup
+
+| Variable | Where it comes from |
+|---|---|
+| `STRIPE_SECRET_KEY` | Developers → API keys. Use `sk_test_…` until you've invoiced yourself once |
+| `STRIPE_WEBHOOK_SECRET` | Developers → Webhooks → your endpoint → Signing secret (`whsec_…`) |
+| `STRIPE_CURRENCY` | Defaults to `nzd` |
+| `STRIPE_PAYMENT_TERMS_DAYS` | Days until due. Defaults to 14 |
+
+Add the webhook endpoint in Stripe at `https://YOUR-SITE/api/stripe/webhook`,
+subscribed to the `invoice.*` events. Without `STRIPE_WEBHOOK_SECRET` invoices
+still go out but nothing is ever marked paid — the webhook is what closes the
+loop, and `npm run preflight` warns when it's missing.
+
+Locally, forward events with the Stripe CLI rather than exposing a tunnel:
+
+```bash
+stripe listen --forward-to localhost:3000/api/stripe/webhook
+```
+
+### How the webhook is secured
+
+`/api/stripe/webhook` is the one route not behind the shared password — Stripe
+can't hold a session cookie. It is exempt from the *password*, not from
+authentication: every request must carry a valid Stripe signature over the raw
+body, verified against `STRIPE_WEBHOOK_SECRET`, and nothing in the payload is
+touched before that check passes. Without it, anyone who found the URL could
+POST a fake `invoice.paid` and mark bookings as paid.
+
+The handler decides state from the invoice's own `status` rather than from
+which event arrived, so replayed or out-of-order webhooks converge on the same
+answer instead of flip-flopping.
+
+### Money is stored in cents
+
+Every price — `Booking.price`, the Settings defaults — is an integer number of
+cents, never a float (`lib/money.ts`). Floats can't represent most decimal
+fractions exactly, so a dollars-as-float column drifts as soon as prices are
+summed or split, and cents is also the unit Stripe bills in, so the amount
+invoiced is the amount stored rather than a rounding of it. Dollars exist only
+at the two edges: what the operator types, and what's displayed.
 
 ## Deploying to Netlify + Supabase
 
@@ -139,6 +211,8 @@ variables:
 | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → `service_role` key |
 | `SUPABASE_STORAGE_BUCKET` | `creative` |
+| `STRIPE_SECRET_KEY` | Optional — see [Stripe invoicing](#stripe-invoicing) |
+| `STRIPE_WEBHOOK_SECRET` | Optional, but required for invoices to be marked paid |
 
 The service-role key bypasses row-level security. It is only ever read in
 `lib/upload.ts`, which is marked `server-only`, so it never reaches the browser —
@@ -218,7 +292,8 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 
 - **Advertiser pipeline:** `PROSPECT → PITCHED → WON → ACTIVE`, plus `PAUSED`, `LOST`
 - **Booking:** `RESERVED → CONFIRMED → RAN`, plus `CANCELLED`
-- **Payment:** `UNPAID → INVOICED → PAID`
+- **Payment:** `UNPAID → INVOICED → PAID` — set by hand, or driven by Stripe
+  when invoicing is configured
 
 ## Pages
 
@@ -255,8 +330,9 @@ app/
     bookings/           list, form, new + edit routes, server actions
     issues/             list, detail (capacity + checklist), server actions
     settings/
+  api/stripe/webhook/   Stripe callbacks — signature-verified, not password-gated
   login/                the password gate
-middleware.ts           enforces the gate on every route
+middleware.ts           enforces the gate on every route bar the webhook
 components/
   ui/                   shadcn/ui-style primitives
   dashboard/            KPI card, charts
@@ -266,6 +342,10 @@ lib/
   enums.ts              the enumerated values + display labels
   inventory.ts          capacity report and the confirm check
   validation.ts         Zod schemas shared by forms and actions
+  money.ts              integer-cents helpers — the only place dollars convert
+  stripe.ts             the Stripe client seam
+  invoice-rules.ts      pure: when a booking may be invoiced (tested)
+  invoicing.ts          raises, sends, voids and reconciles Stripe invoices
   csv.ts  upload.ts  settings.ts  rollups.ts  period.ts
 prisma/
   schema.prisma  seed.ts
@@ -280,9 +360,9 @@ leaves your Settings untouched.
 
 ## Not in v1
 
-Multi-date booking packages, invoice PDFs and Stripe links, client-facing
-advertiser reports, a recurring-issue generator, and a rate card generated from
-Settings prices.
+Multi-date booking packages, client-facing advertiser reports, a
+recurring-issue generator, and a rate card generated from Settings prices.
+[ROADMAP.md](ROADMAP.md) has the fuller list.
 
 Auth is a single shared password, which suits one operator. If more people need
 access, that's the point to move to per-user accounts.

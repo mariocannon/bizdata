@@ -19,8 +19,15 @@ const currencyPrecise = new Intl.NumberFormat('en-NZ', {
   maximumFractionDigits: 2,
 })
 
-export function formatMoney(value: number, precise = false): string {
-  const n = Number.isFinite(value) ? value : 0
+/**
+ * Formats an integer number of **cents** (see lib/money.ts) as currency.
+ *
+ * `precise` keeps the cents visible — used where an exact figure is being
+ * invoiced or reconciled. The default rounds to whole dollars, which is how ad
+ * prices are quoted and keeps table columns narrow.
+ */
+export function formatMoney(cents: number, precise = false): string {
+  const n = Number.isFinite(cents) ? cents / 100 : 0
   return precise ? currencyPrecise.format(n) : currency.format(n)
 }
 

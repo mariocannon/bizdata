@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ExternalLink, ImageOff, Plus } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { centsToDollars } from '@/lib/money'
 import { sumBookings } from '@/lib/rollups'
 import { getCapacityReport } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
@@ -78,7 +79,7 @@ export default async function IssueDetailPage({
     section: booking.section ? label(booking.section) : '',
     issue: issue.title,
     publishDate: issue.publishDate.toISOString().slice(0, 10),
-    price: booking.price,
+    price: centsToDollars(booking.price),
     status: label(booking.status),
     paid: label(booking.paid),
     ctaUrl: booking.ctaUrl ?? '',

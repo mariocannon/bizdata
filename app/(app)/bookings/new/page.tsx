@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import { getSettings } from '@/lib/settings'
+import { centsToInput } from '@/lib/money'
 import { PageHeader } from '@/components/page-header'
 import { BookingForm } from '../booking-form'
 
@@ -48,7 +49,7 @@ export default async function NewBookingPage({
           issueId: searchParams.issueId ?? issues[0]?.id ?? '',
           adType: defaultAdType,
           section: 'WEATHER',
-          price: String(settings.defaultPrices[defaultAdType] ?? 0),
+          price: centsToInput(settings.defaultPrices[defaultAdType] ?? 0),
           status: 'RESERVED',
           paid: 'UNPAID',
           ctaUrl: '',

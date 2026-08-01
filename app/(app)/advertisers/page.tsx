@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { CheckCircle2, ExternalLink } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { centsToDollars } from '@/lib/money'
 import { getAdvertiserTotals, ZERO_TOTALS } from '@/lib/rollups'
 import { ADVERTISER_CATEGORIES, ADVERTISER_STATUSES, label } from '@/lib/enums'
 import { formatDate, formatMoney, toDateInput } from '@/lib/utils'
@@ -112,8 +113,8 @@ export default async function AdvertisersPage({
     website: row.website ?? '',
     reviewsChecked: row.reviewsChecked,
     lastContacted: row.lastContacted ? row.lastContacted.toISOString().slice(0, 10) : '',
-    totalBooked: row.totals.booked,
-    totalPaid: row.totals.paid,
+    totalBooked: centsToDollars(row.totals.booked),
+    totalPaid: centsToDollars(row.totals.paid),
     notes: row.notes ?? '',
   }))
 

@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Field } from '@/components/ui/field'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { AD_TYPES, label } from '@/lib/enums'
+import { centsToInput } from '@/lib/money'
 import type { AppSettings } from '@/lib/settings'
 import { updateSettings } from './actions'
 
@@ -100,8 +101,8 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
                   name={`price.${adType}`}
                   type="number"
                   min="0"
-                  step="1"
-                  defaultValue={settings.defaultPrices[adType] ?? 0}
+                  step="0.01"
+                  defaultValue={centsToInput(settings.defaultPrices[adType] ?? 0)}
                   aria-invalid={Boolean(errors[`price.${adType}`])}
                   className="tabular w-28 text-right"
                 />

@@ -37,6 +37,10 @@ model Advertiser {
   lastContacted  DateTime?
   notes          String?
   bookings       Booking[]
+  // Stripe Customer this advertiser maps to. Created on first invoice and
+  // reused after that, so one advertiser is one customer in Stripe's dashboard
+  // rather than a new record per invoice.
+  stripeCustomerId String? @unique
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
 }
@@ -61,13 +65,26 @@ model Booking {
   issueId      String
   adType       String // AdType union
   section      String? // SectionSlot union — required when adType = SECTION_SPONSOR
-  price        Float      @default(0)
+  // Integer cents, never a float — see lib/money.ts for why, and because it is
+  // the unit Stripe bills in.
+  price        Int        @default(0)
   status       String     @default("RESERVED") // BookingStatus union
   paid         String     @default("UNPAID") // PaidStatus union
   ctaUrl       String?
   copy         String?
   creativeUrl  String? // path/URL to uploaded image
   notes        String?
+
+  // Stripe invoicing. All null until an invoice is raised for this booking.
+  // `stripeInvoiceId` is unique so a replayed webhook can't attach one Stripe
+  // invoice to two bookings, and so raising a second invoice for a booking that
+  // already has one fails loudly rather than double-billing.
+  stripeInvoiceId String?  @unique
+  invoiceUrl      String? // Stripe-hosted payment page
+  invoicePdfUrl   String?
+  invoicedAt      DateTime?
+  paidAt          DateTime?
+
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
 

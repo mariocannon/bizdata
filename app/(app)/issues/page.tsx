@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { AlertTriangle } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { centsToDollars } from '@/lib/money'
 import { getIssueTotals, ZERO_TOTALS } from '@/lib/rollups'
 import { getCapacityReports } from '@/lib/inventory'
 import { ISSUE_STATUSES, label } from '@/lib/enums'
@@ -96,7 +97,7 @@ export default async function IssuesPage({ searchParams }: { searchParams: Searc
     publishDate: row.publishDate.toISOString().slice(0, 10),
     status: label(row.status),
     adsSold: row.report?.totalSold ?? 0,
-    revenue: row.totals.booked,
+    revenue: centsToDollars(row.totals.booked),
     theme: row.theme ?? '',
   }))
 

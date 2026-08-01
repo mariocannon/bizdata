@@ -13,6 +13,14 @@ import {
   type ActionResult,
 } from '@/lib/actions'
 import { UploadError, deleteFile, saveFile } from '@/lib/upload'
+import {
+  InvoiceError,
+  createInvoiceForBooking,
+  emailInvoice,
+  voidInvoiceForBooking,
+} from '@/lib/invoicing'
+import { stripeErrorMessage } from '@/lib/stripe'
+import { formatMoney } from '@/lib/utils'
 import { canConfirm, isCapacityEnforcedStatus, checkCapacity } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
 import { label, type AdType, type SectionSlot } from '@/lib/enums'
@@ -205,6 +213,54 @@ export async function updateBookingPaid(
   } catch (error) {
     console.error('updateBookingPaid failed', error)
     return actionError('Could not update that booking.')
+  }
+}
+
+/**
+ * Raises a Stripe invoice for a booking. Finalises it so there is a payment
+ * link and a PDF, but does not email the advertiser — `sendInvoiceEmail` is a
+ * separate, deliberate press.
+ */
+export async function raiseInvoice(
+  id: string
+): Promise<ActionResult<{ invoiceUrl: string | null }>> {
+  try {
+    const invoice = await createInvoiceForBooking(id)
+    revalidateBookings({ bookingId: id })
+    return actionOk(
+      { invoiceUrl: invoice.invoiceUrl },
+      `Invoice raised for ${formatMoney(invoice.total, true)}.`
+    )
+  } catch (error) {
+    if (error instanceof InvoiceError) return actionError(error.message)
+    console.error('raiseInvoice failed', error)
+    return actionError(stripeErrorMessage(error))
+  }
+}
+
+/** Emails the finalised invoice to the advertiser via Stripe. */
+export async function sendInvoiceEmail(id: string): Promise<ActionResult> {
+  try {
+    await emailInvoice(id)
+    revalidateBookings({ bookingId: id })
+    return actionOk(undefined, 'Invoice emailed to the advertiser.')
+  } catch (error) {
+    if (error instanceof InvoiceError) return actionError(error.message)
+    console.error('sendInvoiceEmail failed', error)
+    return actionError(stripeErrorMessage(error))
+  }
+}
+
+/** Voids the invoice in Stripe and puts the booking back on the chase list. */
+export async function voidInvoice(id: string): Promise<ActionResult> {
+  try {
+    await voidInvoiceForBooking(id)
+    revalidateBookings({ bookingId: id })
+    return actionOk(undefined, 'Invoice voided.')
+  } catch (error) {
+    if (error instanceof InvoiceError) return actionError(error.message)
+    console.error('voidInvoice failed', error)
+    return actionError(stripeErrorMessage(error))
   }
 }
 

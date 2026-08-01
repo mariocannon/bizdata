@@ -3,10 +3,14 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import { getSettings } from '@/lib/settings'
 import { formatDate, formatMoney } from '@/lib/utils'
+import { centsToInput } from '@/lib/money'
 import { PageHeader } from '@/components/page-header'
 import { StatusPill } from '@/components/status-pill'
+import { invoiceEligibility, invoicingAvailable } from '@/lib/invoicing'
+import { stripeTestMode } from '@/lib/stripe'
 import { BookingForm } from '../booking-form'
 import { DeleteBookingButton } from './delete-booking-button'
+import { InvoicePanel } from './invoice-panel'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,6 +33,8 @@ export default async function EditBookingPage({ params }: { params: { id: string
     }),
     getSettings(),
   ])
+
+  const eligibility = invoiceEligibility(booking)
 
   return (
     <>
@@ -55,6 +61,23 @@ export default async function EditBookingPage({ params }: { params: { id: string
         actions={<DeleteBookingButton id={booking.id} label={booking.label} />}
       />
 
+      <div className="mb-6">
+        <InvoicePanel
+          bookingId={booking.id}
+          price={booking.price}
+          paid={booking.paid}
+          advertiserEmail={booking.advertiser.email}
+          invoiceUrl={booking.invoiceUrl}
+          invoicePdfUrl={booking.invoicePdfUrl}
+          invoicedAt={booking.invoicedAt?.toISOString() ?? null}
+          paidAt={booking.paidAt?.toISOString() ?? null}
+          hasInvoice={Boolean(booking.stripeInvoiceId)}
+          available={invoicingAvailable()}
+          testMode={stripeTestMode()}
+          blockedReason={eligibility.ok ? null : eligibility.reason}
+        />
+      </div>
+
       <BookingForm
         advertisers={advertisers}
         issues={issues.map((issue) => ({
@@ -70,7 +93,7 @@ export default async function EditBookingPage({ params }: { params: { id: string
           issueId: booking.issueId,
           adType: booking.adType,
           section: booking.section ?? 'WEATHER',
-          price: String(booking.price),
+          price: centsToInput(booking.price),
           status: booking.status,
           paid: booking.paid,
           ctaUrl: booking.ctaUrl ?? '',

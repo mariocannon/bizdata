@@ -2,20 +2,21 @@
 
 import { revalidatePath } from 'next/cache'
 import { saveSettings } from '@/lib/settings'
+import { parseDollarsToCents } from '@/lib/money'
 import { AD_TYPES } from '@/lib/enums'
 import { actionError, actionOk, text, type ActionResult } from '@/lib/actions'
 
 export async function updateSettings(form: FormData): Promise<ActionResult> {
+  // The form shows dollars; settings store integer cents like every other price.
   const defaultPrices: Record<string, number> = {}
   for (const adType of AD_TYPES) {
-    const raw = text(form, `price.${adType}`)
-    const value = Number(raw)
-    if (!Number.isFinite(value) || value < 0) {
+    const cents = parseDollarsToCents(text(form, `price.${adType}`))
+    if (cents === null || cents < 0) {
       return actionError('Prices must be zero or more.', {
         [`price.${adType}`]: 'Enter a number',
       })
     }
-    defaultPrices[adType] = value
+    defaultPrices[adType] = cents
   }
 
   const bulletinCapacity = Number(text(form, 'bulletinCapacity'))

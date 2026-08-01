@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { centsFromDollarsSchema } from '@/lib/money'
 import {
   adTypeSchema,
   advertiserCategorySchema,
@@ -77,7 +78,8 @@ export const bookingSchema = z
     issueId: z.string().trim().min(1, 'Choose an issue'),
     adType: adTypeSchema,
     section: sectionSlotSchema.optional().or(z.literal('').transform(() => undefined)),
-    price: z.coerce.number().min(0, 'Price cannot be negative').default(0),
+    // The operator types dollars; everything downstream is integer cents.
+    price: centsFromDollarsSchema,
     status: bookingStatusSchema,
     paid: paidStatusSchema,
     ctaUrl: optionalUrl,

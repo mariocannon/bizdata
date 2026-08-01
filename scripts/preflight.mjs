@@ -139,6 +139,44 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.log('  Supabase      ok  storage configured')
 }
 
+// Stripe is optional: unset means invoicing is simply off. But a key that is
+// set and wrong is worth naming here rather than at the first invoice.
+const stripeKey = process.env.STRIPE_SECRET_KEY?.trim()
+const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET?.trim()
+
+if (!stripeKey) {
+  if (stripeWebhookSecret) {
+    warnings.push(
+      'STRIPE_WEBHOOK_SECRET is set but STRIPE_SECRET_KEY is not. Invoicing stays switched off.'
+    )
+  }
+} else if (!/^(sk|rk)_(test|live)_/.test(stripeKey)) {
+  problems.push(
+    'STRIPE_SECRET_KEY does not look like a Stripe secret key (expected sk_test_…, sk_live_… or an rk_ restricted key). ' +
+      'The publishable key pk_… is the wrong one — it cannot raise invoices.'
+  )
+} else {
+  const live = stripeKey.startsWith('sk_live_') || stripeKey.startsWith('rk_live_')
+  console.log(`  Stripe        ok  invoicing configured (${live ? 'LIVE' : 'test'} mode)`)
+
+  if (!stripeWebhookSecret) {
+    warnings.push(
+      'STRIPE_WEBHOOK_SECRET is not set. Invoices can be raised and sent, but nothing will ever be marked paid — ' +
+        'add the endpoint at Stripe → Developers → Webhooks (/api/stripe/webhook) and copy its signing secret.'
+    )
+  } else if (!stripeWebhookSecret.startsWith('whsec_')) {
+    problems.push(
+      'STRIPE_WEBHOOK_SECRET should start with "whsec_". Copy the signing secret from the webhook endpoint, not an API key.'
+    )
+  }
+
+  if (live && !isCI) {
+    warnings.push(
+      'STRIPE_SECRET_KEY is a LIVE key in a local run. Invoices raised from here will charge real advertisers.'
+    )
+  }
+}
+
 if (warnings.length) {
   console.log('\nWarnings:')
   for (const warning of warnings) console.log(`  ! ${warning}`)

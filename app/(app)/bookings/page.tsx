@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { Plus } from 'lucide-react'
 import { prisma } from '@/lib/db'
+import { centsToDollars } from '@/lib/money'
 import { AD_TYPES, PAID_STATUSES, BOOKING_STATUSES, label } from '@/lib/enums'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
@@ -146,7 +147,7 @@ export default async function BookingsPage({
     section: booking.section ? label(booking.section) : '',
     issue: booking.issue.title,
     publishDate: booking.issue.publishDate.toISOString().slice(0, 10),
-    price: booking.price,
+    price: centsToDollars(booking.price),
     status: label(booking.status),
     paid: label(booking.paid),
     ctaUrl: booking.ctaUrl ?? '',

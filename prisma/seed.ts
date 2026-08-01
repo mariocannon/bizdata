@@ -121,7 +121,7 @@ async function main() {
       advertiserId: realty.id,
       issueId: nextIssue.id,
       adType: 'HEADLINE',
-      price: 450,
+      price: 45_000, // $450, in cents
       status: 'CONFIRMED',
       paid: 'INVOICED',
       ctaUrl: 'https://example-realty.co.nz/listings',
@@ -136,7 +136,7 @@ async function main() {
       issueId: nextIssue.id,
       adType: 'SECTION_SPONSOR',
       section: 'WEATHER',
-      price: 150,
+      price: 15_000, // $150, in cents
       status: 'RESERVED',
       paid: 'UNPAID',
     },
@@ -148,7 +148,7 @@ async function main() {
       advertiserId: plumbing.id,
       issueId: followingIssue.id,
       adType: 'BULLETIN_CLASSIFIED',
-      price: 80,
+      price: 8_000, // $80, in cents
       status: 'RESERVED',
       paid: 'UNPAID',
       copy: 'Blocked drain? Example Plumbing covers Ōrewa to Waiwera, same-day callouts.',

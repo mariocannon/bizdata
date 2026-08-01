@@ -18,7 +18,8 @@ import {
   SECTION_SLOTS,
   label,
 } from '@/lib/enums'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatMoney } from '@/lib/utils'
+import { centsToInput } from '@/lib/money'
 import { saveBooking, previewCapacity } from './actions'
 
 export type BookingFormValues = {
@@ -61,8 +62,9 @@ export function BookingForm({
   const [section, setSection] = React.useState(booking?.section ?? 'WEATHER')
   const [issueId, setIssueId] = React.useState(booking?.issueId ?? issues[0]?.id ?? '')
   const [status, setStatus] = React.useState(booking?.status ?? 'RESERVED')
+  // Held as the dollars string the operator types; converted to cents on save.
   const [price, setPrice] = React.useState(
-    booking?.price ?? String(defaultPrices[booking?.adType ?? 'HEADLINE'] ?? 0)
+    booking?.price ?? centsToInput(defaultPrices[booking?.adType ?? 'HEADLINE'] ?? 0)
   )
   const [priceTouched, setPriceTouched] = React.useState(editing)
   const [creativeUrl, setCreativeUrl] = React.useState(booking?.creativeUrl ?? '')
@@ -90,7 +92,7 @@ export function BookingForm({
   function handleAdTypeChange(next: string) {
     setAdType(next)
     // Only pre-fill the price while the operator hasn't set one themselves.
-    if (!priceTouched) setPrice(String(defaultPrices[next] ?? 0))
+    if (!priceTouched) setPrice(centsToInput(defaultPrices[next] ?? 0))
   }
 
   // Live inventory check — shows the conflict before the operator hits save.
@@ -256,14 +258,14 @@ export function BookingForm({
               label="Price"
               htmlFor="price"
               error={errors.price}
-              hint={`Default for ${label(adType)}: $${defaultPrices[adType] ?? 0}`}
+              hint={`Default for ${label(adType)}: ${formatMoney(defaultPrices[adType] ?? 0)}`}
             >
               <Input
                 id="price"
                 name="price"
                 type="number"
                 min="0"
-                step="1"
+                step="0.01"
                 inputMode="decimal"
                 value={price}
                 onChange={(event) => {

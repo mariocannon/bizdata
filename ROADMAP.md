@@ -33,12 +33,14 @@ The app currently records sales that have already happened. These make it help
 
 | | Idea | Size |
 |---|---|---|
-| 2.1 | **Invoice PDFs.** Generate an invoice from a booking (or a package) with the newsletter's branding. Removes the separate accounting-tool step. | M |
-| 2.2 | **Stripe payment links.** Attach a link to the invoice so `INVOICED → PAID` can happen without chasing. Webhook flips the status automatically. | L |
-| 2.3 | **Chase automation.** Draft the follow-up email for anything unpaid past its issue date. Even a copy-to-clipboard draft removes the writing step. | M |
-| 2.4 | **Overdue ageing.** Sort and colour the chase list by *how* overdue, not just by date — 7/14/30+ day buckets. | S |
+| ~~2.1~~ | ~~**Invoice PDFs.**~~ **Shipped** — Stripe finalises each invoice, which produces the hosted payment page and the PDF. | — |
+| ~~2.2~~ | ~~**Stripe payment links.**~~ **Shipped** — invoices raised per booking, webhook flips `INVOICED → PAID`. | — |
+| ~~2.6~~ | ~~**Money as integer cents.**~~ **Shipped** — done alongside Stripe, since cents is the unit it bills in. | — |
+| 2.3 | **Chase automation.** Draft the follow-up email for anything unpaid past its issue date. Stripe can send its own reminder schedule — worth wiring that up before building our own. | M |
+| 2.4 | **Overdue ageing.** Sort and colour the chase list by *how* overdue, not just by date — 7/14/30+ day buckets. Now that `invoicedAt` exists, the due date is derivable. | S |
 | 2.5 | **Accounting export.** A CSV shaped for Xero or MYOB, not just the generic booking export. | S |
-| 2.6 | **Money as integer cents.** `Booking.price` is a `Float`. Fine for whole-dollar ad prices today, wrong the first time something lands on a half-cent after a package split (1.3) or a percentage discount. Worth fixing *before* those exist, not after. | S |
+| 2.7 | **Invoice a package as one bill.** Follows 1.3 — an advertiser buying four weeks should get one invoice, not four. The current model is deliberately one invoice per booking. | M |
+| 2.8 | **Refunds and credit notes.** Voiding works for an unpaid invoice; a paid one has to be refunded in the Stripe dashboard by hand. | M |
 
 ## 3. Send day
 
@@ -98,9 +100,12 @@ now than after real data accumulates.
   marketing person. Needs a `Contact` table (1.5, 2.3).
 - **A `Package` entity.** 1.3 needs bookings to belong to an optional package
   carrying its own price and date range.
-- **Structured `defaultPrices`.** Currently a JSON string in `Settings`. Fine
-  for one flat price per ad type; not enough for seasonal rates, package rates
-  or per-advertiser negotiated rates (1.4, 5.5).
+- **Structured `defaultPrices`.** Currently a JSON string in `Settings` (now
+  holding cents). Fine for one flat price per ad type; not enough for seasonal
+  rates, package rates or per-advertiser negotiated rates (1.4, 5.5).
+- **Tax.** Invoices are raised with no GST line. Fine if the operator isn't
+  registered; needs Stripe Tax or a fixed tax rate on the invoice item as soon
+  as they are.
 - **Creative lifecycle.** Nothing deletes from the Supabase `creative` bucket
   when a booking is deleted. Orphan files accumulate silently.
 - **Audit trail.** No history on anything. 6.1 needs it, and 5.5 wants it.

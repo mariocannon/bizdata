@@ -37,7 +37,13 @@ export const config = {
      *   - /login (the gate itself)
      *   - Next.js internals and static assets
      *   - /uploads (creative served from the local-disk driver)
+     *   - /api/stripe/webhook — Stripe can't hold a session cookie, so this one
+     *     route authenticates by verifying the Stripe signature on the request
+     *     instead. It is exempt from the password, NOT from authentication:
+     *     the route rejects anything it can't verify. Nothing else under /api
+     *     is exempt, and no other route should be added here without its own
+     *     equivalent check.
      */
-    '/((?!login|_next/static|_next/image|uploads|favicon.ico).*)',
+    '/((?!login|_next/static|_next/image|uploads|api/stripe/webhook|favicon.ico).*)',
   ],
 }
