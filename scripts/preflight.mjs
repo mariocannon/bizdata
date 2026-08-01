@@ -131,12 +131,45 @@ if (!process.env.AUTH_SECRET) {
   )
 }
 
+/**
+ * Which Supabase key is this? Storage has row-level security on with no
+ * policies, so only service_role can write — an anon key fails at upload time
+ * with a confusing RLS error. Determined offline: legacy keys are JWTs whose
+ * payload names the role, and the newer format is distinguished by prefix.
+ */
+function supabaseKeyRole(key) {
+  if (key.startsWith('sb_secret_')) return 'service_role'
+  if (key.startsWith('sb_publishable_')) return 'publishable'
+
+  const parts = key.split('.')
+  if (parts.length === 3) {
+    try {
+      return JSON.parse(Buffer.from(parts[1], 'base64url').toString('utf8')).role ?? 'unknown'
+    } catch {
+      return 'unknown'
+    }
+  }
+  return 'unknown'
+}
+
 if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   warnings.push(
     'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not both set. Creative uploads will try to write to local disk, which does not persist on Netlify.'
   )
 } else {
-  console.log('  Supabase      ok  storage configured')
+  const role = supabaseKeyRole(process.env.SUPABASE_SERVICE_ROLE_KEY.trim())
+
+  if (role === 'anon' || role === 'publishable') {
+    problems.push(
+      `SUPABASE_SERVICE_ROLE_KEY holds the ${role} key, not the service_role key. Storage denies it, so every creative upload would fail. Supabase → Settings → API → the secret/service_role key (you have to reveal it).`
+    )
+  } else if (role === 'unknown') {
+    warnings.push(
+      'SUPABASE_SERVICE_ROLE_KEY is not in a recognised format. If uploads fail with a row-level-security error, it is the wrong key.'
+    )
+  } else {
+    console.log('  Supabase      ok  storage configured (service_role key)')
+  }
 }
 
 if (warnings.length) {

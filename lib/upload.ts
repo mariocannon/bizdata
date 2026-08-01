@@ -76,9 +76,18 @@ export async function saveFile(file: File): Promise<string> {
 
     if (error) {
       console.error('supabase storage upload failed', error)
-      throw new UploadError(
-        'Could not upload the creative to storage. Check the bucket exists and is public.'
-      )
+      // Surface what Supabase actually said. A generic message here sends you
+      // hunting for the wrong problem: the common cause is the anon key in
+      // SUPABASE_SERVICE_ROLE_KEY, which reads as a row-level-security denial,
+      // not as anything to do with the bucket.
+      const detail = error.message || 'no detail returned'
+      const hint = /row-level security|Unauthorized|403|invalid|jwt/i.test(detail)
+        ? ' This usually means SUPABASE_SERVICE_ROLE_KEY holds the anon/publishable key rather than the service_role key — only service_role may write to storage.'
+        : /not found|404/i.test(detail)
+          ? ` Check a bucket named "${SUPABASE_BUCKET}" exists (SUPABASE_STORAGE_BUCKET).`
+          : ''
+
+      throw new UploadError(`Storage upload failed: ${detail}.${hint}`)
     }
 
     const { data } = supabase().storage.from(SUPABASE_BUCKET).getPublicUrl(filename)

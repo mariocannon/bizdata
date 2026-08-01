@@ -137,12 +137,18 @@ variables:
 | `AUTH_PASSWORD` | The password you'll use to sign in |
 | `AUTH_SECRET` | `openssl rand -base64 32` |
 | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
-| `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → `service_role` key |
+| `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → the **secret / `service_role`** key (must be revealed — the anon/publishable key will not work) |
 | `SUPABASE_STORAGE_BUCKET` | `creative` |
 
-The service-role key bypasses row-level security. It is only ever read in
-`lib/upload.ts`, which is marked `server-only`, so it never reaches the browser —
-but keep it out of any `NEXT_PUBLIC_` variable.
+It has to be the **service_role** key specifically. Supabase ships
+`storage.objects` with row-level security on and no policies, so only
+`service_role` may write; the anon/publishable key is rejected and every upload
+fails with an RLS error that says nothing about keys. Preflight decodes the key
+and fails the build if it is the wrong one.
+
+That key bypasses row-level security. It is only ever read in `lib/upload.ts`,
+which is marked `server-only`, so it never reaches the browser — but keep it out
+of any `NEXT_PUBLIC_` variable.
 
 **5. Deploy.** The build runs `node scripts/preflight.mjs` first, which checks
 the environment variables and names anything wrong — a connection string wrapped
