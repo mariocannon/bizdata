@@ -191,6 +191,60 @@ Skip this if you're going straight to entering real advertisers. **`npm run seed
 deletes all existing advertisers, issues and bookings** before inserting the
 samples — never point it at a database you care about.
 
+## Reader survey
+
+`/survey` charts the reader survey that the public newsletter site collects. It
+answers "what do our readers actually want?" — the topics chart is the headline;
+the rest describes who is answering.
+
+### It reads a different database
+
+The survey is **not** in the ad manager's database. It lives in its own Supabase
+project, in a `survey_responses` table, and is read directly over the Supabase
+API — Prisma is not involved. It gets its own two variables:
+
+| Key | Value |
+|---|---|
+| `SURVEY_SUPABASE_URL` | The **survey** project's `https://<project-ref>.supabase.co` |
+| `SURVEY_SUPABASE_SERVICE_ROLE_KEY` | That project's Settings → API → **secret / `service_role`** key |
+
+Leave them unset and the page explains what's missing rather than erroring, so a
+fresh clone still runs.
+
+It has to be the **service_role** key. `survey_responses` has row-level security
+on with an INSERT-only policy for `anon`: the public site can post a response,
+but nobody can read one back. That's the right shape for a table of reader
+demographics, and it means the anon/publishable key returns **zero rows** — the
+page would look empty rather than broken. `lib/survey-db.ts` is `server-only`,
+so the key is never bundled into client JavaScript.
+
+> Don't "fix" this by adding a public SELECT policy. That would expose every
+> reader's demographics to anyone holding the anon key, which is public by design.
+
+### Always live
+
+The requirement is that a refresh shows current data, so nothing is cached: the
+route is `force-dynamic`, the page calls `noStore()`, and the Supabase client
+fetches with `cache: 'no-store'` (Next.js patches `fetch` and caches it by
+default, which would otherwise pin the first response for the life of the
+build). One page load is one query.
+
+### Reading the charts
+
+- **Shares are of the people who answered that question**, not of all responses.
+  Everything except suburb and topics is optional, so denominators differ from
+  card to card — each card states its own `n`.
+- **Topics, pets and children's ages are multi-select**, so their shares add up
+  to more than 100%.
+- **Grey bars are "prefer not to say"** — kept in, because dropping them would
+  inflate every other share, but drawn to recede and sorted last.
+- **Ordered scales** (age, income, home value, investable assets) keep the
+  survey's own order and show empty buckets, since a gap in a scale is itself a
+  finding. Unordered lists (suburbs, pets) rank by size and hide options nobody
+  picked.
+- Under 30 responses the page says so: at that size one new response moves a
+  share by several points.
+
 ## Business rules
 
 ### Inventory capacity, per issue
@@ -242,6 +296,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/bookings/new`, `/bookings/[id]` | Booking form — section field appears only for Section Sponsor, creative upload with preview, live inventory check |
 | `/issues` | Table and calendar views, CSV export |
 | `/issues/[id]` | Capacity panel, content-to-ad indicator, bookings, and a publish checklist (the build sheet for send day) |
+| `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
 
 List filters and view toggles live in the URL, so any filtered view is a
@@ -265,18 +320,22 @@ app/
     advertisers/        list, pipeline board, detail, server actions
     bookings/           list, form, new + edit routes, server actions
     issues/             list, detail (capacity + checklist), server actions
+    survey/             reader survey charts (reads the survey Supabase project)
     settings/
   login/                the password gate
 middleware.ts           enforces the gate on every route
 components/
   ui/                   shadcn/ui-style primitives
   dashboard/            KPI card, charts
+  survey/               survey distribution + responses-per-day charts
   *.tsx                 page header, sidebar, status pill, filters, calendar
 lib/
   auth.ts               password check + signed session cookie
   enums.ts              the enumerated values + display labels
   inventory.ts          capacity report and the confirm check
   validation.ts         Zod schemas shared by forms and actions
+  survey-db.ts          client for the separate survey Supabase project
+  survey.ts             survey option lists, roll-ups and distributions
   csv.ts  upload.ts  settings.ts  rollups.ts  period.ts
 prisma/
   schema.prisma  seed.ts

@@ -17,11 +17,12 @@ it, that's the [README](../README.md).
 6. [Bookings](#6-bookings)
 7. [Inventory rules](#7-inventory-rules)
 8. [The dashboard](#8-the-dashboard)
-9. [Settings](#9-settings)
-10. [Exporting to CSV](#10-exporting-to-csv)
-11. [Recipes](#11-recipes)
-12. [Troubleshooting](#12-troubleshooting)
-13. [Limits and things to know](#13-limits-and-things-to-know)
+9. [Reader survey](#9-reader-survey)
+10. [Settings](#10-settings)
+11. [Exporting to CSV](#11-exporting-to-csv)
+12. [Recipes](#12-recipes)
+13. [Troubleshooting](#13-troubleshooting)
+14. [Limits and things to know](#14-limits-and-things-to-know)
 
 ---
 
@@ -370,7 +371,64 @@ Every card links through to the matching filtered view.
 
 ---
 
-## 9. Settings
+## 9. Reader survey
+
+What readers told us they want. **Reader survey** in the sidebar. This is the
+page to open before planning coverage, and the one to quote from when selling to
+an advertiser who wants to know who reads you.
+
+The data comes from the survey on the public site, which lives in its own
+database. **The page re-reads it every time you open or refresh it** — there is
+nothing to sync and no "last updated" to worry about beyond the timestamp in the
+header.
+
+### The six numbers
+
+| Card | Exactly what it is |
+|---|---|
+| **Responses** | Completed surveys, all time |
+| **Last 7 days** | How many came in this week — whether the survey is still working |
+| **Top topic** | The most-picked topic, and the share who picked it |
+| **Suburbs** | How many of the 20 coast suburbs are represented |
+| **Kids at home** | Share answering "Yes", of those who answered that question |
+| **Left an email** | How many are contactable for follow-up |
+
+### The charts
+
+- **Topics readers want covered** — the headline. This is the one that should
+  shape what goes in the newsletter.
+- **Responses per day** — is the survey still collecting, or has it gone quiet?
+- **Suburb** and **Home ownership** — where your readers are, and whether they
+  own or rent
+- **Age, education, gender, relationship status, children, pets, occupations** —
+  the reader profile an advertiser asks for
+- **Household income, home value, investable assets** — the numbers a
+  real-estate or financial-services advertiser wants
+
+### Reading them honestly
+
+Four things will trip you up if you don't know them:
+
+1. **Each chart counts only the people who answered that question.** Every
+   question except suburb and topics is optional, so the "6 answered · 2 skipped"
+   line under each title is the real denominator. Two charts on this page can
+   have different bases.
+2. **Topics, pets and children's ages let people pick more than one**, so those
+   percentages add up to more than 100%. That's not a bug.
+3. **Grey bars are "prefer not to say."** They're left in on purpose — hiding
+   them would quietly inflate every other percentage.
+4. **Small samples move fast.** Under 30 responses the page puts a note at the
+   top. Quote the counts, not the percentages, until you're past that.
+
+A chart that says "Nobody has answered this yet" means the question is optional
+and everyone so far has skipped it — not that anything is broken.
+
+If the page says the survey database isn't connected, that's a setup step, not a
+fault: see the Reader survey section of `README.md`.
+
+---
+
+## 10. Settings
 
 Three things, all optional to change.
 
@@ -398,7 +456,7 @@ Changing a default doesn't touch existing bookings.
 
 ---
 
-## 10. Exporting to CSV
+## 11. Exporting to CSV
 
 **Export CSV** on Advertisers, Bookings and Issues, plus on each issue's detail
 page for just that issue's bookings.
@@ -418,7 +476,7 @@ nothing.
 
 ---
 
-## 11. Recipes
+## 12. Recipes
 
 ### Selling a new advertiser their first ad
 
@@ -469,7 +527,7 @@ the takeover into a different issue.
 
 ---
 
-## 12. Troubleshooting
+## 13. Troubleshooting
 
 **"This issue already has a Headline booking"**
 Working as intended — one Headline per issue. Cancel the existing one, pick a
@@ -504,7 +562,7 @@ Netlify → Deploys → your deploy → Functions.
 
 ---
 
-## 13. Limits and things to know
+## 14. Limits and things to know
 
 **One password, not accounts.** Everyone shares it, and the app can't tell who
 did what. Fine for one operator; if more people need access, that's the point to

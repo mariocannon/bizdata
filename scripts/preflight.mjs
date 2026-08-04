@@ -172,6 +172,41 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   }
 }
 
+/**
+ * The reader survey lives in its own Supabase project. Both variables are
+ * optional — unset, /survey explains what is missing — but a half-set or
+ * wrong-keyed pair is worth catching here. `survey_responses` allows anonymous
+ * inserts and no reads, so an anon key doesn't error: it returns zero rows and
+ * the page reads as "no responses yet". That is exactly the kind of silent
+ * wrong answer this script exists to prevent.
+ */
+const surveyUrl = process.env.SURVEY_SUPABASE_URL
+const surveyKey = process.env.SURVEY_SUPABASE_SERVICE_ROLE_KEY
+
+if (Boolean(surveyUrl) !== Boolean(surveyKey)) {
+  warnings.push(
+    `Only one of SURVEY_SUPABASE_URL / SURVEY_SUPABASE_SERVICE_ROLE_KEY is set. The survey page needs both, and will say it is not connected until it has them.`
+  )
+} else if (surveyUrl && surveyKey) {
+  const role = supabaseKeyRole(surveyKey.trim())
+
+  if (role === 'anon' || role === 'publishable') {
+    problems.push(
+      `SURVEY_SUPABASE_SERVICE_ROLE_KEY holds the ${role} key, not the service_role key. survey_responses has row-level security on with no read policy, so that key returns zero rows and the survey page would look empty rather than broken.`
+    )
+  } else if (role === 'unknown') {
+    warnings.push(
+      'SURVEY_SUPABASE_SERVICE_ROLE_KEY is not in a recognised format. If the survey page shows no responses, it is the wrong key.'
+    )
+  } else if (surveyUrl.trim() === (process.env.SUPABASE_URL ?? '').trim()) {
+    warnings.push(
+      'SURVEY_SUPABASE_URL is the same project as SUPABASE_URL. The reader survey is collected into a separate project — check you copied the right one.'
+    )
+  } else {
+    console.log('  Survey        ok  reader survey configured (service_role key)')
+  }
+}
+
 if (warnings.length) {
   console.log('\nWarnings:')
   for (const warning of warnings) console.log(`  ! ${warning}`)

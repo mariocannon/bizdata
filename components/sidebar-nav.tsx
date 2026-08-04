@@ -7,6 +7,7 @@ import {
   Building2,
   Ticket,
   Newspaper,
+  ClipboardList,
   Settings as SettingsIcon,
   Waves,
 } from 'lucide-react'
@@ -17,6 +18,7 @@ const NAV = [
   { href: '/advertisers', label: 'Advertisers', icon: Building2 },
   { href: '/bookings', label: 'Bookings', icon: Ticket },
   { href: '/issues', label: 'Issues', icon: Newspaper },
+  { href: '/survey', label: 'Reader survey', icon: ClipboardList },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
 ]
 
