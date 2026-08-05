@@ -35,6 +35,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { ClassifiedForm } from './classified-form'
+import { ExportBeehiivButton } from './export-beehiiv-button'
 import { DeleteClassifiedButton } from './delete-classified-button'
 
 export const dynamic = 'force-dynamic'
@@ -172,6 +173,28 @@ export default async function ClassifiedsPage({
     notes: row.notes ?? '',
   }))
 
+  // What goes into the newsletter: published listings, from whatever the page
+  // is currently filtered to, in the order shown.
+  const publishedListings = rows
+    .filter((row) => row.status === 'PUBLISHED')
+    .map((row) => ({
+      headline: row.headline,
+      body: row.body,
+      category: label(row.category),
+      contactName: row.contactName,
+      contactEmail: row.contactEmail,
+      contactPhone: row.contactPhone,
+    }))
+
+  // The usual reason an export comes out empty, worth naming in the message.
+  const approvedInView = rows.filter((row) => row.status === 'APPROVED').length
+
+  // Filtered to one issue? Name it under the heading in the exported block.
+  const filteredIssue =
+    issueFilter && issueFilter !== 'unassigned'
+      ? issues.find((issue) => issue.id === issueFilter)
+      : undefined
+
   const issueOptions = issues.map((issue) => ({ id: issue.id, title: issue.title }))
   const needsWork = rows.filter((row) => row.tooLong).length
   // Anything sent in through the public form and not yet looked at.
@@ -215,6 +238,11 @@ export default async function ClassifiedsPage({
                 Public form
               </a>
             </Button>
+            <ExportBeehiivButton
+              listings={publishedListings}
+              approvedCount={approvedInView}
+              subtitle={filteredIssue?.title}
+            />
             <ExportCsvButton
               rows={csvRows}
               columns={CSV_COLUMNS}

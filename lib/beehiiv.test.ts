@@ -1,0 +1,121 @@
+import assert from 'node:assert/strict'
+import { describe, it } from 'node:test'
+import { beehiivFilename, escapeHtml, toBeehiivHtml, type BeehiivListing } from './beehiiv'
+
+function listing(overrides: Partial<BeehiivListing> = {}): BeehiivListing {
+  return {
+    headline: 'Tidy 4.2m alloy runabout',
+    body: 'Well-kept boat, serviced in March.',
+    category: 'For sale',
+    contactName: 'Jo Ngata',
+    contactEmail: 'jo@example.co.nz',
+    contactPhone: '021 555 0142',
+    ...overrides,
+  }
+}
+
+describe('escapeHtml', () => {
+  it('escapes the characters that would break the markup', () => {
+    assert.equal(escapeHtml('Fish & chips'), 'Fish &amp; chips')
+    assert.equal(escapeHtml('<script>x</script>'), '&lt;script&gt;x&lt;/script&gt;')
+    assert.equal(escapeHtml(`He said "hi"`), 'He said &quot;hi&quot;')
+    assert.equal(escapeHtml("it's"), 'it&#39;s')
+  })
+})
+
+describe('toBeehiivHtml', () => {
+  it('includes the headline, copy and contact details', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /Tidy 4\.2m alloy runabout/)
+    assert.match(html, /Well-kept boat, serviced in March\./)
+    assert.match(html, /Jo Ngata/)
+    assert.match(html, /021 555 0142/)
+  })
+
+  it('makes the email a mailto link', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /<a href="mailto:jo@example\.co\.nz"/)
+  })
+
+  it('escapes copy that came in off the public form', () => {
+    const html = toBeehiivHtml([
+      listing({ headline: 'Fish & chips', body: '<b>cheap</b> & tasty' }),
+    ])
+    assert.match(html, /Fish &amp; chips/)
+    assert.match(html, /&lt;b&gt;cheap&lt;\/b&gt; &amp; tasty/)
+    // The submitted markup must not survive as markup.
+    assert.doesNotMatch(html, /<b>cheap<\/b>/)
+  })
+
+  it('keeps the line breaks a submitter typed', () => {
+    const html = toBeehiivHtml([listing({ body: 'First line\nSecond line' })])
+    assert.match(html, /First line<br \/>Second line/)
+  })
+
+  it('leaves out contact parts that are missing', () => {
+    const html = toBeehiivHtml([
+      listing({ contactName: null, contactEmail: null, contactPhone: '021 555 0142' }),
+    ])
+    assert.match(html, /021 555 0142/)
+    assert.doesNotMatch(html, /&middot;/)
+  })
+
+  it('omits the contact line entirely when there is nothing to show', () => {
+    const html = toBeehiivHtml([
+      listing({ contactName: null, contactEmail: null, contactPhone: null }),
+    ])
+    assert.doesNotMatch(html, /mailto/)
+  })
+
+  it('groups by category when there is more than one', () => {
+    const html = toBeehiivHtml([
+      listing({ category: 'For sale' }),
+      listing({ category: 'Wanted', headline: 'Garage wanted' }),
+    ])
+    assert.match(html, /For sale/)
+    assert.match(html, /Wanted/)
+  })
+
+  it('skips category headings when everything is one category', () => {
+    const html = toBeehiivHtml([listing(), listing({ headline: 'Another boat' })])
+    // The only "For sale" would be a heading, and it earns nothing here.
+    assert.equal(html.match(/For sale/g), null)
+  })
+
+  it('uses the title and subtitle it is given', () => {
+    const html = toBeehiivHtml([listing()], {
+      title: 'Community classifieds',
+      subtitle: 'The Tide — 6 Aug 2026',
+    })
+    assert.match(html, /Community classifieds/)
+    assert.match(html, /The Tide — 6 Aug 2026/)
+  })
+
+  it('styles inline, never in a style block', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /style="font-size:16px;font-weight:700/)
+    assert.doesNotMatch(html, /<style/)
+  })
+
+  it('never closes a style attribute early', () => {
+    // A double quote inside the font stack would end the attribute there and
+    // drop the rest of the declarations — which renders as Times, silently.
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /style="font-family:[^"]*sans-serif;[^"]*"/)
+  })
+
+  it('handles an empty list without producing broken markup', () => {
+    const html = toBeehiivHtml([])
+    assert.match(html, /Classifieds/)
+    assert.doesNotMatch(html, /<hr/)
+  })
+})
+
+describe('beehiivFilename', () => {
+  it('stamps the date and the html extension', () => {
+    assert.equal(
+      beehiivFilename('the-tide-classifieds', new Date('2026-08-05T09:00:00Z')),
+      'the-tide-classifieds-2026-08-05.html'
+    )
+  })
+})

@@ -384,6 +384,33 @@ the limit appears under the page title.
 
 Search covers headlines, copy, contact names and emails.
 
+### Putting them in the newsletter
+
+**Export for beehiiv** downloads the **published** listings you're currently
+looking at as an HTML file, ready to go into a post.
+
+Two ways to use the file, whichever suits how you build:
+
+1. **Open it in a browser**, select all, copy, and paste into the beehiiv
+   editor. Headings, bold and the email links all come across.
+2. **Or open it in a text editor** and paste the markup into a custom HTML
+   block.
+
+What comes out: a *Classifieds* heading, then the listings grouped under their
+category (For sale, Wanted, Services…), each one a bold headline, the copy, and
+the contact line with the email as a clickable link. Categories only appear when
+there's more than one, so a run of three For sale listings doesn't get a
+pointless header.
+
+The export follows the filters, so **filter to an issue first** and you get
+exactly that issue's listings, with the issue named under the heading.
+
+It exports **Published only** — anything still Draft or Approved is left out, on
+purpose, so nothing half-finished reaches a reader. Bear in mind listings are
+usually sitting at *Approved* while you're building: mark them **Published**
+before exporting. If none are, the export says so and tells you how many are
+waiting at Approved.
+
 ### The public form
 
 **Public form** in the top right opens **`/submit`** — your site's address with
@@ -555,7 +582,11 @@ you get exactly that list.
 | **Advertisers** | Name, Category, Status, Contact name, Email, Phone, Website, Reviews checked, Last contacted, Total booked, Total paid, Notes |
 | **Bookings** | Label, Advertiser, Ad type, Section, Issue, Publish date, Price, Status, Paid, CTA URL, Copy, Notes |
 | **Issues** | Title, Publish date, Status, Ads sold, Revenue, Theme |
-| **Classifieds** | Headline, Copy, Words, Category, Status, Issue, Publish date, Contact name, Email, Phone, Notes |
+| **Classifieds** | Headline, Copy, Words, Category, Status, Source, Issue, Publish date, Contact name, Email, Phone, Notes |
+
+The Classifieds page also has **Export for beehiiv**, which is a different
+thing: an HTML block of the published listings for pasting into a post, rather
+than a spreadsheet. See [Classifieds](#8-classifieds).
 
 Files open cleanly in Excel, Numbers and Google Sheets. These column sets mirror
 the underlying data deliberately, so moving to a dedicated tool later loses

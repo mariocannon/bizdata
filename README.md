@@ -324,6 +324,15 @@ At least one of email or phone is required. Word counting lives in
 the live counter in the form and the Zod schema the server action validates
 with, so the two can never disagree.
 
+**Export for beehiiv** on the Classifieds page downloads the published listings
+in the current view as an HTML block (`lib/beehiiv.ts`). beehiiv has no
+classifieds importer, so the file suits both ways content gets into a post:
+open it in a browser and copy the rendered page, or paste the markup into a
+custom HTML block. Styles are inline, since email builders drop `<style>`
+blocks — and the font stack is single-quoted for the same reason, because a
+double quote inside a `style` attribute closes it early and silently drops
+everything after it.
+
 Listings arrive two ways, recorded in `Classified.source`: `STAFF` for ones you
 type in, `PUBLIC` for ones sent through the [public form](#the-public-classified-form).
 Submissions land as unassigned drafts and the Classifieds page counts how many
@@ -396,6 +405,7 @@ lib/
   enums.ts              the enumerated values + display labels
   inventory.ts          capacity report and the confirm check
   classifieds.ts        word counting and the 70-word cap
+  beehiiv.ts            renders published listings as pasteable HTML
   rate-limit.ts         fixed-window limiter for the public endpoint
   validation.ts         Zod schemas shared by forms and actions
   survey-db.ts          client for the separate survey Supabase project
