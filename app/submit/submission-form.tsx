@@ -11,7 +11,6 @@ import { Field } from '@/components/ui/field'
 import { CLASSIFIED_CATEGORIES, label } from '@/lib/enums'
 import {
   CLASSIFIED_WORD_MAX,
-  CLASSIFIED_WORD_MIN,
   countWords,
   wordCountMessage,
   wordCountState,
@@ -20,7 +19,6 @@ import { cn } from '@/lib/utils'
 
 const COUNTER_STYLES: Record<string, string> = {
   empty: 'text-muted-foreground',
-  short: 'text-amber-700',
   ok: 'text-emerald-700',
   long: 'text-amber-700',
 }
@@ -139,7 +137,7 @@ export function SubmissionForm() {
             htmlFor="body"
             required
             error={errors.body}
-            hint={`Between ${CLASSIFIED_WORD_MIN} and ${CLASSIFIED_WORD_MAX} words — enough to say what it is, why it's worth a look, and anything a reader needs to know.`}
+            hint={`Up to ${CLASSIFIED_WORD_MAX} words — what it is, why it's worth a look, and anything a reader needs to know.`}
           >
             <Textarea
               id="body"

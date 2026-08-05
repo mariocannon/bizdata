@@ -156,8 +156,8 @@ async function main() {
     },
   })
 
-  // Classifieds: two ready to run and one still short of the 50-word minimum,
-  // so a fresh clone shows both the in-range and the flagged state.
+  // Classifieds: two approved and placed into issues, one short draft still in
+  // the queue, so a fresh clone shows both states.
   await prisma.classified.create({
     data: {
       headline: 'Tidy 4.2m alloy runabout, Ōrewa',
@@ -191,7 +191,7 @@ async function main() {
       status: 'DRAFT',
       contactName: 'Peter Vaile',
       contactEmail: 'peter@example.co.nz',
-      notes: 'Needs another 20 words before it can be approved.',
+      notes: 'Chasing them for a suburb before this goes in.',
     },
   })
 

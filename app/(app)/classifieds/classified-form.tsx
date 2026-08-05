@@ -21,7 +21,6 @@ import { Field } from '@/components/ui/field'
 import { CLASSIFIED_CATEGORIES, CLASSIFIED_STATUSES, label } from '@/lib/enums'
 import {
   CLASSIFIED_WORD_MAX,
-  CLASSIFIED_WORD_MIN,
   countWords,
   requiresWordCount,
   wordCountMessage,
@@ -47,7 +46,6 @@ export type IssueOption = { id: string; title: string }
 
 const COUNTER_STYLES: Record<string, string> = {
   empty: 'text-muted-foreground',
-  short: 'text-amber-700',
   ok: 'text-emerald-700',
   long: 'text-amber-700',
 }
@@ -117,8 +115,8 @@ export function ClassifiedForm({
         <DialogHeader>
           <DialogTitle>{editing ? 'Edit classified' : 'New classified'}</DialogTitle>
           <DialogDescription>
-            A headline, {CLASSIFIED_WORD_MIN}–{CLASSIFIED_WORD_MAX} words, and a
-            contact number or email.
+            A headline, up to {CLASSIFIED_WORD_MAX} words, and a contact number or
+            email.
           </DialogDescription>
         </DialogHeader>
 
@@ -144,7 +142,7 @@ export function ClassifiedForm({
             htmlFor="body"
             required
             error={errors.body}
-            hint={`${CLASSIFIED_WORD_MIN}–${CLASSIFIED_WORD_MAX} words. Drafts can sit outside the range; approving or publishing can't.`}
+            hint={`Up to ${CLASSIFIED_WORD_MAX} words. Drafts can run long; approving or publishing can't.`}
           >
             <Textarea
               id="body"

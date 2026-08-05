@@ -109,7 +109,7 @@ nothing on it to leak. The endpoint's only effect is to create one row:
   and issue are set by the handler, so a submission always lands as an
   unassigned `DRAFT` tagged `source=PUBLIC` no matter what the payload claims.
   Nothing a stranger sends reaches a reader until you approve it.
-- **The word range is enforced outright**, not just on approval — writing to the
+- **The word cap is enforced outright**, not just on approval — writing to the
   brief is the point of sending someone the form.
 - **A route handler, not a server action.** Server actions are dispatched by an
   ID in the `Next-Action` header rather than by the route they were posted to,
@@ -305,17 +305,18 @@ can never disagree.
 
 ### Classifieds
 
-A classified is a short reader listing — **a headline, 50–70 words, and a phone
-number or email** — not a sold ad slot. It has its own table and its own tab; it
+A classified is a short reader listing — **a headline, up to 70 words, and a
+phone number or email** — not a sold ad slot. It has its own table and its own tab; it
 carries no price or payment status, and it does not consume bulletin inventory.
 The `BULLETIN_CLASSIFIED` ad type above is the separate thing: a paid classified
 slot booked by an advertiser.
 
-The word range is flagged on drafts and enforced on approval, mirroring how a
-reservation warns but a confirmation blocks:
+There is no minimum: a listing that says what it needs to in ten words is a good
+listing. The 70-word cap is flagged on drafts and enforced on approval,
+mirroring how a reservation warns but a confirmation blocks:
 
-- **DRAFT** — any length. Copy arrives half-written.
-- **APPROVED** / **PUBLISHED** — must be 50–70 words, refused otherwise.
+- **DRAFT** — any length. Copy arrives overwritten and gets cut down.
+- **APPROVED** / **PUBLISHED** — 70 words at most, refused otherwise.
 - **ARCHIVED** — has run, or might run again.
 
 At least one of email or phone is required. Word counting lives in
@@ -351,7 +352,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/bookings/new`, `/bookings/[id]` | Booking form — section field appears only for Section Sponsor, creative upload with preview, live inventory check |
 | `/issues` | Table and calendar views, CSV export |
 | `/issues/[id]` | Capacity panel, content-to-ad indicator, bookings, and a publish checklist (the build sheet for send day) |
-| `/classifieds` | Reader classifieds — headline, 50–70 words, contact. Table and copy views, filters, CSV export |
+| `/classifieds` | Reader classifieds — headline, up to 70 words, contact. Table and copy views, filters, CSV export |
 | `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
 | `/submit` | **Public.** The form you send to customers to place a classified. No password, reads nothing, writes an unassigned draft |
@@ -394,7 +395,7 @@ lib/
   auth.ts               password check + signed session cookie
   enums.ts              the enumerated values + display labels
   inventory.ts          capacity report and the confirm check
-  classifieds.ts        word counting and the 50–70 word rule
+  classifieds.ts        word counting and the 70-word cap
   rate-limit.ts         fixed-window limiter for the public endpoint
   validation.ts         Zod schemas shared by forms and actions
   survey-db.ts          client for the separate survey Supabase project

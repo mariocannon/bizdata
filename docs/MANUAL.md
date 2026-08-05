@@ -333,7 +333,7 @@ Bulletin (3), Section Sponsors (6). That's the denominator for sell-through.
 ## 8. Classifieds
 
 The classifieds tab holds the short listings that run in the classifieds
-section: a **headline**, **50–70 words**, and a **contact number or email**.
+section: a **headline**, **up to 70 words**, and a **contact number or email**.
 
 They are deliberately separate from bookings. A booking is an advertiser buying
 a slot; a classified is a listing someone sent in. Classifieds have no price, no
@@ -345,7 +345,7 @@ slots in the inventory rules above.
 | Field | Notes |
 |---|---|
 | **Headline** | Required, up to 80 characters |
-| **Listing copy** | Required. 50–70 words, counted live as you type |
+| **Listing copy** | Required. Up to 70 words, counted live as you type |
 | **Category** | For sale, Wanted, Services, Jobs, Property, Community, Other |
 | **Status** | Draft → Approved → Published, plus Archived |
 | **Issue** | Optional — leave it unassigned to keep it in the queue |
@@ -356,22 +356,24 @@ slots in the inventory rules above.
 ### The word count
 
 The counter under the copy box shows where you are as you type, and turns amber
-when you're outside the range. It counts words the way a reader would:
-"same-day" is one word, a phone number's parts count, and a dash on its own
-doesn't.
+once you're over 70. It counts words the way a reader would: "same-day" is one
+word, a phone number's parts count, and a dash on its own doesn't.
 
-The range is **flagged on drafts and enforced on approval**, the same shape as
-the inventory rules — a reservation warns, a confirmation blocks:
+**There is no minimum.** A listing that says what it needs to in ten words is
+fine. The only limit is the 70-word cap, **flagged on drafts and enforced on
+approval**, the same shape as the inventory rules — a reservation warns, a
+confirmation blocks:
 
-- **Draft** — save anything. Copy arrives half-written and gets cut down.
-- **Approved** or **Published** — must be 50–70 words. Saving outside the range
-  is refused, and the message tells you how many words over or under you are.
+- **Draft** — save anything, any length. Copy arrives overwritten and gets cut
+  down.
+- **Approved** or **Published** — 70 words at most. Saving a longer listing is
+  refused, and the message tells you how many words over you are.
 - **Archived** — for listings that have run, or that you might run again. Delete
   removes the listing for good; archive keeps it.
 
-If a listing was approved and later edited out of range some other way, the list
-flags it: the word count turns amber with a ⚠, and the count of listings outside
-the range appears under the page title.
+If a listing was approved and later edited past the cap some other way, the list
+flags it: the word count turns amber with a ⚠, and the number of listings over
+the limit appears under the page title.
 
 ### Two views
 
@@ -389,8 +391,8 @@ Search covers headlines, copy, contact names and emails.
 the app that doesn't ask for the password, so the link can go in an email, a
 newsletter footer or a social post.
 
-It asks for exactly what a listing needs: headline, 50–70 words with the same
-live counter you see, category, name, and an email or phone. The word range is
+It asks for exactly what a listing needs: headline, up to 70 words with the same
+live counter you see, category, name, and an email or phone. The cap is
 **enforced** there — a customer can't send you 200 words — and the submitter
 picks no status and no issue.
 

@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
   CLASSIFIED_WORD_MAX,
-  CLASSIFIED_WORD_MIN,
   countWords,
   excerpt,
   isWordCountValid,
@@ -48,14 +47,14 @@ describe('countWords', () => {
 })
 
 describe('wordCountState', () => {
-  it('flags copy under the minimum', () => {
-    assert.equal(wordCountState(countWords(body(CLASSIFIED_WORD_MIN - 1))), 'short')
+  it('accepts short copy — there is no minimum', () => {
+    assert.equal(wordCountState(countWords('Free firewood, you pick up.')), 'ok')
+    assert.equal(wordCountState(1), 'ok')
+    assert.equal(isWordCountValid(4), true)
   })
 
-  it('accepts both ends of the range', () => {
-    assert.equal(wordCountState(countWords(body(CLASSIFIED_WORD_MIN))), 'ok')
+  it('accepts copy right up to the maximum', () => {
     assert.equal(wordCountState(countWords(body(CLASSIFIED_WORD_MAX))), 'ok')
-    assert.equal(isWordCountValid(countWords(body(60))), true)
   })
 
   it('flags copy over the maximum', () => {
@@ -63,38 +62,42 @@ describe('wordCountState', () => {
     assert.equal(isWordCountValid(CLASSIFIED_WORD_MAX + 1), false)
   })
 
-  it('separates "nothing written" from "too short"', () => {
+  it('separates "nothing written" from valid copy', () => {
     assert.equal(wordCountState(0), 'empty')
+    assert.equal(isWordCountValid(0), false)
   })
 })
 
 describe('requiresWordCount', () => {
-  it('enforces the range on approved and published listings', () => {
+  it('enforces the cap on approved and published listings', () => {
     assert.equal(requiresWordCount('APPROVED'), true)
     assert.equal(requiresWordCount('PUBLISHED'), true)
   })
 
-  it('lets drafts and archived listings sit outside it', () => {
+  it('lets drafts and archived listings run long', () => {
     assert.equal(requiresWordCount('DRAFT'), false)
     assert.equal(requiresWordCount('ARCHIVED'), false)
   })
 })
 
 describe('wordCountMessage', () => {
-  it('names the shortfall', () => {
-    assert.match(wordCountMessage(41), /9 under/)
-  })
-
   it('names the overrun', () => {
     assert.match(wordCountMessage(74), /4 over/)
   })
 
-  it('just states the count when in range', () => {
+  it('just states the count when within the cap', () => {
     assert.equal(wordCountMessage(63), '63 words')
+    assert.equal(wordCountMessage(4), '4 words')
+  })
+
+  it('never mentions a minimum', () => {
+    for (const count of [1, 4, 20, 49]) {
+      assert.doesNotMatch(wordCountMessage(count), /minimum|under/)
+    }
   })
 
   it('uses the singular for one word', () => {
-    assert.match(wordCountMessage(1), /^1 word /)
+    assert.equal(wordCountMessage(1), '1 word')
   })
 })
 

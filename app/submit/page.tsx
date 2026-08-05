@@ -1,11 +1,11 @@
 import { Waves } from 'lucide-react'
-import { CLASSIFIED_WORD_MAX, CLASSIFIED_WORD_MIN } from '@/lib/classifieds'
+import { CLASSIFIED_WORD_MAX } from '@/lib/classifieds'
 import { SubmissionForm } from './submission-form'
 
 export const metadata = {
   title: 'Place a classified — The Tide',
   description:
-    'Send us a classified for The Tide: a headline, 50–70 words, and how readers can reach you.',
+    'Send us a classified for The Tide: a headline, up to 70 words, and how readers can reach you.',
 }
 
 /**
@@ -26,8 +26,8 @@ export default function SubmitClassifiedPage() {
         </h1>
         <p className="max-w-prose text-sm text-muted-foreground">
           Classifieds run in our weekly email to the Hibiscus Coast. Send yours
-          below — a headline, {CLASSIFIED_WORD_MIN}–{CLASSIFIED_WORD_MAX} words, and
-          a phone number or email so readers can reach you. We&rsquo;ll be in touch
+          below — a headline, up to {CLASSIFIED_WORD_MAX} words, and a phone number
+          or email so readers can reach you. We&rsquo;ll be in touch
           to confirm which issue it runs in.
         </p>
       </header>

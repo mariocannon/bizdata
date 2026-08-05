@@ -12,7 +12,6 @@ import {
 } from '@/lib/enums'
 import {
   CLASSIFIED_WORD_MAX,
-  CLASSIFIED_WORD_MIN,
   countWords,
   isWordCountValid,
   requiresWordCount,
@@ -157,7 +156,7 @@ export type ClassifiedValues = z.output<typeof classifiedSchema>
  *
  *   - No status, source or issue. Submissions always land as an unassigned
  *     draft; nothing off the internet gets to set its own state.
- *   - The word range is enforced outright rather than only on approval. A
+ *   - The word cap is enforced outright rather than only on approval. A
  *     submitter writing to the brief is the whole point of sending them here.
  *   - Lengths are capped so a hostile payload can't be huge.
  */
@@ -199,7 +198,7 @@ export const publicClassifiedSchema = z
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['body'],
-        message: `Listings run to ${CLASSIFIED_WORD_MIN}–${CLASSIFIED_WORD_MAX} words. ${wordCountMessage(words)}.`,
+        message: `Listings run to ${CLASSIFIED_WORD_MAX} words at most. ${wordCountMessage(words)}.`,
       })
     }
   })

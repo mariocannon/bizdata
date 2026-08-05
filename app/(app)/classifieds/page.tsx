@@ -9,7 +9,6 @@ import {
 } from '@/lib/enums'
 import {
   CLASSIFIED_WORD_MAX,
-  CLASSIFIED_WORD_MIN,
   countWords,
   excerpt,
   isWordCountValid,
@@ -57,7 +56,6 @@ const CSV_COLUMNS = [
 
 const WORD_COUNT_STYLES: Record<string, string> = {
   empty: 'text-muted-foreground',
-  short: 'text-amber-700',
   ok: 'text-foreground',
   long: 'text-amber-700',
 }
@@ -105,8 +103,8 @@ export default async function ClassifiedsPage({
         ...classified,
         words,
         state: wordCountState(words),
-        // The word range only blocks a listing once it is approved or published.
-        outOfRange: requiresWordCount(classified.status) && !isWordCountValid(words),
+        // The word cap only blocks a listing once it is approved or published.
+        tooLong: requiresWordCount(classified.status) && !isWordCountValid(words),
       }
     })
     .filter((row) => {
@@ -175,7 +173,7 @@ export default async function ClassifiedsPage({
   }))
 
   const issueOptions = issues.map((issue) => ({ id: issue.id, title: issue.title }))
-  const needsWork = rows.filter((row) => row.outOfRange).length
+  const needsWork = rows.filter((row) => row.tooLong).length
   // Anything sent in through the public form and not yet looked at.
   const awaitingReview = classifieds.filter(
     (row) => row.source === 'PUBLIC' && row.status === 'DRAFT'
@@ -191,7 +189,7 @@ export default async function ClassifiedsPage({
               {rows.length} of {classifieds.length} listings
             </span>
             <span>
-              {CLASSIFIED_WORD_MIN}–{CLASSIFIED_WORD_MAX} words, headline and contact
+              Up to {CLASSIFIED_WORD_MAX} words, headline and contact
             </span>
             {awaitingReview > 0 ? (
               <Link
@@ -204,7 +202,7 @@ export default async function ClassifiedsPage({
             {needsWork > 0 ? (
               <span className="inline-flex items-center gap-1 font-medium text-amber-700">
                 <AlertTriangle className="size-3.5" />
-                {needsWork} outside the word range
+                {needsWork} over the word limit
               </span>
             ) : null}
           </span>
@@ -281,7 +279,7 @@ export default async function ClassifiedsPage({
           title="No classifieds match"
           description={
             classifieds.length === 0
-              ? `Add the first listing — a headline, ${CLASSIFIED_WORD_MIN}–${CLASSIFIED_WORD_MAX} words and a contact number or email.`
+              ? `Add the first listing — a headline, up to ${CLASSIFIED_WORD_MAX} words and a contact number or email.`
               : 'Try clearing the filters or the search term.'
           }
           action={
@@ -399,9 +397,9 @@ export default async function ClassifiedsPage({
                     >
                       {row.words}
                     </span>
-                    {row.outOfRange ? (
+                    {row.tooLong ? (
                       <AlertTriangle
-                        aria-label="Outside the word range"
+                        aria-label="Over the word limit"
                         className="ml-1 inline size-3 text-amber-700"
                       />
                     ) : null}
