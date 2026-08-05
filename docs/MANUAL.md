@@ -399,7 +399,7 @@ Two ways to use the file, whichever suits how you build:
 What comes out is styled to The Tide's brand guide: a Paper card on the Sand
 wash, Deep Harbor text, Steel Blue category eyebrows and links, and a Sea Glass
 rule under the heading — the same system type the signup page uses, no web
-fonts. The card is **1080px wide at most** and framed with a border; on a
+fonts. The card is **600px wide at most** and framed with a border; on a
 narrower screen or column it shrinks to fit rather than overflowing.
 
 Inside it: a *Classifieds* heading, then the listings grouped under their

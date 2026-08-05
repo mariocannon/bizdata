@@ -55,11 +55,11 @@ const STYLES = {
     'font-size:16px',
     'line-height:1.6',
     `color:${BRAND.deepHarbor}`,
-    // Asked for: capped at 1080px, and boxed. border-box so the cap is the
-    // outside edge — without it the padding and border sit outside the 1080
-    // and the block measures 1138.
+    // Capped at 600px — beehiiv's content column — and boxed. border-box so
+    // the cap is the outside edge; without it the padding and border sit
+    // outside the 600 and the block measures 658.
     'box-sizing:border-box',
-    'max-width:1080px',
+    'max-width:600px',
     'margin:0 auto',
     'padding:28px',
     `background:${BRAND.paper}`,

@@ -113,9 +113,9 @@ describe('toBeehiivHtml', () => {
 })
 
 describe('The Tide branding', () => {
-  it('boxes the block at 1080px', () => {
+  it('boxes the block at 600px', () => {
     const html = toBeehiivHtml([listing()])
-    assert.match(html, /max-width:1080px/)
+    assert.match(html, /max-width:600px/)
     assert.match(html, /margin:0 auto/)
     // Without border-box the padding sits outside the cap and it renders wider.
     assert.match(html, /box-sizing:border-box/)
