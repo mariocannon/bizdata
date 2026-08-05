@@ -2,22 +2,41 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE, gateMode, verifySessionToken } from '@/lib/auth'
 
 /**
+ * The public classified form and the endpoint it posts to. Everything else in
+ * the app stays behind the password.
+ */
+const PUBLIC_PATHS = new Set(['/submit', '/api/classifieds/submit'])
+
+/**
  * Gates the whole app behind the shared password. Server actions POST back to
  * the page they live on, so they pass through here too and are protected by the
- * same check — there is no unauthenticated write path.
+ * same check — the only unauthenticated write path is the classified form
+ * below, which is a route handler with its own validation and rate limit.
  */
 export async function middleware(request: NextRequest) {
   const mode = gateMode()
 
-  if (mode === 'disabled') return NextResponse.next()
-
+  // Fail closed first, and for the public form too: a deploy that can't gate
+  // itself shouldn't be taking writes from the internet either.
   if (mode === 'misconfigured') {
-    // Fail closed: a production deploy without AUTH_PASSWORD serves nothing.
     return new NextResponse(
       'AUTH_PASSWORD is not set. Set it in your host\'s environment variables to open the app.',
       { status: 503, headers: { 'content-type': 'text/plain; charset=utf-8' } }
     )
   }
+
+  if (PUBLIC_PATHS.has(request.nextUrl.pathname)) {
+    // A server action is dispatched by the ID in this header, not by the route
+    // it was posted to — so an open route that accepts them is a doorway to
+    // every action in the app, not just the ones on that page. Nothing public
+    // uses actions, so refuse them here rather than rely on that staying true.
+    if (request.headers.get('next-action')) {
+      return new NextResponse('Not found', { status: 404 })
+    }
+    return NextResponse.next()
+  }
+
+  if (mode === 'disabled') return NextResponse.next()
 
   const authed = await verifySessionToken(request.cookies.get(SESSION_COOKIE)?.value)
   if (authed) return NextResponse.next()

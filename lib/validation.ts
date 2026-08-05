@@ -11,10 +11,13 @@ import {
   sectionSlotSchema,
 } from '@/lib/enums'
 import {
+  CLASSIFIED_WORD_MAX,
+  CLASSIFIED_WORD_MIN,
   countWords,
   isWordCountValid,
   requiresWordCount,
   wordCountError,
+  wordCountMessage,
 } from '@/lib/classifieds'
 
 /** Turns '' into undefined so optional text fields clear cleanly. */
@@ -147,6 +150,61 @@ export const classifiedSchema = z
   })
 
 export type ClassifiedValues = z.output<typeof classifiedSchema>
+
+/**
+ * What the public form at /submit accepts. Separate from `classifiedSchema` on
+ * purpose — this one is the contract with strangers, so it is narrower:
+ *
+ *   - No status, source or issue. Submissions always land as an unassigned
+ *     draft; nothing off the internet gets to set its own state.
+ *   - The word range is enforced outright rather than only on approval. A
+ *     submitter writing to the brief is the whole point of sending them here.
+ *   - Lengths are capped so a hostile payload can't be huge.
+ */
+export const publicClassifiedSchema = z
+  .object({
+    headline: z
+      .string()
+      .trim()
+      .min(1, 'Give your listing a headline')
+      .max(80, 'Keep the headline to 80 characters or fewer'),
+    body: z
+      .string()
+      .trim()
+      .min(1, 'Write your listing')
+      .max(2000, 'That is longer than a classified can be'),
+    category: classifiedCategorySchema,
+    contactName: z
+      .string()
+      .trim()
+      .min(1, 'Tell us who to credit this to')
+      .max(120, 'That name is too long'),
+    contactEmail: optionalEmail,
+    contactPhone: optionalText.refine(
+      (v) => v === undefined || v.length <= 40,
+      'That phone number is too long'
+    ),
+  })
+  .superRefine((data, ctx) => {
+    if (!data.contactEmail && !data.contactPhone) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contactEmail'],
+        message: 'Add an email or a phone number so readers can reply',
+      })
+    }
+
+    const words = countWords(data.body)
+    if (!isWordCountValid(words)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['body'],
+        message: `Listings run to ${CLASSIFIED_WORD_MIN}–${CLASSIFIED_WORD_MAX} words. ${wordCountMessage(words)}.`,
+      })
+    }
+  })
+
+export type PublicClassifiedValues = z.output<typeof publicClassifiedSchema>
 
 export const advertiserStatusChangeSchema = z.object({
   id: z.string().min(1),

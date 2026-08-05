@@ -1,7 +1,9 @@
-import { AlertTriangle, Mail, Phone } from 'lucide-react'
+import Link from 'next/link'
+import { AlertTriangle, ExternalLink, Inbox, Mail, Phone } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import {
   CLASSIFIED_CATEGORIES,
+  CLASSIFIED_SOURCES,
   CLASSIFIED_STATUSES,
   label,
 } from '@/lib/enums'
@@ -22,6 +24,7 @@ import { ViewToggle } from '@/components/view-toggle'
 import { SortHeader } from '@/components/sort-header'
 import { StatusPill } from '@/components/status-pill'
 import { ExportCsvButton } from '@/components/export-csv-button'
+import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
@@ -43,6 +46,7 @@ const CSV_COLUMNS = [
   { header: 'Words', key: 'words' },
   { header: 'Category', key: 'category' },
   { header: 'Status', key: 'status' },
+  { header: 'Source', key: 'source' },
   { header: 'Issue', key: 'issue' },
   { header: 'Publish date', key: 'publishDate' },
   { header: 'Contact name', key: 'contactName' },
@@ -63,6 +67,7 @@ type SearchParams = {
   q?: string
   status?: string
   category?: string
+  source?: string
   issueId?: string
   sort?: string
   dir?: string
@@ -77,6 +82,7 @@ export default async function ClassifiedsPage({
   const query = searchParams.q?.trim().toLowerCase() ?? ''
   const statusFilter = searchParams.status ?? ''
   const categoryFilter = searchParams.category ?? ''
+  const sourceFilter = searchParams.source ?? ''
   const issueFilter = searchParams.issueId ?? ''
   const sort = searchParams.sort ?? 'created'
   const dir = searchParams.dir === 'desc' ? 'desc' : 'asc'
@@ -114,6 +120,7 @@ export default async function ClassifiedsPage({
       }
       if (statusFilter && row.status !== statusFilter) return false
       if (categoryFilter && row.category !== categoryFilter) return false
+      if (sourceFilter && row.source !== sourceFilter) return false
       if (issueFilter) {
         if (issueFilter === 'unassigned') {
           if (row.issueId) return false
@@ -158,6 +165,7 @@ export default async function ClassifiedsPage({
     words: row.words,
     category: label(row.category),
     status: label(row.status),
+    source: label(row.source),
     issue: row.issue?.title ?? '',
     publishDate: row.issue ? row.issue.publishDate.toISOString().slice(0, 10) : '',
     contactName: row.contactName ?? '',
@@ -168,6 +176,10 @@ export default async function ClassifiedsPage({
 
   const issueOptions = issues.map((issue) => ({ id: issue.id, title: issue.title }))
   const needsWork = rows.filter((row) => row.outOfRange).length
+  // Anything sent in through the public form and not yet looked at.
+  const awaitingReview = classifieds.filter(
+    (row) => row.source === 'PUBLIC' && row.status === 'DRAFT'
+  ).length
 
   return (
     <>
@@ -181,6 +193,14 @@ export default async function ClassifiedsPage({
             <span>
               {CLASSIFIED_WORD_MIN}–{CLASSIFIED_WORD_MAX} words, headline and contact
             </span>
+            {awaitingReview > 0 ? (
+              <Link
+                href="/classifieds?source=PUBLIC&status=DRAFT"
+                className="font-medium text-primary hover:underline"
+              >
+                {awaitingReview} submitted, awaiting review
+              </Link>
+            ) : null}
             {needsWork > 0 ? (
               <span className="inline-flex items-center gap-1 font-medium text-amber-700">
                 <AlertTriangle className="size-3.5" />
@@ -191,6 +211,12 @@ export default async function ClassifiedsPage({
         }
         actions={
           <>
+            <Button asChild variant="ghost">
+              <a href="/submit" target="_blank" rel="noopener noreferrer">
+                <ExternalLink />
+                Public form
+              </a>
+            </Button>
             <ExportCsvButton
               rows={csvRows}
               columns={CSV_COLUMNS}
@@ -216,6 +242,15 @@ export default async function ClassifiedsPage({
                 param: 'category',
                 label: 'Category',
                 options: CLASSIFIED_CATEGORIES.map((value) => ({
+                  value,
+                  label: label(value),
+                })),
+              },
+              {
+                param: 'source',
+                label: 'Source',
+                allLabel: 'Any source',
+                options: CLASSIFIED_SOURCES.map((value) => ({
                   value,
                   label: label(value),
                 })),
@@ -260,9 +295,12 @@ export default async function ClassifiedsPage({
               <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
                 <div className="min-w-0">
                   <CardTitle className="text-base">{row.headline}</CardTitle>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {label(row.category)} ·{' '}
-                    {row.issue ? row.issue.title : 'Unassigned'}
+                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span>
+                      {label(row.category)} ·{' '}
+                      {row.issue ? row.issue.title : 'Unassigned'}
+                    </span>
+                    {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -325,6 +363,7 @@ export default async function ClassifiedsPage({
                     <p className="truncate font-medium" title={row.headline}>
                       {row.headline}
                     </p>
+                    {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
                     <p className="truncate text-xs text-muted-foreground">
                       {excerpt(row.body)}
                     </p>
@@ -405,6 +444,16 @@ export default async function ClassifiedsPage({
         </Card>
       )}
     </>
+  )
+}
+
+/** Marks a listing that came in through the public form rather than being typed in. */
+function SubmittedChip() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-100 px-1.5 py-0.5 text-[11px] font-medium text-sky-800">
+      <Inbox className="size-3" />
+      Submitted
+    </span>
   )
 }
 

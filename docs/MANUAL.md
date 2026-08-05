@@ -382,6 +382,35 @@ the range appears under the page title.
 
 Search covers headlines, copy, contact names and emails.
 
+### The public form
+
+**Public form** in the top right opens **`/submit`** — your site's address with
+`/submit` on the end. That's the page to send to customers. It's the one page in
+the app that doesn't ask for the password, so the link can go in an email, a
+newsletter footer or a social post.
+
+It asks for exactly what a listing needs: headline, 50–70 words with the same
+live counter you see, category, name, and an email or phone. The word range is
+**enforced** there — a customer can't send you 200 words — and the submitter
+picks no status and no issue.
+
+What arrives:
+
+- A **Draft**, **Unassigned**, tagged **Submitted** with a blue chip in the list.
+- Nothing a customer sends appears in an issue until you approve it. Read it,
+  trim it, assign an issue, set it to Approved.
+- The count of listings waiting on you shows under the page title — **"3
+  submitted, awaiting review"** — and clicking it filters to exactly those.
+- The **Source** filter separates what you typed in from what came in.
+
+Spam is handled quietly: a hidden field bots fill in and people never see, a
+limit of five submissions from one place every ten minutes, and a check that the
+form wasn't filled in impossibly fast. You don't have to do anything about it.
+
+**Contact details are printed with the listing**, and the form says so above the
+send button. That's how a classified works — readers reply to the person, not to
+you — but it's worth knowing when someone asks.
+
 ---
 
 ## 9. The dashboard

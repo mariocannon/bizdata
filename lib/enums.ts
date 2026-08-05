@@ -56,6 +56,10 @@ export const CLASSIFIED_CATEGORIES = [
 
 export const CLASSIFIED_STATUSES = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'] as const
 
+/** Where a classified came from: typed in by the operator, or sent in through
+ * the public form at /submit. */
+export const CLASSIFIED_SOURCES = ['STAFF', 'PUBLIC'] as const
+
 export type AdType = (typeof AD_TYPES)[number]
 export type SectionSlot = (typeof SECTION_SLOTS)[number]
 export type AdvertiserCategory = (typeof ADVERTISER_CATEGORIES)[number]
@@ -65,6 +69,7 @@ export type PaidStatus = (typeof PAID_STATUSES)[number]
 export type IssueStatus = (typeof ISSUE_STATUSES)[number]
 export type ClassifiedCategory = (typeof CLASSIFIED_CATEGORIES)[number]
 export type ClassifiedStatus = (typeof CLASSIFIED_STATUSES)[number]
+export type ClassifiedSource = (typeof CLASSIFIED_SOURCES)[number]
 
 export const adTypeSchema = z.enum(AD_TYPES)
 export const sectionSlotSchema = z.enum(SECTION_SLOTS)
@@ -75,6 +80,7 @@ export const paidStatusSchema = z.enum(PAID_STATUSES)
 export const issueStatusSchema = z.enum(ISSUE_STATUSES)
 export const classifiedCategorySchema = z.enum(CLASSIFIED_CATEGORIES)
 export const classifiedStatusSchema = z.enum(CLASSIFIED_STATUSES)
+export const classifiedSourceSchema = z.enum(CLASSIFIED_SOURCES)
 
 /** Human-readable labels for every enumerated value, keyed by raw value. */
 export const LABELS: Record<string, string> = {
@@ -138,6 +144,10 @@ export const LABELS: Record<string, string> = {
   JOBS: 'Jobs',
   PROPERTY: 'Property',
   COMMUNITY: 'Community',
+
+  // Classified sources
+  STAFF: 'Added by you',
+  PUBLIC: 'Submitted',
 
   // Classified statuses
   DRAFT: 'Draft',

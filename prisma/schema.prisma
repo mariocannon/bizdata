@@ -89,6 +89,7 @@ model Classified {
   body         String // 50–70 words, enforced once approved (lib/classifieds.ts)
   category     String // ClassifiedCategory union
   status       String   @default("DRAFT") // ClassifiedStatus union
+  source       String   @default("STAFF") // ClassifiedSource union — STAFF or PUBLIC (/submit)
   contactName  String?
   contactEmail String?
   contactPhone String?

@@ -81,8 +81,8 @@ Two drivers, chosen by environment, both behind one function each:
 ## Authentication
 
 One shared password for the whole app, checked in `middleware.ts`, which covers
-every route including the server actions that pages POST back to — there is no
-unauthenticated write path.
+every route including the server actions that pages POST back to. The only
+exception is the public classified form described [below](#the-public-classified-form).
 
 | `AUTH_PASSWORD` | Environment | Behaviour |
 |---|---|---|
@@ -94,6 +94,35 @@ The session is a signed, HttpOnly, SameSite=Lax cookie valid for 30 days, signed
 with `AUTH_SECRET` (HMAC-SHA256 via Web Crypto, so it runs on the edge). Setting
 `AUTH_SECRET` separately means rotating the password doesn't invalidate every
 session, and vice versa.
+
+### The public classified form
+
+`/submit` is the page you send to customers, and `/api/classifieds/submit` is
+the endpoint it posts to. They are the two entries in `PUBLIC_PATHS` in
+`middleware.ts`; everything else still needs the password.
+
+The page reads nothing from the database and renders no app chrome, so there is
+nothing on it to leak. The endpoint's only effect is to create one row:
+
+- **The shape is fixed server-side.** `publicClassifiedSchema` accepts a
+  headline, body, category and contact details and nothing else. Status, source
+  and issue are set by the handler, so a submission always lands as an
+  unassigned `DRAFT` tagged `source=PUBLIC` no matter what the payload claims.
+  Nothing a stranger sends reaches a reader until you approve it.
+- **The word range is enforced outright**, not just on approval — writing to the
+  brief is the point of sending someone the form.
+- **A route handler, not a server action.** Server actions are dispatched by an
+  ID in the `Next-Action` header rather than by the route they were posted to,
+  so an open route that accepts them is a doorway to *every* action in the app.
+  Middleware refuses action posts on public paths outright.
+- **Rate limit** of 5 submissions per IP per 10 minutes (`lib/rate-limit.ts`),
+  plus a honeypot field, a minimum time-on-page, and a 16 KB body cap. The
+  limiter is in-memory, so on serverless each instance counts separately and the
+  real limit is looser — it stops a naive flood, and it's the seam to swap for
+  Postgres or Redis if that ever isn't enough.
+- **Fails closed with the rest of the app.** A production deploy with no
+  `AUTH_PASSWORD` serves 503 here too, rather than taking writes from the
+  internet into a database nobody can log in to review.
 
 ## Deploying to Netlify + Supabase
 
@@ -294,6 +323,11 @@ At least one of email or phone is required. Word counting lives in
 the live counter in the form and the Zod schema the server action validates
 with, so the two can never disagree.
 
+Listings arrive two ways, recorded in `Classified.source`: `STAFF` for ones you
+type in, `PUBLIC` for ones sent through the [public form](#the-public-classified-form).
+Submissions land as unassigned drafts and the Classifieds page counts how many
+are waiting to be looked at.
+
 ### Content-to-ad ratio
 
 Target 3:1 content-to-ad. Informational only: the issue detail shows ads sold
@@ -320,6 +354,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/classifieds` | Reader classifieds — headline, 50–70 words, contact. Table and copy views, filters, CSV export |
 | `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
+| `/submit` | **Public.** The form you send to customers to place a classified. No password, reads nothing, writes an unassigned draft |
 
 List filters and view toggles live in the URL, so any filtered view is a
 shareable link and the dashboard deep-links straight into one.
@@ -332,7 +367,7 @@ flattened on the server (derived totals included) so column sets stay plain data
 - **Advertisers:** Name, Category, Status, Contact name, Email, Phone, Website, Reviews checked, Last contacted, Total booked, Total paid, Notes
 - **Bookings:** Label, Advertiser, Ad type, Section, Issue, Publish date, Price, Status, Paid, CTA URL, Copy, Notes
 - **Issues:** Title, Publish date, Status, Ads sold, Revenue, Theme
-- **Classifieds:** Headline, Copy, Words, Category, Status, Issue, Publish date, Contact name, Email, Phone, Notes
+- **Classifieds:** Headline, Copy, Words, Category, Status, Source, Issue, Publish date, Contact name, Email, Phone, Notes
 
 ## Project layout
 
@@ -346,7 +381,10 @@ app/
     survey/             reader survey charts (reads the survey Supabase project)
     settings/
   login/                the password gate
-middleware.ts           enforces the gate on every route
+  submit/               the public classified form (no password)
+  api/classifieds/
+    submit/             the endpoint that form posts to
+middleware.ts           enforces the gate on every route bar the two public ones
 components/
   ui/                   shadcn/ui-style primitives
   dashboard/            KPI card, charts
@@ -357,6 +395,7 @@ lib/
   enums.ts              the enumerated values + display labels
   inventory.ts          capacity report and the confirm check
   classifieds.ts        word counting and the 50–70 word rule
+  rate-limit.ts         fixed-window limiter for the public endpoint
   validation.ts         Zod schemas shared by forms and actions
   survey-db.ts          client for the separate survey Supabase project
   survey.ts             survey option lists, roll-ups and distributions
