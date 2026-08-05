@@ -333,6 +333,27 @@ blocks — and the font stack is single-quoted for the same reason, because a
 double quote inside a `style` attribute closes it early and silently drops
 everything after it.
 
+The block follows The Tide's brand guide, with the palette named in `BRAND` in
+that file:
+
+| Role | Colour |
+|---|---|
+| Surface | Paper `#fffdf8` |
+| Text | Deep Harbor `#23313c` |
+| Secondary text | Slate `#5a6672` |
+| Category eyebrows, links | Steel Blue `#45758c` |
+| Accent rule under the title | Sea Glass `#a2c5d3` |
+| Border, dividers | Deep Navy at 25% / 14% |
+
+Type is the guide's system stack — no web fonts, which is also the only thing
+that behaves in an inbox. Eyebrows are 700, uppercase, `0.18em` tracking; the
+title is 800 at `-0.02em`, exactly as the guide specifies. The block is capped
+at **1080px** with `box-sizing:border-box`, so the cap is the outside edge
+rather than the content box, and framed with a 1px border. The Foam-into-Sand
+radial wash is on the file's `<body>` for preview only — body styles don't
+travel when the rendered page is copied, so no email client has to render a
+gradient.
+
 Listings arrive two ways, recorded in `Classified.source`: `STAFF` for ones you
 type in, `PUBLIC` for ones sent through the [public form](#the-public-classified-form).
 Submissions land as unassigned drafts and the Classifieds page counts how many

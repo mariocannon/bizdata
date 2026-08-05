@@ -23,21 +23,67 @@ export type BeehiivListing = {
   contactPhone: string | null
 }
 
+/**
+ * The Tide's palette, straight off the brand guide. Named here so the styles
+ * below read as the guide reads.
+ */
+const BRAND = {
+  foam: '#faf5ea',
+  sand: '#f0e7d6',
+  paper: '#fffdf8',
+  deepHarbor: '#23313c',
+  slate: '#5a6672',
+  driftwood: '#8a8272',
+  seaGlass: '#a2c5d3',
+  steelBlue: '#45758c',
+  /** Deep Navy at the alpha the guide uses for outlines and rules. */
+  border: 'rgba(35, 65, 90, 0.25)',
+  rule: 'rgba(35, 65, 90, 0.14)',
+}
+
+// System stack, no web fonts — the guide is explicit about it, and it happens to
+// be the only thing that works reliably in an inbox anyway.
+//
+// Single quotes inside the stack on purpose: these strings land inside a
+// double-quoted style attribute, and a double quote here would close it early
+// and silently drop every declaration after it.
+const FONT_STACK = "system-ui,-apple-system,'Segoe UI',Roboto,sans-serif"
+
 const STYLES = {
-  // Single quotes inside the font stack on purpose: these strings land inside a
-  // double-quoted style attribute, and a double quote here would close it early
-  // and silently drop every declaration after it.
-  wrapper:
-    "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5;color:#111827;",
-  sectionTitle: 'font-size:20px;font-weight:700;margin:0 0 4px;',
-  intro: 'font-size:14px;color:#6b7280;margin:0 0 20px;',
-  categoryTitle:
-    'font-size:13px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:#0f766e;margin:24px 0 10px;',
-  headline: 'font-size:16px;font-weight:700;margin:0 0 4px;',
-  body: 'margin:0 0 6px;',
-  contact: 'font-size:14px;color:#4b5563;margin:0;',
-  link: 'color:#0f766e;',
-  rule: 'border:0;border-top:1px solid #e5e7eb;margin:16px 0;',
+  wrapper: [
+    `font-family:${FONT_STACK}`,
+    'font-size:16px',
+    'line-height:1.6',
+    `color:${BRAND.deepHarbor}`,
+    // Asked for: capped at 1080px, and boxed. border-box so the cap is the
+    // outside edge — without it the padding and border sit outside the 1080
+    // and the block measures 1138.
+    'box-sizing:border-box',
+    'max-width:1080px',
+    'margin:0 auto',
+    'padding:28px',
+    `background:${BRAND.paper}`,
+    `border:1px solid ${BRAND.border}`,
+    'border-radius:10px',
+  ].join(';') + ';',
+  // Display: 800 with the guide's negative tracking.
+  sectionTitle: `font-size:24px;font-weight:800;letter-spacing:-0.02em;color:${BRAND.deepHarbor};margin:0 0 4px;`,
+  intro: `font-size:14px;color:${BRAND.slate};margin:0 0 16px;`,
+  // The Sea Glass accent, used once, under the title.
+  titleRule: `border:0;border-top:2px solid ${BRAND.seaGlass};margin:0 0 20px;`,
+  // Eyebrow: 700, uppercase, 0.18em tracking, Steel Blue.
+  categoryTitle: `font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.steelBlue};margin:24px 0 12px;`,
+  headline: `font-size:17px;font-weight:700;color:${BRAND.deepHarbor};margin:0 0 6px;`,
+  body: `margin:0 0 8px;color:${BRAND.deepHarbor};`,
+  contact: `font-size:14px;color:${BRAND.slate};margin:0;`,
+  link: `color:${BRAND.steelBlue};`,
+  rule: `border:0;border-top:1px solid ${BRAND.rule};margin:18px 0;`,
+  /**
+   * Preview only. Body styles don't travel when the rendered page is copied,
+   * so this makes the file look like The Tide on screen without putting a
+   * gradient anywhere an email client has to cope with it.
+   */
+  page: `margin:0;padding:32px 16px;background:radial-gradient(120% 90% at 50% 0%, ${BRAND.foam} 0%, ${BRAND.sand} 60%);`,
 }
 
 export function escapeHtml(value: string): string {
@@ -126,16 +172,19 @@ export function toBeehiivHtml(
 <meta charset="utf-8" />
 <title>${escapeHtml(title)}</title>
 </head>
-<body>
+<body style="${STYLES.page}">
 <!--
-  ${listings.length} classified${listings.length === 1 ? '' : 's'} for beehiiv.
+  ${listings.length} classified${listings.length === 1 ? '' : 's'} for beehiiv,
+  styled to The Tide's brand guide: system type, Paper surface, Deep Harbor
+  text, Steel Blue eyebrows and links, one Sea Glass accent rule.
 
   Two ways in, whichever suits your post:
     1. Open this file in a browser, select all, copy, and paste into the
        beehiiv editor. Headings, bold and the email links come across.
-    2. Or paste the markup below into a custom HTML block.
+    2. Or paste the <div> below into a custom HTML block.
 
-  Styles are inline so they survive either route.
+  Styles are inline so they survive either route. The page background here is
+  preview only — it isn't part of the block you copy.
 -->
 <div style="${STYLES.wrapper}">
     <p style="${STYLES.sectionTitle}">${escapeHtml(title)}</p>${
@@ -143,6 +192,7 @@ export function toBeehiivHtml(
         ? `\n    <p style="${STYLES.intro}">${escapeHtml(options.subtitle)}</p>`
         : ''
     }
+    <hr style="${STYLES.titleRule}" />
 ${body}
 </div>
 </body>

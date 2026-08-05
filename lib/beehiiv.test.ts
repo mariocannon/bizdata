@@ -93,7 +93,7 @@ describe('toBeehiivHtml', () => {
 
   it('styles inline, never in a style block', () => {
     const html = toBeehiivHtml([listing()])
-    assert.match(html, /style="font-size:16px;font-weight:700/)
+    assert.match(html, /style="font-size:17px;font-weight:700/)
     assert.doesNotMatch(html, /<style/)
   })
 
@@ -107,7 +107,43 @@ describe('toBeehiivHtml', () => {
   it('handles an empty list without producing broken markup', () => {
     const html = toBeehiivHtml([])
     assert.match(html, /Classifieds/)
-    assert.doesNotMatch(html, /<hr/)
+    // The accent rule under the title, and no listing dividers after it.
+    assert.equal(html.match(/<hr/g)?.length, 1)
+  })
+})
+
+describe('The Tide branding', () => {
+  it('boxes the block at 1080px', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /max-width:1080px/)
+    assert.match(html, /margin:0 auto/)
+    // Without border-box the padding sits outside the cap and it renders wider.
+    assert.match(html, /box-sizing:border-box/)
+  })
+
+  it('draws a border around it', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /border:1px solid rgba\(35, 65, 90, 0\.25\)/)
+  })
+
+  it('uses the brand palette, not defaults', () => {
+    const html = toBeehiivHtml([listing({ category: 'For sale' }), listing({ category: 'Wanted' })])
+    assert.match(html, /#fffdf8/) // Paper surface
+    assert.match(html, /#23313c/) // Deep Harbor text
+    assert.match(html, /#5a6672/) // Slate secondary
+    assert.match(html, /#45758c/) // Steel Blue eyebrow + links
+    assert.match(html, /#a2c5d3/) // Sea Glass accent rule
+  })
+
+  it('sets category eyebrows the way the guide does', () => {
+    const html = toBeehiivHtml([listing({ category: 'For sale' }), listing({ category: 'Wanted' })])
+    assert.match(html, /font-weight:700;letter-spacing:0\.18em;text-transform:uppercase/)
+  })
+
+  it('ships the system stack and no web fonts', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif/)
+    assert.doesNotMatch(html, /@font-face|fonts\.googleapis/)
   })
 })
 
