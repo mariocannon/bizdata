@@ -37,6 +37,7 @@ function daysAgo(days: number): Date {
 
 async function main() {
   // Idempotent: a re-seed replaces the sample rows rather than duplicating.
+  await prisma.classified.deleteMany()
   await prisma.booking.deleteMany()
   await prisma.issue.deleteMany()
   await prisma.advertiser.deleteMany()
@@ -155,17 +156,57 @@ async function main() {
     },
   })
 
+  // Classifieds: two ready to run and one still short of the 50-word minimum,
+  // so a fresh clone shows both the in-range and the flagged state.
+  await prisma.classified.create({
+    data: {
+      headline: 'Tidy 4.2m alloy runabout, Ōrewa',
+      body: 'Well-kept 4.2 metre alloy runabout with a 40hp four-stroke, serviced in March and running beautifully. Comes on a galvanised trailer with new bearings, a fish finder, safety gear for four, and a full cover. Launched off Ōrewa most weekends and never left on a mooring. Selling because the family has outgrown it. Open to a sensible offer, viewing any weekend.',
+      category: 'FOR_SALE',
+      status: 'APPROVED',
+      contactName: 'Jo Ngata',
+      contactPhone: '021 555 0142',
+      issueId: nextIssue.id,
+    },
+  })
+
+  await prisma.classified.create({
+    data: {
+      headline: 'Piano lessons in Silverdale, beginners welcome',
+      body: 'Patient, experienced teacher taking a few new students this term, from complete beginners through to grade five. Lessons run half an hour after school or during the day, in a home studio five minutes from Silverdale shops with off-street parking. Exams are optional and nobody is pushed towards them. First lesson is free so you can see whether it suits. Weekday spaces left.',
+      category: 'SERVICES',
+      status: 'APPROVED',
+      contactName: 'Marama Hughes',
+      contactEmail: 'marama@example.co.nz',
+      contactPhone: '022 555 0198',
+      issueId: followingIssue.id,
+    },
+  })
+
+  await prisma.classified.create({
+    data: {
+      headline: 'Wanted: dry garage space to rent',
+      body: 'After a single garage or similar dry space to store a classic car over winter. Happy to pay monthly, anywhere between Silverdale and Waiwera.',
+      category: 'WANTED',
+      status: 'DRAFT',
+      contactName: 'Peter Vaile',
+      contactEmail: 'peter@example.co.nz',
+      notes: 'Needs another 20 words before it can be approved.',
+    },
+  })
+
   // Settings are left alone — getSettings() creates the single row with
   // defaults on first access, so a re-seed never clobbers edited settings.
 
-  const [advertisers, issues, bookings] = await Promise.all([
+  const [advertisers, issues, bookings, classifieds] = await Promise.all([
     prisma.advertiser.count(),
     prisma.issue.count(),
     prisma.booking.count(),
+    prisma.classified.count(),
   ])
 
   console.log(
-    `Seeded ${advertisers} advertisers, ${issues} issues, ${bookings} bookings.`
+    `Seeded ${advertisers} advertisers, ${issues} issues, ${bookings} bookings, ${classifieds} classifieds.`
   )
 }
 

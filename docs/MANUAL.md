@@ -16,13 +16,14 @@ it, that's the [README](../README.md).
 5. [Issues](#5-issues)
 6. [Bookings](#6-bookings)
 7. [Inventory rules](#7-inventory-rules)
-8. [The dashboard](#8-the-dashboard)
-9. [Reader survey](#9-reader-survey)
-10. [Settings](#10-settings)
-11. [Exporting to CSV](#11-exporting-to-csv)
-12. [Recipes](#12-recipes)
-13. [Troubleshooting](#13-troubleshooting)
-14. [Limits and things to know](#14-limits-and-things-to-know)
+8. [Classifieds](#8-classifieds)
+9. [The dashboard](#9-the-dashboard)
+10. [Reader survey](#10-reader-survey)
+11. [Settings](#11-settings)
+12. [Exporting to CSV](#12-exporting-to-csv)
+13. [Recipes](#13-recipes)
+14. [Troubleshooting](#14-troubleshooting)
+15. [Limits and things to know](#15-limits-and-things-to-know)
 
 ---
 
@@ -329,7 +330,61 @@ Bulletin (3), Section Sponsors (6). That's the denominator for sell-through.
 
 ---
 
-## 8. The dashboard
+## 8. Classifieds
+
+The classifieds tab holds the short listings that run in the classifieds
+section: a **headline**, **50–70 words**, and a **contact number or email**.
+
+They are deliberately separate from bookings. A booking is an advertiser buying
+a slot; a classified is a listing someone sent in. Classifieds have no price, no
+payment status and no advertiser record, and they don't consume any of the 12
+slots in the inventory rules above.
+
+### The fields
+
+| Field | Notes |
+|---|---|
+| **Headline** | Required, up to 80 characters |
+| **Listing copy** | Required. 50–70 words, counted live as you type |
+| **Category** | For sale, Wanted, Services, Jobs, Property, Community, Other |
+| **Status** | Draft → Approved → Published, plus Archived |
+| **Issue** | Optional — leave it unassigned to keep it in the queue |
+| **Contact name** | Optional |
+| **Email / Phone** | **At least one is required.** A listing nobody can reply to is not worth printing |
+| **Notes** | Internal only, never printed |
+
+### The word count
+
+The counter under the copy box shows where you are as you type, and turns amber
+when you're outside the range. It counts words the way a reader would:
+"same-day" is one word, a phone number's parts count, and a dash on its own
+doesn't.
+
+The range is **flagged on drafts and enforced on approval**, the same shape as
+the inventory rules — a reservation warns, a confirmation blocks:
+
+- **Draft** — save anything. Copy arrives half-written and gets cut down.
+- **Approved** or **Published** — must be 50–70 words. Saving outside the range
+  is refused, and the message tells you how many words over or under you are.
+- **Archived** — for listings that have run, or that you might run again. Delete
+  removes the listing for good; archive keeps it.
+
+If a listing was approved and later edited out of range some other way, the list
+flags it: the word count turns amber with a ⚠, and the count of listings outside
+the range appears under the page title.
+
+### Two views
+
+- **Table** — the working list. Sort by headline, category, issue, word count or
+  status; filter by any of them, including **Unassigned** to see the queue.
+- **Copy** — every listing in full, in order, with its contact line. This is the
+  view to work from on build day.
+
+Search covers headlines, copy, contact names and emails.
+
+---
+
+## 9. The dashboard
 
 The home page. Everything respects the **period selector** at the top right:
 **This month · This quarter · This year · All time**.
@@ -371,7 +426,7 @@ Every card links through to the matching filtered view.
 
 ---
 
-## 9. Reader survey
+## 10. Reader survey
 
 What readers told us they want. **Reader survey** in the sidebar. This is the
 page to open before planning coverage, and the one to quote from when selling to
@@ -428,7 +483,7 @@ fault: see the Reader survey section of `README.md`.
 
 ---
 
-## 10. Settings
+## 11. Settings
 
 Three things, all optional to change.
 
@@ -456,10 +511,10 @@ Changing a default doesn't touch existing bookings.
 
 ---
 
-## 11. Exporting to CSV
+## 12. Exporting to CSV
 
-**Export CSV** on Advertisers, Bookings and Issues, plus on each issue's detail
-page for just that issue's bookings.
+**Export CSV** on Advertisers, Bookings, Issues and Classifieds, plus on each
+issue's detail page for just that issue's bookings.
 
 The export respects whatever you've filtered to. Filter to unpaid, export, and
 you get exactly that list.
@@ -469,6 +524,7 @@ you get exactly that list.
 | **Advertisers** | Name, Category, Status, Contact name, Email, Phone, Website, Reviews checked, Last contacted, Total booked, Total paid, Notes |
 | **Bookings** | Label, Advertiser, Ad type, Section, Issue, Publish date, Price, Status, Paid, CTA URL, Copy, Notes |
 | **Issues** | Title, Publish date, Status, Ads sold, Revenue, Theme |
+| **Classifieds** | Headline, Copy, Words, Category, Status, Issue, Publish date, Contact name, Email, Phone, Notes |
 
 Files open cleanly in Excel, Numbers and Google Sheets. These column sets mirror
 the underlying data deliberately, so moving to a dedicated tool later loses
@@ -476,7 +532,7 @@ nothing.
 
 ---
 
-## 12. Recipes
+## 13. Recipes
 
 ### Selling a new advertiser their first ad
 
@@ -527,7 +583,7 @@ the takeover into a different issue.
 
 ---
 
-## 13. Troubleshooting
+## 14. Troubleshooting
 
 **"This issue already has a Headline booking"**
 Working as intended — one Headline per issue. Cancel the existing one, pick a
@@ -562,7 +618,7 @@ Netlify → Deploys → your deploy → Functions.
 
 ---
 
-## 14. Limits and things to know
+## 15. Limits and things to know
 
 **One password, not accounts.** Everyone shares it, and the app can't tell who
 did what. Fine for one operator; if more people need access, that's the point to

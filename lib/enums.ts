@@ -44,6 +44,18 @@ export const BOOKING_STATUSES = ['RESERVED', 'CONFIRMED', 'RAN', 'CANCELLED'] as
 export const PAID_STATUSES = ['UNPAID', 'INVOICED', 'PAID'] as const
 export const ISSUE_STATUSES = ['PLANNING', 'DRAFTING', 'READY', 'SENT'] as const
 
+export const CLASSIFIED_CATEGORIES = [
+  'FOR_SALE',
+  'WANTED',
+  'SERVICES',
+  'JOBS',
+  'PROPERTY',
+  'COMMUNITY',
+  'OTHER',
+] as const
+
+export const CLASSIFIED_STATUSES = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'] as const
+
 export type AdType = (typeof AD_TYPES)[number]
 export type SectionSlot = (typeof SECTION_SLOTS)[number]
 export type AdvertiserCategory = (typeof ADVERTISER_CATEGORIES)[number]
@@ -51,6 +63,8 @@ export type AdvertiserStatus = (typeof ADVERTISER_STATUSES)[number]
 export type BookingStatus = (typeof BOOKING_STATUSES)[number]
 export type PaidStatus = (typeof PAID_STATUSES)[number]
 export type IssueStatus = (typeof ISSUE_STATUSES)[number]
+export type ClassifiedCategory = (typeof CLASSIFIED_CATEGORIES)[number]
+export type ClassifiedStatus = (typeof CLASSIFIED_STATUSES)[number]
 
 export const adTypeSchema = z.enum(AD_TYPES)
 export const sectionSlotSchema = z.enum(SECTION_SLOTS)
@@ -59,6 +73,8 @@ export const advertiserStatusSchema = z.enum(ADVERTISER_STATUSES)
 export const bookingStatusSchema = z.enum(BOOKING_STATUSES)
 export const paidStatusSchema = z.enum(PAID_STATUSES)
 export const issueStatusSchema = z.enum(ISSUE_STATUSES)
+export const classifiedCategorySchema = z.enum(CLASSIFIED_CATEGORIES)
+export const classifiedStatusSchema = z.enum(CLASSIFIED_STATUSES)
 
 /** Human-readable labels for every enumerated value, keyed by raw value. */
 export const LABELS: Record<string, string> = {
@@ -114,6 +130,20 @@ export const LABELS: Record<string, string> = {
   DRAFTING: 'Drafting',
   READY: 'Ready',
   SENT: 'Sent',
+
+  // Classified categories
+  FOR_SALE: 'For sale',
+  WANTED: 'Wanted',
+  SERVICES: 'Services',
+  JOBS: 'Jobs',
+  PROPERTY: 'Property',
+  COMMUNITY: 'Community',
+
+  // Classified statuses
+  DRAFT: 'Draft',
+  APPROVED: 'Approved',
+  PUBLISHED: 'Published',
+  ARCHIVED: 'Archived',
 }
 
 /** Safe label lookup — falls back to the raw value if it isn't a known enum. */

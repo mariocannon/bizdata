@@ -4,10 +4,18 @@ import {
   advertiserCategorySchema,
   advertiserStatusSchema,
   bookingStatusSchema,
+  classifiedCategorySchema,
+  classifiedStatusSchema,
   issueStatusSchema,
   paidStatusSchema,
   sectionSlotSchema,
 } from '@/lib/enums'
+import {
+  countWords,
+  isWordCountValid,
+  requiresWordCount,
+  wordCountError,
+} from '@/lib/classifieds'
 
 /** Turns '' into undefined so optional text fields clear cleanly. */
 const optionalText = z
@@ -96,6 +104,49 @@ export const bookingSchema = z
   })
 
 export type BookingValues = z.output<typeof bookingSchema>
+
+export const classifiedSchema = z
+  .object({
+    id: z.string().optional(),
+    headline: z
+      .string()
+      .trim()
+      .min(1, 'Headline is required')
+      .max(80, 'Keep the headline to 80 characters or fewer'),
+    body: z.string().trim().min(1, 'Write the listing copy'),
+    category: classifiedCategorySchema,
+    status: classifiedStatusSchema,
+    contactName: optionalText,
+    contactEmail: optionalEmail,
+    contactPhone: optionalText,
+    issueId: optionalText,
+    notes: optionalText,
+  })
+  .superRefine((data, ctx) => {
+    // "Contact or email" — either will do, but a listing nobody can reply to
+    // is not worth printing.
+    if (!data.contactEmail && !data.contactPhone) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contactEmail'],
+        message: 'Add an email or a phone number so readers can reply',
+      })
+    }
+
+    // Drafts may sit outside the word range; approving or publishing enforces it.
+    if (requiresWordCount(data.status)) {
+      const words = countWords(data.body)
+      if (!isWordCountValid(words)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['body'],
+          message: wordCountError(words, data.status),
+        })
+      }
+    }
+  })
+
+export type ClassifiedValues = z.output<typeof classifiedSchema>
 
 export const advertiserStatusChangeSchema = z.object({
   id: z.string().min(1),

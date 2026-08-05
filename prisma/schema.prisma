@@ -42,14 +42,15 @@ model Advertiser {
 }
 
 model Issue {
-  id          String    @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String // e.g. "The Tide — 14 Aug 2025"
   publishDate DateTime
-  status      String    @default("PLANNING") // IssueStatus union
+  status      String       @default("PLANNING") // IssueStatus union
   theme       String?
   bookings    Booking[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  classifieds Classified[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 }
 
 model Booking {
@@ -73,6 +74,31 @@ model Booking {
 
   @@index([issueId])
   @@index([advertiserId])
+}
+
+// A short reader-submitted listing in the classifieds section: a headline, 50–70
+// words and a way to reply. Deliberately not a Booking — a classified is not
+// sold to an advertiser in the CRM and does not consume bulletin inventory, so
+// giving it its own table keeps both models honest.
+//
+// issueId is optional: listings are collected before they are placed, and an
+// unplaced one sits in the queue until an issue is picked.
+model Classified {
+  id           String   @id @default(cuid())
+  headline     String
+  body         String // 50–70 words, enforced once approved (lib/classifieds.ts)
+  category     String // ClassifiedCategory union
+  status       String   @default("DRAFT") // ClassifiedStatus union
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  issue        Issue?   @relation(fields: [issueId], references: [id])
+  issueId      String?
+  notes        String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([issueId])
 }
 
 // Single-row settings (id is always "settings").

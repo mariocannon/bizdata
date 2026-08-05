@@ -30,7 +30,7 @@ Then:
 npm install
 cp .env.example .env       # set DATABASE_URL and DIRECT_URL
 npx prisma migrate dev     # applies the schema
-npm run seed               # sample advertisers, issues and bookings
+npm run seed               # sample advertisers, issues, bookings, classifieds
 npm run dev                # http://localhost:3000
 ```
 
@@ -45,7 +45,7 @@ off in development and creative uploads fall back to `./public/uploads`.
 | `npm run dev` | Dev server on :3000 |
 | `npm run build` / `npm start` | Production build and serve |
 | `npm run seed` | Reset the sample data (leaves Settings alone) |
-| `npm test` | Inventory rule tests (`node --test`) |
+| `npm test` | Inventory and classified rule tests (`node --test`) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run db:reset` | Drop, re-migrate and re-seed the database |
 | `npm run preflight` | Check deployment env vars are well-formed |
@@ -167,7 +167,7 @@ npm run preflight
 ```
 
 Then `prisma migrate deploy` runs, which creates the
-four tables (`Advertiser`, `Issue`, `Booking`, `Settings`) in your Supabase
+five tables (`Advertiser`, `Issue`, `Booking`, `Classified`, `Settings`) in your Supabase
 database and enables row-level security on each. If the project already holds
 other tables, these sit alongside them — Prisma only touches what's in this
 schema.
@@ -188,7 +188,7 @@ npm run seed
 ```
 
 Skip this if you're going straight to entering real advertisers. **`npm run seed`
-deletes all existing advertisers, issues and bookings** before inserting the
+deletes all existing advertisers, issues, bookings and classifieds** before inserting the
 samples — never point it at a database you care about.
 
 ## Reader survey
@@ -274,6 +274,26 @@ All of this lives in `lib/inventory.ts` and is covered by `lib/inventory.test.ts
 The issue detail and the dashboard read the same `CapacityReport`, so the numbers
 can never disagree.
 
+### Classifieds
+
+A classified is a short reader listing — **a headline, 50–70 words, and a phone
+number or email** — not a sold ad slot. It has its own table and its own tab; it
+carries no price or payment status, and it does not consume bulletin inventory.
+The `BULLETIN_CLASSIFIED` ad type above is the separate thing: a paid classified
+slot booked by an advertiser.
+
+The word range is flagged on drafts and enforced on approval, mirroring how a
+reservation warns but a confirmation blocks:
+
+- **DRAFT** — any length. Copy arrives half-written.
+- **APPROVED** / **PUBLISHED** — must be 50–70 words, refused otherwise.
+- **ARCHIVED** — has run, or might run again.
+
+At least one of email or phone is required. Word counting lives in
+`lib/classifieds.ts`, is covered by `lib/classifieds.test.ts`, and is shared by
+the live counter in the form and the Zod schema the server action validates
+with, so the two can never disagree.
+
 ### Content-to-ad ratio
 
 Target 3:1 content-to-ad. Informational only: the issue detail shows ads sold
@@ -284,6 +304,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 - **Advertiser pipeline:** `PROSPECT → PITCHED → WON → ACTIVE`, plus `PAUSED`, `LOST`
 - **Booking:** `RESERVED → CONFIRMED → RAN`, plus `CANCELLED`
 - **Payment:** `UNPAID → INVOICED → PAID`
+- **Classified:** `DRAFT → APPROVED → PUBLISHED`, plus `ARCHIVED`
 
 ## Pages
 
@@ -296,6 +317,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/bookings/new`, `/bookings/[id]` | Booking form — section field appears only for Section Sponsor, creative upload with preview, live inventory check |
 | `/issues` | Table and calendar views, CSV export |
 | `/issues/[id]` | Capacity panel, content-to-ad indicator, bookings, and a publish checklist (the build sheet for send day) |
+| `/classifieds` | Reader classifieds — headline, 50–70 words, contact. Table and copy views, filters, CSV export |
 | `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
 
@@ -310,6 +332,7 @@ flattened on the server (derived totals included) so column sets stay plain data
 - **Advertisers:** Name, Category, Status, Contact name, Email, Phone, Website, Reviews checked, Last contacted, Total booked, Total paid, Notes
 - **Bookings:** Label, Advertiser, Ad type, Section, Issue, Publish date, Price, Status, Paid, CTA URL, Copy, Notes
 - **Issues:** Title, Publish date, Status, Ads sold, Revenue, Theme
+- **Classifieds:** Headline, Copy, Words, Category, Status, Issue, Publish date, Contact name, Email, Phone, Notes
 
 ## Project layout
 
@@ -333,6 +356,7 @@ lib/
   auth.ts               password check + signed session cookie
   enums.ts              the enumerated values + display labels
   inventory.ts          capacity report and the confirm check
+  classifieds.ts        word counting and the 50–70 word rule
   validation.ts         Zod schemas shared by forms and actions
   survey-db.ts          client for the separate survey Supabase project
   survey.ts             survey option lists, roll-ups and distributions

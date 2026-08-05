@@ -33,6 +33,12 @@ const STATUS_STYLES: Record<string, string> = {
   READY: 'bg-tide-100 text-tide-800 border-tide-200',
   SENT: 'bg-emerald-100 text-emerald-800 border-emerald-200',
 
+  // Classified status
+  DRAFT: 'bg-slate-100 text-slate-700 border-slate-200',
+  APPROVED: 'bg-tide-100 text-tide-800 border-tide-200',
+  PUBLISHED: 'bg-emerald-100 text-emerald-800 border-emerald-200',
+  ARCHIVED: 'bg-slate-100 text-slate-500 border-slate-200',
+
   // Inventory states
   OPEN: 'bg-emerald-100 text-emerald-800 border-emerald-200',
   FULL: 'bg-slate-100 text-slate-700 border-slate-200',
