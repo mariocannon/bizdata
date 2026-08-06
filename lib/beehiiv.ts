@@ -1,15 +1,16 @@
 /**
- * Renders published classifieds as a block of HTML to drop into a beehiiv post.
+ * Renders published listings — classifieds or events — as a block of HTML to
+ * drop into a beehiiv post.
  *
- * beehiiv has no classifieds importer, so the file is built to suit the two
+ * beehiiv has no listings importer, so the file is built to suit the two
  * ways anything gets into a post: open it in a browser and copy the rendered
  * page (beehiiv keeps the headings, bold and links on paste), or paste the
  * markup itself into a custom HTML block. Styles are therefore inline — email
  * builders drop `<style>` blocks — and the markup stays to tags every editor
  * understands: headings, paragraphs, links, rules.
  *
- * The file holds the classifieds block and nothing else, so "select all, copy"
- * is exactly the block. The how-to lives in an HTML comment, which renders
+ * The file holds the block and nothing else, so "select all, copy" is exactly
+ * the block. The how-to lives in an HTML comment, which renders
  * nowhere and is harmless if it gets pasted along with the markup.
  */
 
@@ -18,6 +19,11 @@ export type BeehiivListing = {
   body: string
   /** Display label, e.g. "For sale". */
   category: string
+  /**
+   * A line under the headline: for an event, when and where. Classifieds leave
+   * it out.
+   */
+  meta?: string | null
   contactName: string | null
   contactEmail: string | null
   contactPhone: string | null
@@ -73,14 +79,16 @@ const STYLES = {
   titleRule: `border:0;border-top:2px solid ${BRAND.seaGlass};margin:0 0 20px;`,
   // Eyebrow: 700, uppercase, 0.18em tracking, Steel Blue.
   categoryTitle: `font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.steelBlue};margin:24px 0 12px;`,
-  headline: `font-size:17px;font-weight:700;color:${BRAND.deepHarbor};margin:0 0 6px;`,
+  headline: `font-size:17px;font-weight:700;color:${BRAND.deepHarbor};margin:0 0 4px;`,
+  // When and where, sitting between the title and the copy.
+  meta: `font-size:14px;font-weight:600;color:${BRAND.steelBlue};margin:0 0 6px;`,
   body: `margin:0 0 8px;color:${BRAND.deepHarbor};`,
   contact: `font-size:14px;color:${BRAND.slate};margin:0;`,
   link: `color:${BRAND.steelBlue};`,
   rule: `border:0;border-top:1px solid ${BRAND.rule};margin:18px 0;`,
   /**
    * The page is the block and nothing else: no margin, no padding, and
-   * width:fit-content so the document is exactly as big as the classifieds
+   * width:fit-content so the document is exactly as big as the listings
    * card. A decorative page wash only reads as dead space around it, and body
    * styles don't travel into beehiiv anyway.
    */
@@ -119,6 +127,7 @@ function contactHtml(listing: BeehiivListing): string {
 function listingHtml(listing: BeehiivListing): string {
   return [
     `<p style="${STYLES.headline}">${escapeHtml(listing.headline)}</p>`,
+    listing.meta ? `<p style="${STYLES.meta}">${escapeHtml(listing.meta)}</p>` : '',
     `<p style="${STYLES.body}">${paragraphHtml(listing.body)}</p>`,
     contactHtml(listing),
   ]
@@ -142,6 +151,12 @@ export type BeehiivOptions = {
   title?: string
   /** Line under the heading — the issue it was built for, usually. */
   subtitle?: string
+  /**
+   * Group listings under a category heading. On by default, and right for
+   * classifieds. Events pass false: they are already in date order, and
+   * chopping them into categories breaks the one thing a reader scans for.
+   */
+  groupByCategory?: boolean
 }
 
 export function toBeehiivHtml(
@@ -149,11 +164,14 @@ export function toBeehiivHtml(
   options: BeehiivOptions = {}
 ): string {
   const title = options.title ?? 'Classifieds'
-  const groups = groupByCategory(listings)
+  const grouped = options.groupByCategory ?? true
+  const groups: [string, BeehiivListing[]][] = grouped
+    ? groupByCategory(listings)
+    : [['', listings]]
 
   // With everything in one category, the category heading says nothing the
   // section heading hasn't already said.
-  const showCategories = groups.length > 1
+  const showCategories = grouped && groups.length > 1
 
   const sections = groups.map(([category, group]) => {
     const heading = showCategories
@@ -175,7 +193,7 @@ export function toBeehiivHtml(
 </head>
 <body style="${STYLES.page}">
 <!--
-  ${listings.length} classified${listings.length === 1 ? '' : 's'} for beehiiv,
+  ${listings.length} listing${listings.length === 1 ? '' : 's'} for beehiiv,
   styled to The Tide's brand guide: system type, Paper surface, Deep Harbor
   text, Steel Blue eyebrows and links, one Sea Glass accent rule.
 

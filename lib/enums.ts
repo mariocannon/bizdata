@@ -60,6 +60,21 @@ export const CLASSIFIED_STATUSES = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'
  * the public form at /submit. */
 export const CLASSIFIED_SOURCES = ['STAFF', 'PUBLIC'] as const
 
+export const EVENT_CATEGORIES = [
+  'MUSIC',
+  'MARKET',
+  'SPORT',
+  'ARTS',
+  'FOOD',
+  'FUNDRAISER',
+  'FAMILY',
+  'COMMUNITY',
+  'OTHER',
+] as const
+
+/** Same shape as classifieds: draft, approved, published, archived. */
+export const EVENT_STATUSES = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'] as const
+
 export type AdType = (typeof AD_TYPES)[number]
 export type SectionSlot = (typeof SECTION_SLOTS)[number]
 export type AdvertiserCategory = (typeof ADVERTISER_CATEGORIES)[number]
@@ -70,6 +85,8 @@ export type IssueStatus = (typeof ISSUE_STATUSES)[number]
 export type ClassifiedCategory = (typeof CLASSIFIED_CATEGORIES)[number]
 export type ClassifiedStatus = (typeof CLASSIFIED_STATUSES)[number]
 export type ClassifiedSource = (typeof CLASSIFIED_SOURCES)[number]
+export type EventCategory = (typeof EVENT_CATEGORIES)[number]
+export type EventStatus = (typeof EVENT_STATUSES)[number]
 
 export const adTypeSchema = z.enum(AD_TYPES)
 export const sectionSlotSchema = z.enum(SECTION_SLOTS)
@@ -81,6 +98,8 @@ export const issueStatusSchema = z.enum(ISSUE_STATUSES)
 export const classifiedCategorySchema = z.enum(CLASSIFIED_CATEGORIES)
 export const classifiedStatusSchema = z.enum(CLASSIFIED_STATUSES)
 export const classifiedSourceSchema = z.enum(CLASSIFIED_SOURCES)
+export const eventCategorySchema = z.enum(EVENT_CATEGORIES)
+export const eventStatusSchema = z.enum(EVENT_STATUSES)
 
 /** Human-readable labels for every enumerated value, keyed by raw value. */
 export const LABELS: Record<string, string> = {
@@ -144,6 +163,14 @@ export const LABELS: Record<string, string> = {
   JOBS: 'Jobs',
   PROPERTY: 'Property',
   COMMUNITY: 'Community',
+
+  // Event categories (FAMILY, COMMUNITY and OTHER reuse the labels above)
+  MUSIC: 'Music',
+  MARKET: 'Market',
+  SPORT: 'Sport',
+  ARTS: 'Arts',
+  FOOD: 'Food & Drink',
+  FUNDRAISER: 'Fundraiser',
 
   // Classified sources
   STAFF: 'Added by you',

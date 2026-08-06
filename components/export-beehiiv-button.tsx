@@ -7,6 +7,8 @@ import { beehiivFilename, toBeehiivHtml, type BeehiivListing } from '@/lib/beehi
 
 /**
  * Downloads the published listings as an HTML block to paste into beehiiv.
+ * Shared by Classifieds and Events — the only differences are the heading,
+ * the filename, and whether listings group by category.
  *
  * Rows arrive from the server already narrowed to Published and already
  * filtered, so what comes out is what the page is showing. `approvedCount` is
@@ -17,10 +19,22 @@ export function ExportBeehiivButton({
   listings,
   approvedCount,
   subtitle,
+  title = 'Classifieds',
+  filenameBase = 'the-tide-classifieds',
+  groupByCategory = true,
+  noun = 'listing',
+  note,
 }: {
   listings: BeehiivListing[]
   approvedCount: number
   subtitle?: string
+  title?: string
+  filenameBase?: string
+  groupByCategory?: boolean
+  /** What one row is called, for the messages. */
+  noun?: string
+  /** Appended to the success message — e.g. a warning about past events. */
+  note?: string
 }) {
   function handleExport() {
     if (listings.length === 0) {
@@ -30,18 +44,18 @@ export function ExportBeehiivButton({
           : `${approvedCount} are still Approved — mark them Published to include them.`
 
       toast.info(
-        `No published listings in view.${approvedCount > 0 ? ` ${stillApproved}` : ''}`
+        `No published ${noun}s in view.${approvedCount > 0 ? ` ${stillApproved}` : ''}`
       )
       return
     }
 
-    const html = toBeehiivHtml(listings, { title: 'Classifieds', subtitle })
+    const html = toBeehiivHtml(listings, { title, subtitle, groupByCategory })
     const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
     const url = URL.createObjectURL(blob)
 
     const link = document.createElement('a')
     link.href = url
-    link.download = beehiivFilename('the-tide-classifieds')
+    link.download = beehiivFilename(filenameBase)
     document.body.appendChild(link)
     link.click()
     document.body.removeChild(link)
@@ -49,8 +63,8 @@ export function ExportBeehiivButton({
 
     toast.success(
       `Exported ${listings.length} published ${
-        listings.length === 1 ? 'listing' : 'listings'
-      } for beehiiv.`
+        listings.length === 1 ? noun : `${noun}s`
+      } for beehiiv.${note ? ` ${note}` : ''}`
     )
   }
 

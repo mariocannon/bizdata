@@ -17,13 +17,14 @@ it, that's the [README](../README.md).
 6. [Bookings](#6-bookings)
 7. [Inventory rules](#7-inventory-rules)
 8. [Classifieds](#8-classifieds)
-9. [The dashboard](#9-the-dashboard)
-10. [Reader survey](#10-reader-survey)
-11. [Settings](#11-settings)
-12. [Exporting to CSV](#12-exporting-to-csv)
-13. [Recipes](#13-recipes)
-14. [Troubleshooting](#14-troubleshooting)
-15. [Limits and things to know](#15-limits-and-things-to-know)
+9. [Events](#9-events)
+10. [The dashboard](#10-the-dashboard)
+11. [Reader survey](#11-reader-survey)
+12. [Settings](#12-settings)
+13. [Exporting to CSV](#13-exporting-to-csv)
+14. [Recipes](#14-recipes)
+15. [Troubleshooting](#15-troubleshooting)
+16. [Limits and things to know](#16-limits-and-things-to-know)
 
 ---
 
@@ -449,7 +450,61 @@ you — but it's worth knowing when someone asks.
 
 ---
 
-## 9. The dashboard
+## 9. Events
+
+Community events — what's on, and when. **Events** in the sidebar.
+
+An event is a classified with a date on it: same copy rules, same statuses
+(Draft → Approved → Published, plus Archived), same two views. Everything in
+section 8 applies. What follows is only what's different.
+
+### When and where
+
+| Field | Notes |
+|---|---|
+| **Starts** | Required — the date. |
+| **Start time** | Optional. **Leave it blank for an all-day listing** and the event reads as a date instead of "12am". |
+| **Ends** / **End time** | Only for events that run past one day, or where the finish is worth printing. |
+| **Where** | Venue and suburb — what a reader needs to find it. |
+| **Tickets / more info** | Optional link, printed with the listing. |
+
+The dates come out as one line, in whichever shape fits:
+
+- `Sat 15 Aug 2026` — no time given
+- `Sat 15 Aug 2026, 10am` — a start time
+- `Sat 15 Aug 2026, 10am – 2pm` — same day, both times
+- `Sat 15 Aug 2026, 10am – Sun 16 Aug 2026, 4pm` — runs across days
+
+### The list is in date order
+
+The page **opens sorted by date**, soonest first — that's the order you'd read
+them in, and the order they'll run in. Click **When** to reverse it, or sort by
+event, venue, category, word count or status like any other list.
+
+Events that have been are **dimmed and marked "Been and gone"**. The **When**
+filter cuts the list to **Upcoming** or **Past** in one click, and the count of
+events still to come sits under the page title.
+
+An event with no time stays "upcoming" for the whole of its day, so a Saturday
+market doesn't vanish from the list at one minute past midnight on the morning
+it runs.
+
+### Exporting
+
+**Export CSV** carries both readable and machine-sortable dates: `Start date`
+and `Start time` as plain `yyyy-MM-dd` and `HH:mm` columns for sorting in a
+spreadsheet, plus a `When` column with the printed line.
+
+**Export for beehiiv** gives you the published events as a *What's on* block,
+**in date order**, each with its when-and-where line under the title. Unlike
+classifieds they aren't grouped by category — a diary reads by date.
+
+If an event you're exporting has already been, the message says so and points
+you at the Upcoming filter. It doesn't stop you: sometimes a recap is the point.
+
+---
+
+## 10. The dashboard
 
 The home page. Everything respects the **period selector** at the top right:
 **This month · This quarter · This year · All time**.
@@ -491,7 +546,7 @@ Every card links through to the matching filtered view.
 
 ---
 
-## 10. Reader survey
+## 11. Reader survey
 
 What readers told us they want. **Reader survey** in the sidebar. This is the
 page to open before planning coverage, and the one to quote from when selling to
@@ -548,7 +603,7 @@ fault: see the Reader survey section of `README.md`.
 
 ---
 
-## 11. Settings
+## 12. Settings
 
 Three things, all optional to change.
 
@@ -576,9 +631,9 @@ Changing a default doesn't touch existing bookings.
 
 ---
 
-## 12. Exporting to CSV
+## 13. Exporting to CSV
 
-**Export CSV** on Advertisers, Bookings, Issues and Classifieds, plus on each
+**Export CSV** on Advertisers, Bookings, Issues, Classifieds and Events, plus on each
 issue's detail page for just that issue's bookings.
 
 The export respects whatever you've filtered to. Filter to unpaid, export, and
@@ -590,6 +645,7 @@ you get exactly that list.
 | **Bookings** | Label, Advertiser, Ad type, Section, Issue, Publish date, Price, Status, Paid, CTA URL, Copy, Notes |
 | **Issues** | Title, Publish date, Status, Ads sold, Revenue, Theme |
 | **Classifieds** | Headline, Copy, Words, Category, Status, Source, Issue, Publish date, Contact name, Email, Phone, Notes |
+| **Events** | Event, Start date, Start time, End date, End time, When, Where, Copy, Words, Category, Status, Issue, Tickets URL, Contact name, Email, Phone, Notes |
 
 The Classifieds page also has **Export for beehiiv**, which is a different
 thing: an HTML block of the published listings for pasting into a post, rather
@@ -601,7 +657,7 @@ nothing.
 
 ---
 
-## 13. Recipes
+## 14. Recipes
 
 ### Selling a new advertiser their first ad
 
@@ -652,7 +708,7 @@ the takeover into a different issue.
 
 ---
 
-## 14. Troubleshooting
+## 15. Troubleshooting
 
 **"This issue already has a Headline booking"**
 Working as intended — one Headline per issue. Cancel the existing one, pick a
@@ -687,7 +743,7 @@ Netlify → Deploys → your deploy → Functions.
 
 ---
 
-## 15. Limits and things to know
+## 16. Limits and things to know
 
 **One password, not accounts.** Everyone shares it, and the app can't tell who
 did what. Fine for one operator; if more people need access, that's the point to

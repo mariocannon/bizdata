@@ -56,3 +56,26 @@ export function parseDateInput(value: string): Date {
   const [y, m, d] = value.split('-').map(Number)
   return new Date(y, (m ?? 1) - 1, d ?? 1, 12, 0, 0, 0)
 }
+
+/**
+ * Parses a yyyy-MM-dd date and an optional HH:mm time into one Date, built
+ * from the components so the stored instant matches the wall clock that was
+ * typed rather than being shifted by the server's zone.
+ *
+ * An empty time lands on midnight, which the app reads as "no time given" —
+ * see `hasTime()` in lib/events.ts.
+ */
+export function parseDateTimeInput(date: string, time?: string): Date {
+  const [y, m, d] = date.split('-').map(Number)
+  const [hh, mm] = (time && time.trim() !== '' ? time : '00:00').split(':').map(Number)
+  return new Date(y, (m ?? 1) - 1, d ?? 1, hh ?? 0, mm ?? 0, 0, 0)
+}
+
+/** HH:mm for <input type="time">, blank at midnight. */
+export function toTimeInput(value: Date | string | null | undefined): string {
+  if (!value) return ''
+  const d = typeof value === 'string' ? new Date(value) : value
+  if (!isValid(d)) return ''
+  if (d.getHours() === 0 && d.getMinutes() === 0) return ''
+  return format(d, 'HH:mm')
+}

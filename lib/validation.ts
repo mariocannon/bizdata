@@ -6,10 +6,14 @@ import {
   bookingStatusSchema,
   classifiedCategorySchema,
   classifiedStatusSchema,
+  eventCategorySchema,
+  eventStatusSchema,
   issueStatusSchema,
   paidStatusSchema,
   sectionSlotSchema,
 } from '@/lib/enums'
+import { requiresWordCount as eventRequiresWordCount } from '@/lib/events'
+import { parseDateTimeInput } from '@/lib/utils'
 import {
   CLASSIFIED_WORD_MAX,
   countWords,
@@ -204,6 +208,79 @@ export const publicClassifiedSchema = z
   })
 
 export type PublicClassifiedValues = z.output<typeof publicClassifiedSchema>
+
+/**
+ * An event listing. The copy rules match a classified — same word cap, flagged
+ * on drafts and enforced on approval — so only the dates are new.
+ *
+ * Dates arrive as a `yyyy-MM-dd` date plus an optional `HH:mm` time, kept
+ * separate so "on Saturday" with no time is expressible. The action combines
+ * them; blank time means midnight, which reads as no time given.
+ */
+export const eventSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Title is required')
+      .max(120, 'Keep the title to 120 characters or fewer'),
+    body: z.string().trim().min(1, 'Write the listing copy'),
+    startDate: z.string().trim().min(1, 'A start date is required'),
+    startTime: optionalText,
+    endDate: optionalText,
+    endTime: optionalText,
+    location: optionalText,
+    category: eventCategorySchema,
+    status: eventStatusSchema,
+    contactName: optionalText,
+    contactEmail: optionalEmail,
+    contactPhone: optionalText,
+    ticketUrl: optionalUrl,
+    issueId: optionalText,
+    notes: optionalText,
+  })
+  .superRefine((data, ctx) => {
+    // A time without a date has nothing to attach itself to.
+    if (data.endTime && !data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['endDate'],
+        message: 'Add an end date to go with that time',
+      })
+    }
+
+    if (data.endDate) {
+      const starts = parseDateTimeInput(data.startDate, data.startTime)
+      const ends = parseDateTimeInput(data.endDate, data.endTime)
+      // An end at midnight is a date with no time, so it covers that whole day.
+      const endOfEnd =
+        data.endTime && data.endTime.trim() !== ''
+          ? ends
+          : new Date(ends.getFullYear(), ends.getMonth(), ends.getDate(), 23, 59, 59)
+
+      if (endOfEnd < starts) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['endDate'],
+          message: 'The event cannot finish before it starts',
+        })
+      }
+    }
+
+    if (eventRequiresWordCount(data.status)) {
+      const words = countWords(data.body)
+      if (!isWordCountValid(words)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['body'],
+          message: wordCountError(words, data.status),
+        })
+      }
+    }
+  })
+
+export type EventValues = z.output<typeof eventSchema>
 
 export const advertiserStatusChangeSchema = z.object({
   id: z.string().min(1),

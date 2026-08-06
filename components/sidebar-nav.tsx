@@ -9,6 +9,7 @@ import {
   Newspaper,
   ClipboardList,
   ScrollText,
+  CalendarDays,
   Settings as SettingsIcon,
   Waves,
 } from 'lucide-react'
@@ -20,6 +21,7 @@ const NAV = [
   { href: '/bookings', label: 'Bookings', icon: Ticket },
   { href: '/issues', label: 'Issues', icon: Newspaper },
   { href: '/classifieds', label: 'Classifieds', icon: ScrollText },
+  { href: '/events', label: 'Events', icon: CalendarDays },
   { href: '/survey', label: 'Reader survey', icon: ClipboardList },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
 ]

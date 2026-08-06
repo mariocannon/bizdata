@@ -112,6 +112,45 @@ describe('toBeehiivHtml', () => {
   })
 })
 
+describe('event listings', () => {
+  it('puts the when-and-where line between the title and the copy', () => {
+    const html = toBeehiivHtml([
+      listing({ headline: 'Ōrewa Night Market', meta: 'Sat 15 Aug 2026, 5pm · The Esplanade' }),
+    ])
+    const title = html.indexOf('Ōrewa Night Market')
+    const meta = html.indexOf('Sat 15 Aug 2026, 5pm · The Esplanade')
+    const body = html.indexOf('Well-kept boat')
+    assert.ok(title < meta && meta < body, 'meta should sit between title and copy')
+  })
+
+  it('escapes the meta line like everything else', () => {
+    const html = toBeehiivHtml([listing({ meta: 'Sat 15 Aug · Bob & Sons <hall>' })])
+    assert.match(html, /Bob &amp; Sons &lt;hall&gt;/)
+  })
+
+  it('leaves the meta line out when there is none', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.doesNotMatch(html, /font-size:14px;font-weight:600/)
+  })
+
+  it('keeps date order instead of grouping when grouping is off', () => {
+    const html = toBeehiivHtml(
+      [
+        listing({ headline: 'First up', category: 'Music' }),
+        listing({ headline: 'Then this', category: 'Market' }),
+        listing({ headline: 'Last', category: 'Music' }),
+      ],
+      { groupByCategory: false }
+    )
+    // No category headings, and the order given is the order rendered.
+    assert.doesNotMatch(html, /text-transform:uppercase/)
+    assert.ok(
+      html.indexOf('First up') < html.indexOf('Then this') &&
+        html.indexOf('Then this') < html.indexOf('Last')
+    )
+  })
+})
+
 describe('The Tide branding', () => {
   it('boxes the block at 600px', () => {
     const html = toBeehiivHtml([listing()])

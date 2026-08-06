@@ -49,6 +49,7 @@ model Issue {
   theme       String?
   bookings    Booking[]
   classifieds Classified[]
+  events      Event[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -76,8 +77,8 @@ model Booking {
   @@index([advertiserId])
 }
 
-// A short reader-submitted listing in the classifieds section: a headline, 50–70
-// words and a way to reply. Deliberately not a Booking — a classified is not
+// A short reader-submitted listing in the classifieds section: a headline, up
+// to 70 words and a way to reply. Deliberately not a Booking — a classified is not
 // sold to an advertiser in the CRM and does not consume bulletin inventory, so
 // giving it its own table keeps both models honest.
 //
@@ -86,7 +87,7 @@ model Booking {
 model Classified {
   id           String   @id @default(cuid())
   headline     String
-  body         String // 50–70 words, enforced once approved (lib/classifieds.ts)
+  body         String // up to 70 words, enforced once approved (lib/classifieds.ts)
   category     String // ClassifiedCategory union
   status       String   @default("DRAFT") // ClassifiedStatus union
   source       String   @default("STAFF") // ClassifiedSource union — STAFF or PUBLIC (/submit)
@@ -100,6 +101,36 @@ model Classified {
   updatedAt    DateTime @updatedAt
 
   @@index([issueId])
+}
+
+// A community event listing: a classified with a date on it. Same copy rules
+// (lib/events.ts shares the 70-word cap), plus when and where.
+//
+// Midnight on startsAt/endsAt means "no time given" — the form has a date field
+// and a separate optional time field, so a market that just runs "on Saturday"
+// reads as a date rather than as 12am.
+model Event {
+  id           String    @id @default(cuid())
+  title        String
+  body         String // up to 70 words, enforced once approved
+  startsAt     DateTime
+  endsAt       DateTime?
+  location     String?
+  category     String // EventCategory union
+  status       String    @default("DRAFT") // EventStatus union
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  ticketUrl    String?
+  issue        Issue?    @relation(fields: [issueId], references: [id])
+  issueId      String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([issueId])
+  // Every list and the export are ordered by date, so it earns an index.
+  @@index([startsAt])
 }
 
 // Single-row settings (id is always "settings").

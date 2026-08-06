@@ -30,7 +30,7 @@ Then:
 npm install
 cp .env.example .env       # set DATABASE_URL and DIRECT_URL
 npx prisma migrate dev     # applies the schema
-npm run seed               # sample advertisers, issues, bookings, classifieds
+npm run seed               # sample advertisers, issues, bookings, classifieds, events
 npm run dev                # http://localhost:3000
 ```
 
@@ -45,7 +45,7 @@ off in development and creative uploads fall back to `./public/uploads`.
 | `npm run dev` | Dev server on :3000 |
 | `npm run build` / `npm start` | Production build and serve |
 | `npm run seed` | Reset the sample data (leaves Settings alone) |
-| `npm test` | Inventory and classified rule tests (`node --test`) |
+| `npm test` | Inventory, classified and event rule tests (`node --test`) |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run db:reset` | Drop, re-migrate and re-seed the database |
 | `npm run preflight` | Check deployment env vars are well-formed |
@@ -196,7 +196,7 @@ npm run preflight
 ```
 
 Then `prisma migrate deploy` runs, which creates the
-five tables (`Advertiser`, `Issue`, `Booking`, `Classified`, `Settings`) in your Supabase
+six tables (`Advertiser`, `Issue`, `Booking`, `Classified`, `Event`, `Settings`) in your Supabase
 database and enables row-level security on each. If the project already holds
 other tables, these sit alongside them — Prisma only touches what's in this
 schema.
@@ -217,7 +217,7 @@ npm run seed
 ```
 
 Skip this if you're going straight to entering real advertisers. **`npm run seed`
-deletes all existing advertisers, issues, bookings and classifieds** before inserting the
+deletes all existing advertisers, issues, bookings, classifieds and events** before inserting the
 samples — never point it at a database you care about.
 
 ## Reader survey
@@ -359,6 +359,28 @@ type in, `PUBLIC` for ones sent through the [public form](#the-public-classified
 Submissions land as unassigned drafts and the Classifieds page counts how many
 are waiting to be looked at.
 
+### Events
+
+An event listing is a classified with a date on it, and it shares the copy rules
+— same 70-word cap, flagged on drafts and enforced on approval. `Event` is its
+own table for the same reason `Classified` is: no price, no payment status, no
+claim on inventory.
+
+Dates are the point, so the page opens in date order and defaults to sorting by
+`startsAt`. The form keeps the date and the time in **separate fields** rather
+than using one `datetime-local`, so "on Saturday" with no particular time is
+expressible: a blank time lands on midnight, and `hasTime()` in `lib/events.ts`
+reads midnight as "no time given" and formats the listing as a date alone.
+
+`isUpcoming()` treats a date-only event as upcoming until the end of that day,
+so a Saturday market doesn't drop out of the list at one minute past midnight on
+the morning it runs.
+
+The beehiiv export passes `groupByCategory: false` — events are a diary, and
+chopping them into categories breaks the date order a reader scans. It warns
+when a published event in view has already been, since a finished event in next
+week's newsletter is the obvious way to get this wrong.
+
 ### Content-to-ad ratio
 
 Target 3:1 content-to-ad. Informational only: the issue detail shows ads sold
@@ -383,6 +405,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/issues` | Table and calendar views, CSV export |
 | `/issues/[id]` | Capacity panel, content-to-ad indicator, bookings, and a publish checklist (the build sheet for send day) |
 | `/classifieds` | Reader classifieds — headline, up to 70 words, contact. Table and copy views, filters, CSV export |
+| `/events` | Community events — the same shape plus when and where. Opens in date order, filterable to Upcoming, CSV and beehiiv exports |
 | `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
 | `/submit` | **Public.** The form you send to customers to place a classified. No password, reads nothing, writes an unassigned draft |
@@ -409,6 +432,8 @@ app/
     advertisers/        list, pipeline board, detail, server actions
     bookings/           list, form, new + edit routes, server actions
     issues/             list, detail (capacity + checklist), server actions
+    classifieds/        list, form + word-count rules, server actions
+    events/             list, form + dates, server actions
     survey/             reader survey charts (reads the survey Supabase project)
     settings/
   login/                the password gate
@@ -426,6 +451,7 @@ lib/
   enums.ts              the enumerated values + display labels
   inventory.ts          capacity report and the confirm check
   classifieds.ts        word counting and the 70-word cap
+  events.ts             event dates: formatting, upcoming, the no-time rule
   beehiiv.ts            renders published listings as pasteable HTML
   rate-limit.ts         fixed-window limiter for the public endpoint
   validation.ts         Zod schemas shared by forms and actions

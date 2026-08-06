@@ -37,6 +37,7 @@ function daysAgo(days: number): Date {
 
 async function main() {
   // Idempotent: a re-seed replaces the sample rows rather than duplicating.
+  await prisma.event.deleteMany()
   await prisma.classified.deleteMany()
   await prisma.booking.deleteMany()
   await prisma.issue.deleteMany()
@@ -195,18 +196,86 @@ async function main() {
     },
   })
 
+  // Events: one with a time, one all-day, one that runs across a weekend, and
+  // one already past — enough to show the date formats and the Upcoming filter.
+  const eventDay = (weeksAhead: number, hours = 0, minutes = 0) => {
+    const day = nthPublishDate(weeksAhead)
+    day.setHours(hours, minutes, 0, 0)
+    return day
+  }
+
+  await prisma.event.create({
+    data: {
+      title: 'Ōrewa Night Market',
+      body: 'Forty stalls along the Ōrewa waterfront: hot food, local makers, and live music from seven. Free entry, dogs on leads welcome, and the carpark fills fast so walk down if you can. Runs rain or shine under cover at the surf club end.',
+      startsAt: eventDay(1, 17, 0),
+      endsAt: eventDay(1, 21, 0),
+      location: 'The Esplanade, Ōrewa',
+      category: 'MARKET',
+      status: 'PUBLISHED',
+      contactName: 'Hine Walters',
+      contactEmail: 'hine@example.co.nz',
+      issueId: nextIssue.id,
+    },
+  })
+
+  await prisma.event.create({
+    data: {
+      title: 'Hibiscus Coast Half Marathon',
+      body: 'Half, ten kilometre and five kilometre courses along the coast, starting and finishing at Victor Eaves Park. Entries close the Wednesday before. Marshals still needed — get in touch if you can spare a morning.',
+      // No time: an all-day listing, which reads as a date rather than 12am.
+      startsAt: eventDay(2),
+      location: 'Victor Eaves Park, Ōrewa',
+      category: 'SPORT',
+      status: 'PUBLISHED',
+      contactEmail: 'run@example.co.nz',
+      ticketUrl: 'https://example.co.nz/half-marathon',
+      issueId: followingIssue.id,
+    },
+  })
+
+  await prisma.event.create({
+    data: {
+      title: 'Coast Art Trail',
+      body: 'Twenty-two studios open across the weekend, from Silverdale through to Waiwera. Pick up a printed map at the library or follow the signs.',
+      startsAt: eventDay(2, 10, 0),
+      endsAt: eventDay(3, 16, 0),
+      location: 'Studios across the Hibiscus Coast',
+      category: 'ARTS',
+      status: 'APPROVED',
+      contactName: 'Tama Reid',
+      contactPhone: '021 555 0177',
+    },
+  })
+
+  await prisma.event.create({
+    data: {
+      title: 'Silverdale School Gala',
+      body: 'The annual gala: rides, a sausage sizzle, the white elephant stall and the cake competition. All proceeds go to the new playground.',
+      startsAt: eventDay(-2, 10, 0),
+      endsAt: eventDay(-2, 14, 0),
+      location: 'Silverdale School',
+      category: 'FUNDRAISER',
+      status: 'PUBLISHED',
+      contactName: 'Gala committee',
+      contactEmail: 'gala@example.co.nz',
+    },
+  })
+
   // Settings are left alone — getSettings() creates the single row with
   // defaults on first access, so a re-seed never clobbers edited settings.
 
-  const [advertisers, issues, bookings, classifieds] = await Promise.all([
+  const [advertisers, issues, bookings, classifieds, events] = await Promise.all([
     prisma.advertiser.count(),
     prisma.issue.count(),
     prisma.booking.count(),
     prisma.classified.count(),
+    prisma.event.count(),
   ])
 
   console.log(
-    `Seeded ${advertisers} advertisers, ${issues} issues, ${bookings} bookings, ${classifieds} classifieds.`
+    `Seeded ${advertisers} advertisers, ${issues} issues, ${bookings} bookings, ` +
+      `${classifieds} classifieds, ${events} events.`
   )
 }
 
