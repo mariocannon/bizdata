@@ -2,16 +2,22 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { SESSION_COOKIE, gateMode, verifySessionToken } from '@/lib/auth'
 
 /**
- * The public classified form and the endpoint it posts to. Everything else in
- * the app stays behind the password.
+ * The public forms and the endpoints they post to — a classified at /submit and
+ * an event at /submit/event. Everything else in the app stays behind the
+ * password.
  */
-const PUBLIC_PATHS = new Set(['/submit', '/api/classifieds/submit'])
+const PUBLIC_PATHS = new Set([
+  '/submit',
+  '/api/classifieds/submit',
+  '/submit/event',
+  '/api/events/submit',
+])
 
 /**
  * Gates the whole app behind the shared password. Server actions POST back to
  * the page they live on, so they pass through here too and are protected by the
- * same check — the only unauthenticated write path is the classified form
- * below, which is a route handler with its own validation and rate limit.
+ * same check — the only unauthenticated write paths are the two public forms
+ * above, which are route handlers with their own validation and rate limits.
  */
 export async function middleware(request: NextRequest) {
   const mode = gateMode()

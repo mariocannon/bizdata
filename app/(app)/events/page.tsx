@@ -1,6 +1,20 @@
-import { AlertTriangle, CalendarDays, ExternalLink, Mail, MapPin, Phone } from 'lucide-react'
+import Link from 'next/link'
+import {
+  AlertTriangle,
+  CalendarDays,
+  ExternalLink,
+  Inbox,
+  Mail,
+  MapPin,
+  Phone,
+} from 'lucide-react'
 import { prisma } from '@/lib/db'
-import { EVENT_CATEGORIES, EVENT_STATUSES, label } from '@/lib/enums'
+import {
+  CLASSIFIED_SOURCES,
+  EVENT_CATEGORIES,
+  EVENT_STATUSES,
+  label,
+} from '@/lib/enums'
 import {
   countWords,
   excerpt,
@@ -22,6 +36,7 @@ import { ViewToggle } from '@/components/view-toggle'
 import { SortHeader } from '@/components/sort-header'
 import { StatusPill } from '@/components/status-pill'
 import { ExportCsvButton } from '@/components/export-csv-button'
+import { Button } from '@/components/ui/button'
 import { ExportBeehiivButton } from '@/components/export-beehiiv-button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -50,6 +65,7 @@ const CSV_COLUMNS = [
   { header: 'Words', key: 'words' },
   { header: 'Category', key: 'category' },
   { header: 'Status', key: 'status' },
+  { header: 'Source', key: 'source' },
   { header: 'Issue', key: 'issue' },
   { header: 'Tickets URL', key: 'ticketUrl' },
   { header: 'Contact name', key: 'contactName' },
@@ -69,6 +85,7 @@ type SearchParams = {
   q?: string
   status?: string
   category?: string
+  source?: string
   when?: string
   issueId?: string
   sort?: string
@@ -80,6 +97,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   const query = searchParams.q?.trim().toLowerCase() ?? ''
   const statusFilter = searchParams.status ?? ''
   const categoryFilter = searchParams.category ?? ''
+  const sourceFilter = searchParams.source ?? ''
   const whenFilter = searchParams.when ?? ''
   const issueFilter = searchParams.issueId ?? ''
   // Dates are what an events list is for, so it opens in date order.
@@ -122,6 +140,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
       }
       if (statusFilter && row.status !== statusFilter) return false
       if (categoryFilter && row.category !== categoryFilter) return false
+      if (sourceFilter && row.source !== sourceFilter) return false
       if (whenFilter === 'upcoming' && !row.upcoming) return false
       if (whenFilter === 'past' && row.upcoming) return false
       if (issueFilter) {
@@ -179,6 +198,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
     words: row.words,
     category: label(row.category),
     status: label(row.status),
+    source: label(row.source),
     issue: row.issue?.title ?? '',
     ticketUrl: row.ticketUrl ?? '',
     contactName: row.contactName ?? '',
@@ -218,6 +238,10 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   const upcomingCount = events.filter((event) =>
     isUpcoming(event.startsAt, event.endsAt, now)
   ).length
+  // Anything sent in through the public form and not yet looked at.
+  const awaitingReview = events.filter(
+    (row) => row.source === 'PUBLIC' && row.status === 'DRAFT'
+  ).length
 
   return (
     <>
@@ -229,6 +253,14 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
               {rows.length} of {events.length} events
             </span>
             <span className="tabular">{upcomingCount} still to come</span>
+            {awaitingReview > 0 ? (
+              <Link
+                href="/events?source=PUBLIC&status=DRAFT"
+                className="font-medium text-primary hover:underline"
+              >
+                {awaitingReview} submitted, awaiting review
+              </Link>
+            ) : null}
             <span>Up to {EVENT_WORD_MAX} words, when, where and a contact</span>
             {needsWork > 0 ? (
               <span className="inline-flex items-center gap-1 font-medium text-amber-700">
@@ -240,6 +272,12 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
         }
         actions={
           <>
+            <Button asChild variant="ghost">
+              <a href="/submit/event" target="_blank" rel="noopener noreferrer">
+                <ExternalLink />
+                Public form
+              </a>
+            </Button>
             <ExportBeehiivButton
               listings={publishedListings}
               approvedCount={approvedInView}
@@ -295,6 +333,15 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                 })),
               },
               {
+                param: 'source',
+                label: 'Source',
+                allLabel: 'Any source',
+                options: CLASSIFIED_SOURCES.map((value) => ({
+                  value,
+                  label: label(value),
+                })),
+              },
+              {
                 param: 'issueId',
                 label: 'Issue',
                 allLabel: 'All issues',
@@ -336,8 +383,12 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                     <CalendarDays className="size-3.5 shrink-0" />
                     {eventMeta(row.startsAt, row.endsAt, row.location)}
                   </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {label(row.category)} · {row.issue ? row.issue.title : 'Unassigned'}
+                  <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                    <span>
+                      {label(row.category)} ·{' '}
+                      {row.issue ? row.issue.title : 'Unassigned'}
+                    </span>
+                    {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
@@ -424,6 +475,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                     <p className="truncate font-medium" title={row.title}>
                       {row.title}
                     </p>
+                    {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
                     <p className="truncate text-xs text-muted-foreground">
                       {excerpt(row.body)}
                     </p>
@@ -510,6 +562,16 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
         </Card>
       )}
     </>
+  )
+}
+
+/** Marks a listing that came in through the public form rather than being typed in. */
+function SubmittedChip() {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-100 px-1.5 py-0.5 text-[11px] font-medium text-sky-800">
+      <Inbox className="size-3" />
+      Submitted
+    </span>
   )
 }
 

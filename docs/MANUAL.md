@@ -489,6 +489,20 @@ An event with no time stays "upcoming" for the whole of its day, so a Saturday
 market doesn't vanish from the list at one minute past midnight on the morning
 it runs.
 
+### The public form
+
+**Public form** in the top right opens **`/submit/event`** — the events version
+of the classifieds form, and the page to send to anyone running something.
+
+It asks for the event name, the date and an optional time, where it is, up to 70
+words, a category, an optional tickets link, and a name plus an email or phone.
+Two things it checks that the classifieds form doesn't: the date has to be
+**still ahead of us**, and an end date can't come before the start.
+
+Submissions arrive exactly like classifieds do — **Draft**, **Unassigned**,
+tagged **Submitted** — with the count waiting on you under the page title and a
+**Source** filter to separate them from what you typed in.
+
 ### Exporting
 
 **Export CSV** carries both readable and machine-sortable dates: `Start date`

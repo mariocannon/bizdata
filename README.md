@@ -82,7 +82,7 @@ Two drivers, chosen by environment, both behind one function each:
 
 One shared password for the whole app, checked in `middleware.ts`, which covers
 every route including the server actions that pages POST back to. The only
-exception is the public classified form described [below](#the-public-classified-form).
+exceptions are the two public forms described [below](#the-public-forms).
 
 | `AUTH_PASSWORD` | Environment | Behaviour |
 |---|---|---|
@@ -95,28 +95,37 @@ with `AUTH_SECRET` (HMAC-SHA256 via Web Crypto, so it runs on the edge). Setting
 `AUTH_SECRET` separately means rotating the password doesn't invalidate every
 session, and vice versa.
 
-### The public classified form
+### The public forms
 
-`/submit` is the page you send to customers, and `/api/classifieds/submit` is
-the endpoint it posts to. They are the two entries in `PUBLIC_PATHS` in
-`middleware.ts`; everything else still needs the password.
+Two pages you can send to people, and the endpoints they post to:
+
+| Page | Endpoint | Writes |
+|---|---|---|
+| `/submit` | `/api/classifieds/submit` | a `Classified` |
+| `/submit/event` | `/api/events/submit` | an `Event` |
+
+Those four paths are `PUBLIC_PATHS` in `middleware.ts`; everything else still
+needs the password.
 
 The page reads nothing from the database and renders no app chrome, so there is
 nothing on it to leak. The endpoint's only effect is to create one row:
 
-- **The shape is fixed server-side.** `publicClassifiedSchema` accepts a
-  headline, body, category and contact details and nothing else. Status, source
+- **The shape is fixed server-side.** `publicClassifiedSchema` and
+  `publicEventSchema` accept the listing fields and nothing else. Status, source
   and issue are set by the handler, so a submission always lands as an
   unassigned `DRAFT` tagged `source=PUBLIC` no matter what the payload claims.
   Nothing a stranger sends reaches a reader until you approve it.
+- **Events must be in the future**, and can't finish before they start —
+  collecting a listing for a date that has already been is pure noise.
 - **The word cap is enforced outright**, not just on approval — writing to the
   brief is the point of sending someone the form.
 - **A route handler, not a server action.** Server actions are dispatched by an
   ID in the `Next-Action` header rather than by the route they were posted to,
   so an open route that accepts them is a doorway to *every* action in the app.
   Middleware refuses action posts on public paths outright.
-- **Rate limit** of 5 submissions per IP per 10 minutes (`lib/rate-limit.ts`),
-  plus a honeypot field, a minimum time-on-page, and a 16 KB body cap. The
+- **Rate limit** of 5 submissions per IP per 10 minutes, counted separately per
+  form (`lib/rate-limit.ts`), plus a honeypot field, a minimum time-on-page, and
+  a 16 KB body cap. The
   limiter is in-memory, so on serverless each instance counts separately and the
   real limit is looser — it stops a naive flood, and it's the seam to swap for
   Postgres or Redis if that ever isn't enough.
@@ -409,6 +418,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
 | `/submit` | **Public.** The form you send to customers to place a classified. No password, reads nothing, writes an unassigned draft |
+| `/submit/event` | **Public.** The same, for an event — plus when and where |
 
 List filters and view toggles live in the URL, so any filtered view is a
 shareable link and the dashboard deep-links straight into one.
@@ -438,8 +448,11 @@ app/
     settings/
   login/                the password gate
   submit/               the public classified form (no password)
+    event/              the public event form
   api/classifieds/
-    submit/             the endpoint that form posts to
+    submit/             the endpoint the classified form posts to
+  api/events/
+    submit/             the endpoint the event form posts to
 middleware.ts           enforces the gate on every route bar the two public ones
 components/
   ui/                   shadcn/ui-style primitives

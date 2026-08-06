@@ -118,6 +118,7 @@ model Event {
   location     String?
   category     String // EventCategory union
   status       String    @default("DRAFT") // EventStatus union
+  source       String    @default("STAFF") // ClassifiedSource union — STAFF or PUBLIC (/submit/event)
   contactName  String?
   contactEmail String?
   contactPhone String?

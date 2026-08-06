@@ -12,7 +12,7 @@ import {
   paidStatusSchema,
   sectionSlotSchema,
 } from '@/lib/enums'
-import { requiresWordCount as eventRequiresWordCount } from '@/lib/events'
+import { isUpcoming, requiresWordCount as eventRequiresWordCount } from '@/lib/events'
 import { parseDateTimeInput } from '@/lib/utils'
 import {
   CLASSIFIED_WORD_MAX,
@@ -281,6 +281,105 @@ export const eventSchema = z
   })
 
 export type EventValues = z.output<typeof eventSchema>
+
+/**
+ * What the public form at /submit/event accepts — the same contract-with-
+ * strangers shape as `publicClassifiedSchema`:
+ *
+ *   - No status, source or issue. Submissions always land as an unassigned
+ *     draft; nothing off the internet gets to set its own state.
+ *   - The word cap is enforced outright rather than only on approval.
+ *   - Where and when are required, because an event listing without them is
+ *     not a listing, and the date has to still be ahead of us.
+ */
+export const publicEventSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Give your event a name')
+      .max(120, 'Keep the name to 120 characters or fewer'),
+    body: z
+      .string()
+      .trim()
+      .min(1, 'Tell us about your event')
+      .max(2000, 'That is longer than a listing can be'),
+    startDate: z.string().trim().min(1, 'When is it on?'),
+    startTime: optionalText,
+    endDate: optionalText,
+    endTime: optionalText,
+    location: z
+      .string()
+      .trim()
+      .min(1, 'Where is it on?')
+      .max(160, 'That is too long for a venue'),
+    category: eventCategorySchema,
+    contactName: z
+      .string()
+      .trim()
+      .min(1, 'Tell us who to credit this to')
+      .max(120, 'That name is too long'),
+    contactEmail: optionalEmail,
+    contactPhone: optionalText.refine(
+      (v) => v === undefined || v.length <= 40,
+      'That phone number is too long'
+    ),
+    ticketUrl: optionalUrl,
+  })
+  .superRefine((data, ctx) => {
+    if (!data.contactEmail && !data.contactPhone) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contactEmail'],
+        message: 'Add an email or a phone number so readers can reply',
+      })
+    }
+
+    const words = countWords(data.body)
+    if (!isWordCountValid(words)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['body'],
+        message: `Listings run to ${CLASSIFIED_WORD_MAX} words at most. ${wordCountMessage(words)}.`,
+      })
+    }
+
+    const starts = parseDateTimeInput(data.startDate, data.startTime)
+    const ends = data.endDate ? parseDateTimeInput(data.endDate, data.endTime) : null
+
+    if (data.endTime && !data.endDate) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['endDate'],
+        message: 'Add an end date to go with that time',
+      })
+    }
+
+    if (ends) {
+      const endOfEnd =
+        data.endTime && data.endTime.trim() !== ''
+          ? ends
+          : new Date(ends.getFullYear(), ends.getMonth(), ends.getDate(), 23, 59, 59)
+      if (endOfEnd < starts) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['endDate'],
+          message: 'The event cannot finish before it starts',
+        })
+      }
+    }
+
+    // No point collecting something that has already happened.
+    if (!isUpcoming(starts, ends)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['startDate'],
+        message: 'That date has already been — check the year, or send us the next one',
+      })
+    }
+  })
+
+export type PublicEventValues = z.output<typeof publicEventSchema>
 
 export const advertiserStatusChangeSchema = z.object({
   id: z.string().min(1),

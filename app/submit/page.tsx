@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { Waves } from 'lucide-react'
 import { CLASSIFIED_WORD_MAX } from '@/lib/classifieds'
 import { SubmissionForm } from './submission-form'
@@ -35,6 +36,10 @@ export default function SubmitClassifiedPage() {
       <SubmissionForm />
 
       <p className="mt-6 text-center text-xs text-muted-foreground">
+        <Link href="/submit/event" className="text-primary hover:underline">
+          Running an event? List it here instead.
+        </Link>
+        <br />
         Your contact details are printed with your listing so readers can respond —
         please only send details you&rsquo;re happy to have published.
       </p>
