@@ -140,6 +140,13 @@ describe('The Tide branding', () => {
     assert.match(html, /font-weight:700;letter-spacing:0\.18em;text-transform:uppercase/)
   })
 
+  it('sizes the page to the block, with no dead space around it', () => {
+    const html = toBeehiivHtml([listing()])
+    assert.match(html, /<body style="margin:0;padding:0;width:fit-content;"/)
+    // No decorative page wash — it only reads as blank space around the card.
+    assert.doesNotMatch(html, /radial-gradient/)
+  })
+
   it('ships the system stack and no web fonts', () => {
     const html = toBeehiivHtml([listing()])
     assert.match(html, /font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif/)

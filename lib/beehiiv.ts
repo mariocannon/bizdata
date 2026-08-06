@@ -79,11 +79,12 @@ const STYLES = {
   link: `color:${BRAND.steelBlue};`,
   rule: `border:0;border-top:1px solid ${BRAND.rule};margin:18px 0;`,
   /**
-   * Preview only. Body styles don't travel when the rendered page is copied,
-   * so this makes the file look like The Tide on screen without putting a
-   * gradient anywhere an email client has to cope with it.
+   * The page is the block and nothing else: no margin, no padding, and
+   * width:fit-content so the document is exactly as big as the classifieds
+   * card. A decorative page wash only reads as dead space around it, and body
+   * styles don't travel into beehiiv anyway.
    */
-  page: `margin:0;padding:32px 16px;background:radial-gradient(120% 90% at 50% 0%, ${BRAND.foam} 0%, ${BRAND.sand} 60%);`,
+  page: 'margin:0;padding:0;width:fit-content;',
 }
 
 export function escapeHtml(value: string): string {
@@ -183,8 +184,7 @@ export function toBeehiivHtml(
        beehiiv editor. Headings, bold and the email links come across.
     2. Or paste the <div> below into a custom HTML block.
 
-  Styles are inline so they survive either route. The page background here is
-  preview only — it isn't part of the block you copy.
+  Styles are inline so they survive either route.
 -->
 <div style="${STYLES.wrapper}">
     <p style="${STYLES.sectionTitle}">${escapeHtml(title)}</p>${

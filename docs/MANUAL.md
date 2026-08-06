@@ -396,11 +396,12 @@ Two ways to use the file, whichever suits how you build:
 2. **Or open it in a text editor** and paste the markup into a custom HTML
    block.
 
-What comes out is styled to The Tide's brand guide: a Paper card on the Sand
-wash, Deep Harbor text, Steel Blue category eyebrows and links, and a Sea Glass
-rule under the heading — the same system type the signup page uses, no web
-fonts. The card is **600px wide at most** and framed with a border; on a
-narrower screen or column it shrinks to fit rather than overflowing.
+What comes out is styled to The Tide's brand guide: a Paper card, Deep Harbor
+text, Steel Blue category eyebrows and links, and a Sea Glass rule under the
+heading — the same system type the signup page uses, no web fonts. The card is
+**600px wide at most** and framed with a border; on a narrower screen or column
+it shrinks to fit rather than overflowing. Open the file and the page is just
+the card — no empty space around it.
 
 Inside it: a *Classifieds* heading, then the listings grouped under their
 category (For sale, Wanted, Services…), each one a bold headline, the copy, and

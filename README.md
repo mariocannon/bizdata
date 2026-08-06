@@ -350,10 +350,9 @@ that behaves in an inbox. Eyebrows are 700, uppercase, `0.18em` tracking; the
 title is 800 at `-0.02em`, exactly as the guide specifies. The block is capped
 at **600px** — beehiiv's content column — with `box-sizing:border-box`, so the
 cap is the outside edge rather than the content box, and framed with a 1px
-border. The Foam-into-Sand
-radial wash is on the file's `<body>` for preview only — body styles don't
-travel when the rendered page is copied, so no email client has to render a
-gradient.
+border. The file's `<body>` carries nothing but `width:fit-content`, so the
+document is exactly as big as the card — no page wash, no padding, nothing that
+reads as dead space around it.
 
 Listings arrive two ways, recorded in `Classified.source`: `STAFF` for ones you
 type in, `PUBLIC` for ones sent through the [public form](#the-public-classified-form).
