@@ -589,8 +589,10 @@ header.
 - **Responses per day** — is the survey still collecting, or has it gone quiet?
 - **Suburb** and **Home ownership** — where your readers are, and whether they
   own or rent
-- **Age, education, gender, relationship status, children, pets, occupations** —
-  the reader profile an advertiser asks for
+- **Age, education, gender, relationship status, children, pets, hobbies,
+  occupations** — the reader profile an advertiser asks for. Hobbies is the most
+  directly sellable of these: it's what you point a golf club, a garden centre
+  or a boat dealer at.
 - **Household income, home value, investable assets** — the numbers a
   real-estate or financial-services advertiser wants
 
@@ -603,7 +605,9 @@ Four things will trip you up if you don't know them:
    line under each title is the real denominator. Two charts on this page can
    have different bases.
 2. **Topics, pets and children's ages let people pick more than one**, so those
-   percentages add up to more than 100%. That's not a bug.
+   percentages add up to more than 100%. That's not a bug. Hobbies is one choice
+   each — anyone who picked "Other" typed their own answer, and those are listed
+   as chips under the chart.
 3. **Grey bars are "prefer not to say."** They're left in on purpose — hiding
    them would quietly inflate every other percentage.
 4. **Small samples move fast.** Under 30 responses the page puts a note at the
@@ -611,6 +615,11 @@ Four things will trip you up if you don't know them:
 
 A chart that says "Nobody has answered this yet" means the question is optional
 and everyone so far has skipped it — not that anything is broken.
+
+A card showing **"asked since 5 Aug"** means that question was added to the
+survey partway through. Every response collected before that date counts as a
+skip, so ignore the big skipped number on those cards — it says nothing about
+whether people are willing to answer.
 
 If the page says the survey database isn't connected, that's a setup step, not a
 fault: see the Reader survey section of `README.md`.

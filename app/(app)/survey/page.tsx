@@ -8,6 +8,7 @@ import {
   CHILDREN_AT_HOME,
   EDUCATION,
   GENDERS,
+  HOBBIES,
   HOME_OWNERSHIP,
   HOME_VALUES,
   HOUSEHOLD_INCOMES,
@@ -16,9 +17,10 @@ import {
   RELATIONSHIP_STATUSES,
   TOPICS,
   distribution,
+  firstAnsweredAt,
+  freeTextCounts,
   loadSurveyResponses,
   multiDistribution,
-  occupations,
   responsesByDay,
   type Distribution,
 } from '@/lib/survey'
@@ -49,6 +51,12 @@ const stampFormatter = new Intl.DateTimeFormat('en-NZ', {
   minute: '2-digit',
 })
 
+const dateFormatter = new Intl.DateTimeFormat('en-NZ', {
+  timeZone: TIME_ZONE,
+  day: 'numeric',
+  month: 'short',
+})
+
 /** Below this, one extra response swings a share by several points. */
 const SMALL_SAMPLE = 30
 
@@ -63,12 +71,15 @@ function ChartCard({
   data,
   className,
   labelWidth,
+  footer,
 }: {
   title: string
   note?: string
   data: Distribution
   className?: string
   labelWidth?: number
+  /** For a question with a write-in, so "Other" isn't a dead end. */
+  footer?: React.ReactNode
 }) {
   return (
     <Card className={className}>
@@ -89,6 +100,7 @@ function ChartCard({
         ) : (
           <DistributionChart data={data.points} labelWidth={labelWidth} />
         )}
+        {footer}
       </CardContent>
     </Card>
   )
@@ -243,8 +255,14 @@ export default async function SurveyPage() {
     includeEmpty: true,
   })
 
+  const hobbies = distribution(rows, (row) => row.hobby, HOBBIES)
+  const hobbyWriteIns = freeTextCounts(rows, (row) => row.hobbyOther)
+  // The hobby question was added after the survey went live, so most of the
+  // "skipped" count is responses that predate it rather than people declining.
+  const hobbyFrom = firstAnsweredAt(rows, (row) => row.hobby)
+
   const byDay = responsesByDay(rows)
-  const jobs = occupations(rows)
+  const jobs = freeTextCounts(rows, (row) => row.occupation)
 
   // --- Headline numbers ---------------------------------------------------
   const topTopic = topics.points.filter((point) => point.count > 0)[0]
@@ -362,7 +380,37 @@ export default async function SurveyPage() {
         />
         <ChartCard title="Pets" note="several per household" data={pets} />
 
-        <Card>
+        <ChartCard
+          title="Hobbies"
+          note={hobbyFrom ? `asked since ${dateFormatter.format(hobbyFrom)}` : undefined}
+          data={hobbies}
+          footer={
+            hobbyWriteIns.length > 0 ? (
+              <div className="mt-4 border-t border-border pt-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  Written in under &ldquo;Other&rdquo;
+                </p>
+                <ul className="mt-2 flex flex-wrap gap-1.5">
+                  {hobbyWriteIns.map((entry) => (
+                    <li
+                      key={entry.label.toLowerCase()}
+                      className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs"
+                    >
+                      {entry.label}
+                      {entry.count > 1 ? (
+                        <span className="tabular ml-1 text-muted-foreground">
+                          ×{entry.count}
+                        </span>
+                      ) : null}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null
+          }
+        />
+
+        <Card className="lg:col-span-2">
           <CardHeader className="pb-3">
             <CardTitle>Occupations</CardTitle>
             <p className="text-xs text-muted-foreground">

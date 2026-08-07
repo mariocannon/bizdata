@@ -82,6 +82,16 @@ export const CHILDREN_AGES = [
   'Prefer not to say',
 ] as const
 
+/**
+ * Single-choice, unlike topics and pets — readers pick the one hobby, and
+ * `hobby_other` carries the write-in when they pick "Other".
+ */
+export const HOBBIES = [
+  'Gardening', 'Exercising (gym, running, yoga)', 'Golf', 'Fishing or boating',
+  'Walking or hiking', 'Cooking or baking', 'Reading', 'Travel',
+  'DIY and home projects', 'Photography, art or craft', 'Other',
+] as const
+
 export const PETS = [
   'I do not have pets', 'Yes, a dog or dogs', 'Yes, a cat or cats', 'Yes, fish',
   'Yes, a bird or birds', 'Yes, a reptile or reptiles',
@@ -161,6 +171,10 @@ const SHORT_LABELS: Record<string, string> = {
 
   '18+ living at home': '18+ at home',
 
+  'Exercising (gym, running, yoga)': 'Exercising',
+  'Photography, art or craft': 'Photo / art / craft',
+  'DIY and home projects': 'DIY and home',
+
   'I do not have pets': 'No pets',
   'Yes, a dog or dogs': 'Dogs',
   'Yes, a cat or cats': 'Cats',
@@ -197,6 +211,9 @@ export type SurveyResponse = {
   childrenAtHome: string | null
   childrenAges: string[]
   pets: string[]
+  hobby: string | null
+  /** Free text, and only ever set when `hobby` is "Other". */
+  hobbyOther: string | null
   hasEmail: boolean
 }
 
@@ -216,11 +233,13 @@ type Row = {
   children_at_home: string | null
   children_ages: string[] | null
   pets: string[] | null
+  hobby: string | null
+  hobby_other: string | null
   email: string | null
 }
 
 const COLUMNS =
-  'created_at, area, topics, occupation, education, age_range, gender, relationship_status, home_ownership, home_value, household_income, investments, children_at_home, children_ages, pets, email'
+  'created_at, area, topics, occupation, education, age_range, gender, relationship_status, home_ownership, home_value, household_income, investments, children_at_home, children_ages, pets, hobby, hobby_other, email'
 
 // ── Distributions ────────────────────────────────────────────────────────────
 
@@ -401,14 +420,21 @@ export function responsesByDay(rows: SurveyResponse[]): DayPoint[] {
   return points
 }
 
-/** Free-text occupations, grouped case-insensitively, most common first. */
-export function occupations(
-  rows: SurveyResponse[]
-): { label: string; count: number }[] {
-  const groups = new Map<string, { label: string; count: number }>()
+export type TextCount = { label: string; count: number }
+
+/**
+ * Free text grouped case-insensitively, most common first — people type
+ * "Retired" and "retired" and mean the same thing. The first spelling seen
+ * wins the label.
+ */
+export function freeTextCounts(
+  rows: SurveyResponse[],
+  pick: (row: SurveyResponse) => string | null
+): TextCount[] {
+  const groups = new Map<string, TextCount>()
 
   for (const row of rows) {
-    const raw = row.occupation?.trim()
+    const raw = pick(row)?.trim()
     if (!raw) continue
     const key = raw.toLowerCase()
     const existing = groups.get(key)
@@ -419,6 +445,29 @@ export function occupations(
   return [...groups.values()].sort(
     (a, b) => b.count - a.count || a.label.localeCompare(b.label)
   )
+}
+
+/**
+ * When a question first got an answer. A question added after launch shows a
+ * big "skipped" count that has nothing to do with willingness to answer — every
+ * response older than the question counts as a skip — so the card says when it
+ * started being asked instead of leaving that to be misread.
+ */
+export function firstAnsweredAt(
+  rows: SurveyResponse[],
+  pick: (row: SurveyResponse) => unknown
+): Date | null {
+  let earliest: number | null = null
+
+  for (const row of rows) {
+    const value = pick(row)
+    if (value === null || value === undefined || value === '') continue
+    const at = new Date(row.createdAt).getTime()
+    if (!Number.isFinite(at)) continue
+    if (earliest === null || at < earliest) earliest = at
+  }
+
+  return earliest === null ? null : new Date(earliest)
 }
 
 // ── Fetch ────────────────────────────────────────────────────────────────────
@@ -465,6 +514,8 @@ export async function loadSurveyResponses(): Promise<SurveyLoad> {
         childrenAtHome: row.children_at_home,
         childrenAges: row.children_ages ?? [],
         pets: row.pets ?? [],
+        hobby: row.hobby,
+        hobbyOther: row.hobby_other,
         hasEmail: Boolean(row.email),
       })
     )
