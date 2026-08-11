@@ -127,7 +127,7 @@ export function PipelineBoard({ advertisers }: { advertisers: PipelineCard[] }) 
                             {formatMoney(card.booked)}
                           </span>
                           {card.outstanding > 0 ? (
-                            <span className="tabular text-xs text-amber-700">
+                            <span className="tabular text-xs text-attention">
                               {formatMoney(card.outstanding)} due
                             </span>
                           ) : null}

@@ -58,6 +58,12 @@ see [Deploying](#deploying-to-netlify--supabase).
 troubleshooting, written for the person running ad sales rather than for a
 developer.
 
+**Anything visual follows [docs/BRANDING.md](docs/BRANDING.md)** — The Tide's
+palette, typography, logo, wave motif and voice. It is binding for the app, the
+public submission forms and anything else a reader or advertiser sees. Colours
+live as tokens in `app/globals.css` and `tailwind.config.js`; don't hardcode a
+hex, and don't add a web font.
+
 ## Tech
 
 - **Next.js 14 (App Router) + TypeScript**, Server Actions for all writes

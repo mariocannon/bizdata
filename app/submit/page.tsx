@@ -1,6 +1,6 @@
 import Link from 'next/link'
-import { Waves } from 'lucide-react'
 import { CLASSIFIED_WORD_MAX } from '@/lib/classifieds'
+import { BrandShell } from '@/components/brand/brand-shell'
 import { SubmissionForm } from './submission-form'
 
 export const metadata = {
@@ -17,32 +17,29 @@ export const metadata = {
  */
 export default function SubmitClassifiedPage() {
   return (
-    <div className="page-shell mx-auto flex min-h-screen max-w-2xl flex-col justify-center py-10">
-      <header className="mb-6 flex flex-col items-center gap-2 text-center">
-        <span className="flex size-11 items-center justify-center rounded-lg bg-tide-700 text-white">
-          <Waves className="size-5" />
-        </span>
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Place a classified in The Tide
-        </h1>
-        <p className="max-w-prose text-sm text-muted-foreground">
-          Classifieds run in our weekly email to the Hibiscus Coast. Send yours
-          below — a headline, up to {CLASSIFIED_WORD_MAX} words, and a phone number
-          or email so readers can reach you. We&rsquo;ll be in touch
-          to confirm which issue it runs in.
-        </p>
-      </header>
-
+    <BrandShell
+      width="wide"
+      title="Place a classified in The Tide"
+      intro={
+        <>
+          Classifieds go out to Coasties in our weekly email. Send yours below — a
+          headline, up to {CLASSIFIED_WORD_MAX} words, and a phone number or email
+          so readers can reach you. We&rsquo;ll be in touch to confirm which issue
+          it runs in.
+        </>
+      }
+      footer={
+        <>
+          <Link href="/submit/event" className="font-medium text-steel hover:underline">
+            Running an event? List it here instead.
+          </Link>
+          <br />
+          Your contact details are printed with your listing so readers can respond —
+          please only send details you&rsquo;re happy to have published.
+        </>
+      }
+    >
       <SubmissionForm />
-
-      <p className="mt-6 text-center text-xs text-muted-foreground">
-        <Link href="/submit/event" className="text-primary hover:underline">
-          Running an event? List it here instead.
-        </Link>
-        <br />
-        Your contact details are printed with your listing so readers can respond —
-        please only send details you&rsquo;re happy to have published.
-      </p>
-    </div>
+    </BrandShell>
   )
 }

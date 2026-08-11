@@ -233,7 +233,7 @@ export default async function DashboardPage({
                     <div className="flex shrink-0 items-center gap-2">
                       {report?.oversold ? (
                         <AlertTriangle
-                          className="size-3.5 text-red-600"
+                          className="size-3.5 text-danger"
                           aria-label="Oversold"
                         />
                       ) : null}

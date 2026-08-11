@@ -19,8 +19,8 @@ import { cn } from '@/lib/utils'
 
 const COUNTER_STYLES: Record<string, string> = {
   empty: 'text-muted-foreground',
-  ok: 'text-emerald-700',
-  long: 'text-amber-700',
+  ok: 'text-success',
+  long: 'text-attention',
 }
 
 type Response = {
@@ -86,7 +86,7 @@ export function SubmissionForm() {
     return (
       <Card>
         <CardContent className="flex flex-col items-center gap-3 p-8 text-center">
-          <CheckCircle2 className="size-8 text-emerald-600" />
+          <CheckCircle2 className="size-8 text-success" />
           <h2 className="text-lg font-semibold">Thanks — your listing is in.</h2>
           <p className="max-w-prose text-sm text-muted-foreground">
             We read every classified before it runs. If it needs a trim or we have a

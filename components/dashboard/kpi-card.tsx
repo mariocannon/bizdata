@@ -27,8 +27,8 @@ export function KpiCard({
       <p
         className={cn(
           'tabular mt-1.5 text-3xl font-semibold leading-none',
-          tone === 'positive' && 'text-emerald-700',
-          tone === 'warning' && 'text-amber-700'
+          tone === 'positive' && 'text-success',
+          tone === 'warning' && 'text-attention'
         )}
       >
         {value}

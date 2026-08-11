@@ -2,38 +2,150 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Design tokens for The Tide. Every value below traces to a named colour in
+ * docs/BRANDING.md — if you need a colour that isn't here, add it to the brand
+ * guide first, then to this file. Nothing in the app should hardcode a hex.
+ */
 @layer base {
   :root {
-    /* Coastal, understated: near-white chrome, deep navy text, teal accent. */
-    --background: 200 25% 98%;
-    --foreground: 205 40% 15%;
+    /* ---- Brand palette (docs/BRANDING.md §1) ------------------------- */
+    --foam: 41 62% 95%; /* #faf5ea */
+    --sand: 39 46% 89%; /* #f0e7d6 */
+    --paper: 43 100% 99%; /* #fffdf8 */
+    --harbor: 206 26% 19%; /* #23313c */
+    --slate: 210 12% 40%; /* #5a6672 */
+    --driftwood: 40 10% 49%; /* #8a8272 */
+    --mist: 207 10% 64%; /* #9aa4ac */
+    --navy: 207 44% 25%; /* #23415a */
+    --seaglass: 197 36% 73%; /* #a2c5d3 */
+    --steel: 199 34% 41%; /* #45758c */
+    --coral: 5 61% 44%; /* #b3372c */
+    --kelp: 151 61% 30%; /* #1e7a4d */
 
-    --card: 0 0% 100%;
-    --card-foreground: 205 40% 15%;
+    /* The brand's signature ground: Foam washing down into Sand. */
+    --brand-wash: radial-gradient(
+      120% 90% at 50% 0%,
+      hsl(var(--foam)) 0%,
+      hsl(var(--sand)) 60%
+    );
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 205 40% 15%;
+    /* System UI stack — The Tide ships no web fonts (docs/BRANDING.md §3). */
+    --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 
-    --primary: 196 57% 31%;
-    --primary-foreground: 200 40% 98%;
+    /* ---- Chrome tokens ---------------------------------------------- */
+    --background: var(--sand);
+    --foreground: var(--harbor);
 
-    --secondary: 200 22% 94%;
-    --secondary-foreground: 205 40% 20%;
+    --card: var(--paper);
+    --card-foreground: var(--harbor);
 
-    --muted: 200 22% 95%;
-    --muted-foreground: 205 12% 42%;
+    --popover: var(--paper);
+    --popover-foreground: var(--harbor);
 
-    --accent: 196 40% 93%;
-    --accent-foreground: 196 60% 22%;
+    /* The brand button: Sea Glass fill, Deep Harbor label. */
+    --primary: var(--seaglass);
+    --primary-foreground: var(--harbor);
 
-    --destructive: 0 68% 44%;
-    --destructive-foreground: 0 0% 100%;
+    --secondary: 42 24% 84%; /* Deep Navy 8% over Sand */
+    --secondary-foreground: var(--harbor);
 
-    --border: 205 18% 88%;
-    --input: 205 18% 85%;
-    --ring: 196 57% 40%;
+    --muted: 42 24% 86%;
+    --muted-foreground: var(--slate);
 
-    --radius: 0.5rem;
+    --accent: 184 18% 85%; /* Sea Glass wash, for hover grounds */
+    --accent-foreground: var(--navy);
+
+    --destructive: var(--coral);
+    --destructive-foreground: var(--paper);
+
+    --border: 47 14% 80%; /* Deep Navy 14% over Sand */
+    --input: 195 8% 80%; /* Deep Navy 25% over Paper */
+    --ring: var(--steel);
+
+    /* Button radius from the brand guide's signup control. */
+    --radius: 0.65rem;
+
+    /* ---- Semantic states (docs/BRANDING.md §6) ----------------------- */
+    --success: 151 63% 24%;
+    --success-soft: 145 24% 92%;
+    --success-border: 148 30% 80%;
+
+    --attention: 38 76% 29%;
+    --attention-soft: 40 55% 90%;
+    --attention-border: 41 44% 78%;
+
+    --danger: 5 62% 38%;
+    --danger-soft: 8 55% 93%;
+    --danger-border: 8 50% 85%;
+
+    --progress: 199 43% 33%;
+    --progress-soft: 199 42% 93%;
+    --progress-border: 197 40% 85%;
+
+    --neutral: 210 12% 38%;
+    --neutral-soft: 40 30% 87%;
+    --neutral-border: 40 24% 79%;
+  }
+
+  /*
+   * Dark theme, lifted from the brand guide. Tailwind's darkMode is 'class',
+   * so this applies when `dark` is set on <html>.
+   */
+  .dark {
+    --background: 207 28% 13%; /* #172129 */
+    --foreground: 120 13% 94%; /* #eef2ee */
+
+    --card: 205 27% 17%; /* #202e38 */
+    --card-foreground: 120 13% 94%;
+
+    --popover: 205 27% 17%;
+    --popover-foreground: 120 13% 94%;
+
+    --primary: var(--seaglass);
+    --primary-foreground: var(--harbor);
+
+    --secondary: 205 28% 22%;
+    --secondary-foreground: 120 13% 94%;
+
+    --muted: 205 28% 21%;
+    --muted-foreground: 205 13% 72%; /* #aeb9c1 */
+
+    --accent: 205 28% 24%;
+    --accent-foreground: var(--seaglass);
+
+    --destructive: 5 55% 50%;
+    --destructive-foreground: 120 13% 94%;
+
+    --border: 197 25% 28%;
+    --input: 197 22% 32%;
+    --ring: var(--seaglass);
+
+    --brand-wash: radial-gradient(
+      120% 90% at 50% 0%,
+      hsl(205 28% 16%) 0%,
+      hsl(207 28% 13%) 60%
+    );
+
+    --success: 151 45% 62%;
+    --success-soft: 151 25% 20%;
+    --success-border: 151 25% 30%;
+
+    --attention: 40 62% 66%;
+    --attention-soft: 38 25% 20%;
+    --attention-border: 38 25% 30%;
+
+    --danger: 5 70% 70%;
+    --danger-soft: 5 28% 22%;
+    --danger-border: 5 28% 32%;
+
+    --progress: 197 40% 72%;
+    --progress-soft: 199 25% 22%;
+    --progress-border: 199 25% 32%;
+
+    --neutral: 205 13% 72%;
+    --neutral-soft: 205 20% 22%;
+    --neutral-border: 205 20% 30%;
   }
 }
 
@@ -60,6 +172,23 @@
 @layer components {
   .page-shell {
     @apply mx-auto w-full max-w-[1400px] px-6 py-8;
+  }
+
+  /*
+   * The brand's radial wash, for the public-facing pages (sign-in and the two
+   * submission forms). Reproduce it exactly — see docs/BRANDING.md §2.
+   */
+  .brand-wash {
+    background: var(--brand-wash);
+  }
+
+  /*
+   * The eyebrow: uppercase, wide-tracked, Steel Blue. The one piece of type
+   * that carries the brand's personality (docs/BRANDING.md §3).
+   */
+  .eyebrow {
+    @apply text-xs font-bold uppercase text-steel;
+    letter-spacing: 0.18em;
   }
 }
 

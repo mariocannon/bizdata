@@ -108,7 +108,7 @@ export default async function IssueDetailPage({
             </span>
             <span className="tabular">{formatMoney(totals.booked)} booked</span>
             {totals.outstanding > 0 ? (
-              <span className="tabular text-amber-700">
+              <span className="tabular text-attention">
                 {formatMoney(totals.outstanding)} outstanding
               </span>
             ) : null}
@@ -297,7 +297,7 @@ function PublishChecklist({ bookings }: { bookings: ChecklistBooking[] }) {
                 {booking.copy ? (
                   <p className="whitespace-pre-wrap">{booking.copy}</p>
                 ) : (
-                  <p className="text-amber-700">No ad copy written yet.</p>
+                  <p className="text-attention">No ad copy written yet.</p>
                 )}
 
                 {booking.ctaUrl ? (
@@ -305,13 +305,13 @@ function PublishChecklist({ bookings }: { bookings: ChecklistBooking[] }) {
                     href={booking.ctaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 break-all text-primary hover:underline"
+                    className="inline-flex items-center gap-1.5 break-all text-steel hover:underline"
                   >
                     <ExternalLink className="size-3.5 shrink-0" />
                     {booking.ctaUrl}
                   </a>
                 ) : (
-                  <p className="text-amber-700">No CTA link.</p>
+                  <p className="text-attention">No CTA link.</p>
                 )}
               </div>
             </CardContent>

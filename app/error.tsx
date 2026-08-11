@@ -17,7 +17,7 @@ export default function Error({
 
   return (
     <div className="page-shell flex min-h-screen flex-col items-center justify-center gap-3 text-center">
-      <AlertTriangle className="size-6 text-amber-600" />
+      <AlertTriangle className="size-6 text-attention" />
       <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
       <p className="max-w-sm text-sm text-muted-foreground">
         {error.message || 'An unexpected error occurred while loading this page.'}

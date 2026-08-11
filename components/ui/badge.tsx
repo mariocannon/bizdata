@@ -7,12 +7,14 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-transparent bg-primary/10 text-primary',
+        // Sea Glass is a fill colour, never a text colour — the label takes
+        // Deep Navy off the ramp so it clears contrast (docs/BRANDING.md §1).
+        default: 'border-transparent bg-tide-100 text-tide-800',
         neutral: 'border-border bg-muted text-muted-foreground',
         outline: 'border-border text-foreground',
-        success: 'border-transparent bg-emerald-100 text-emerald-800',
-        warning: 'border-transparent bg-amber-100 text-amber-900',
-        danger: 'border-transparent bg-red-100 text-red-800',
+        success: 'border-transparent bg-success-soft text-success',
+        warning: 'border-transparent bg-attention-soft text-attention',
+        danger: 'border-transparent bg-danger-soft text-danger',
       },
     },
     defaultVariants: { variant: 'default' },

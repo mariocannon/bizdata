@@ -65,12 +65,12 @@ export default async function AdvertiserDetailPage({
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
             <span>{label(advertiser.category)}</span>
             {advertiser.reviewsChecked ? (
-              <span className="inline-flex items-center gap-1 text-emerald-700">
+              <span className="inline-flex items-center gap-1 text-success">
                 <CheckCircle2 className="size-3.5" />
                 Reviews checked
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1 text-amber-700">
+              <span className="inline-flex items-center gap-1 text-attention">
                 <ShieldAlert className="size-3.5" />
                 Reviews not checked
               </span>
@@ -270,9 +270,9 @@ function Stat({
         className={
           'tabular mt-1 text-2xl font-semibold ' +
           (tone === 'positive'
-            ? 'text-emerald-700'
+            ? 'text-success'
             : tone === 'warning'
-              ? 'text-amber-700'
+              ? 'text-attention'
               : 'text-foreground')
         }
       >

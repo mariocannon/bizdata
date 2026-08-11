@@ -236,7 +236,7 @@ export default async function AdvertisersPage({
                       </Link>
                       {row.reviewsChecked ? (
                         <CheckCircle2
-                          className="size-3.5 text-emerald-600"
+                          className="size-3.5 text-success"
                           aria-label="Reviews checked"
                         />
                       ) : null}
@@ -257,7 +257,7 @@ export default async function AdvertisersPage({
                   <TableCell className="tabular text-right">
                     {formatMoney(row.totals.paid)}
                     {row.totals.outstanding > 0 ? (
-                      <span className="block text-xs text-amber-700">
+                      <span className="block text-xs text-attention">
                         {formatMoney(row.totals.outstanding)} due
                       </span>
                     ) : null}

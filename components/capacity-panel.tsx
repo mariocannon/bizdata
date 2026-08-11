@@ -34,7 +34,7 @@ function SlotRow({
         <span
           className={cn(
             'tabular text-sm font-semibold',
-            state === 'OVERSOLD' && 'text-red-700'
+            state === 'OVERSOLD' && 'text-danger'
           )}
         >
           {sold} / {cap}
@@ -64,7 +64,7 @@ export function CapacityPanel({
       <CardHeader className="flex-row items-center justify-between gap-2 space-y-0">
         <CardTitle>Inventory</CardTitle>
         {report.oversold ? (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-800">
+          <span className="inline-flex items-center gap-1 rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold text-danger">
             <AlertTriangle className="size-3.5" />
             Oversold
           </span>
@@ -128,10 +128,12 @@ export function CapacityPanel({
             aria-valuemax={soldOutTarget}
             aria-label="Ads sold against the soft sold-out target"
           >
+            {/* Steel Blue, not Sea Glass: the fill has to clear 3:1 against the
+                track to be readable as a meter (docs/BRANDING.md §1). */}
             <div
               className={cn(
                 'h-full rounded-full transition-all',
-                overTarget ? 'bg-amber-500' : 'bg-primary'
+                overTarget ? 'bg-attention' : 'bg-steel'
               )}
               style={{ width: `${ratioPct}%` }}
             />

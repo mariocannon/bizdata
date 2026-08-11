@@ -258,7 +258,7 @@ export default async function BookingsPage({
             href: `/bookings/${booking.id}`,
             className:
               booking.status === 'CANCELLED'
-                ? 'bg-slate-100 text-slate-500 line-through'
+                ? 'bg-neutral-soft text-neutral line-through'
                 : adTypeChipClass(booking.adType),
           }))}
         />

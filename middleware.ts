@@ -61,8 +61,9 @@ export const config = {
      * Everything except:
      *   - /login (the gate itself)
      *   - Next.js internals and static assets
+     *   - /brand (the logo and marks, which the public pages render)
      *   - /uploads (creative served from the local-disk driver)
      */
-    '/((?!login|_next/static|_next/image|uploads|favicon.ico).*)',
+    '/((?!login|_next/static|_next/image|brand|uploads|favicon.ico).*)',
   ],
 }

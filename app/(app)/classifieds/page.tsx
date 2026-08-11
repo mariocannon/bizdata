@@ -58,7 +58,7 @@ const CSV_COLUMNS = [
 const WORD_COUNT_STYLES: Record<string, string> = {
   empty: 'text-muted-foreground',
   ok: 'text-foreground',
-  long: 'text-amber-700',
+  long: 'text-attention',
 }
 
 type SearchParams = {
@@ -217,13 +217,13 @@ export default async function ClassifiedsPage({
             {awaitingReview > 0 ? (
               <Link
                 href="/classifieds?source=PUBLIC&status=DRAFT"
-                className="font-medium text-primary hover:underline"
+                className="font-medium text-steel hover:underline"
               >
                 {awaitingReview} submitted, awaiting review
               </Link>
             ) : null}
             {needsWork > 0 ? (
-              <span className="inline-flex items-center gap-1 font-medium text-amber-700">
+              <span className="inline-flex items-center gap-1 font-medium text-attention">
                 <AlertTriangle className="size-3.5" />
                 {needsWork} over the word limit
               </span>
@@ -428,7 +428,7 @@ export default async function ClassifiedsPage({
                     {row.tooLong ? (
                       <AlertTriangle
                         aria-label="Over the word limit"
-                        className="ml-1 inline size-3 text-amber-700"
+                        className="ml-1 inline size-3 text-attention"
                       />
                     ) : null}
                   </TableCell>
@@ -476,7 +476,7 @@ export default async function ClassifiedsPage({
 /** Marks a listing that came in through the public form rather than being typed in. */
 function SubmittedChip() {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full border border-sky-200 bg-sky-100 px-1.5 py-0.5 text-[11px] font-medium text-sky-800">
+    <span className="inline-flex items-center gap-1 rounded-full border border-progress-border bg-progress-soft px-1.5 py-0.5 text-[11px] font-medium text-progress">
       <Inbox className="size-3" />
       Submitted
     </span>
@@ -495,7 +495,7 @@ function ContactLine({
   compact?: boolean
 }) {
   if (!name && !email && !phone) {
-    return <span className="text-xs text-amber-700">No contact</span>
+    return <span className="text-xs text-attention">No contact</span>
   }
 
   return (
@@ -504,7 +504,7 @@ function ContactLine({
       {email ? (
         <a
           href={`mailto:${email}`}
-          className="inline-flex items-center gap-1 break-words text-primary hover:underline"
+          className="inline-flex items-center gap-1 break-words text-steel hover:underline"
         >
           <Mail className="size-3 shrink-0" />
           {email}

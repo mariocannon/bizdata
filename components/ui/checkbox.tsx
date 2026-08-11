@@ -9,7 +9,7 @@ const Checkbox = React.forwardRef<
     ref={ref}
     type="checkbox"
     className={cn(
-      'size-4 shrink-0 cursor-pointer rounded border-input text-primary shadow-sm',
+      'size-4 shrink-0 cursor-pointer rounded border-input accent-steel shadow-sm',
       'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
       'disabled:cursor-not-allowed disabled:opacity-50',
       className

@@ -322,8 +322,8 @@ export function BookingForm({
             className={
               'flex items-start gap-2.5 rounded-lg border p-3 text-sm ' +
               (blocking
-                ? 'border-red-200 bg-red-50 text-red-800'
-                : 'border-amber-200 bg-amber-50 text-amber-900')
+                ? 'border-danger-border bg-danger-soft text-danger'
+                : 'border-attention-border bg-attention-soft text-attention')
             }
             role="status"
           >

@@ -47,8 +47,8 @@ export type IssueOption = { id: string; title: string }
 
 const COUNTER_STYLES: Record<string, string> = {
   empty: 'text-muted-foreground',
-  ok: 'text-emerald-700',
-  long: 'text-amber-700',
+  ok: 'text-success',
+  long: 'text-attention',
 }
 
 export function EventForm({

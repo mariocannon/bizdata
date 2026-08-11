@@ -30,8 +30,10 @@ export type BeehiivListing = {
 }
 
 /**
- * The Tide's palette, straight off the brand guide. Named here so the styles
- * below read as the guide reads.
+ * The Tide's palette, straight off the brand guide — see docs/BRANDING.md §1.
+ * Named here so the styles below read as the guide reads. Inlined as hex
+ * because email clients have no custom properties; keep it in step with the
+ * tokens in app/globals.css.
  */
 const BRAND = {
   foam: '#faf5ea',

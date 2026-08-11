@@ -47,18 +47,63 @@ module.exports = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
-        // Coastal accents used for charts and ad-type colouring.
+
+        // Semantic states. `DEFAULT` is the text/icon tone, `soft` the tint it
+        // sits on and `border` the outline between them — every pairing is
+        // contrast-checked in docs/BRANDING.md §6.
+        success: {
+          DEFAULT: 'hsl(var(--success))',
+          soft: 'hsl(var(--success-soft))',
+          border: 'hsl(var(--success-border))',
+        },
+        attention: {
+          DEFAULT: 'hsl(var(--attention))',
+          soft: 'hsl(var(--attention-soft))',
+          border: 'hsl(var(--attention-border))',
+        },
+        danger: {
+          DEFAULT: 'hsl(var(--danger))',
+          soft: 'hsl(var(--danger-soft))',
+          border: 'hsl(var(--danger-border))',
+        },
+        progress: {
+          DEFAULT: 'hsl(var(--progress))',
+          soft: 'hsl(var(--progress-soft))',
+          border: 'hsl(var(--progress-border))',
+        },
+        neutral: {
+          DEFAULT: 'hsl(var(--neutral))',
+          soft: 'hsl(var(--neutral-soft))',
+          border: 'hsl(var(--neutral-border))',
+        },
+        // The Tide palette, verbatim from docs/BRANDING.md. These are the only
+        // brand colours — reach for a named one before any Tailwind default.
+        foam: '#faf5ea',
+        sand: '#f0e7d6',
+        paper: '#fffdf8',
+        harbor: '#23313c',
+        driftwood: '#8a8272',
+        mist: '#9aa4ac',
+        navy: '#23415a',
+        seaglass: '#a2c5d3',
+        steel: '#45758c',
+        coral: '#b3372c',
+        kelp: '#1e7a4d',
+
+        // The coastal ramp, for tints and shades of the brand blues. The three
+        // anchors are brand colours: 300 Sea Glass, 600 Steel Blue, 800 Deep
+        // Navy; 900 is Deep Harbor. Everything between is interpolated.
         tide: {
-          50: '#eef7f9',
-          100: '#d3ecf1',
-          200: '#a8d9e3',
-          300: '#71bfd0',
-          400: '#3f9fb5',
-          500: '#2a8299',
-          600: '#22687d',
-          700: '#1f5566',
-          800: '#1e4654',
-          900: '#123043',
+          50: '#f4f9fb',
+          100: '#e4eff4',
+          200: '#c9dfe8',
+          300: '#a2c5d3',
+          400: '#7ba7ba',
+          500: '#5b8ba2',
+          600: '#45758c',
+          700: '#345a70',
+          800: '#23415a',
+          900: '#23313c',
         },
       },
       borderRadius: {

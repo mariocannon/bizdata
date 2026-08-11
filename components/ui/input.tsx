@@ -8,7 +8,10 @@ const Input = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLI
       ref={ref}
       className={cn(
         'flex h-9 w-full rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors',
-        'placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
+        // Focus per the brand guide §5: the border goes Steel Blue behind a
+        // 3px Sea Glass glow. Placeholders are Mist.
+        'placeholder:text-mist focus-visible:outline-none focus-visible:border-steel',
+        'focus-visible:ring-[3px] focus-visible:ring-seaglass/55 focus-visible:ring-offset-0',
         'disabled:cursor-not-allowed disabled:opacity-50',
         'file:border-0 file:bg-transparent file:text-sm file:font-medium',
         'aria-[invalid=true]:border-destructive aria-[invalid=true]:ring-destructive/30',

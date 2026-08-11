@@ -160,7 +160,7 @@ export default async function IssuesPage({ searchParams }: { searchParams: Searc
             subtitle: `${row.report?.totalSold ?? 0}/${row.report?.totalCap ?? 0} slots`,
             href: `/issues/${row.id}`,
             className: row.report?.oversold
-              ? 'bg-red-100 text-red-800'
+              ? 'bg-danger-soft text-danger'
               : 'bg-tide-100 text-tide-800',
           }))}
         />
@@ -216,7 +216,7 @@ export default async function IssuesPage({ searchParams }: { searchParams: Searc
                       {row.report?.totalSold ?? 0} / {row.report?.totalCap ?? 0}
                     </span>
                     {row.report?.oversold ? (
-                      <span className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-red-700">
+                      <span className="ml-2 inline-flex items-center gap-1 text-xs font-semibold text-danger">
                         <AlertTriangle className="size-3" />
                         Oversold
                       </span>

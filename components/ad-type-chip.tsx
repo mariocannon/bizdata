@@ -1,19 +1,26 @@
 import { label, type AdType } from '@/lib/enums'
 import { cn } from '@/lib/utils'
 
-/** One colour per ad type, shared by the bookings calendar and issue views. */
+/**
+ * One colour per ad type, shared by the bookings calendar and issue views.
+ *
+ * All seven come off the coastal ramp plus two brand states, so the chips read
+ * as one family rather than seven competing hues (docs/BRANDING.md §6): the
+ * premium placements take the dark end, the bulletin family the light end,
+ * sponsors the warm neutral and events Kelp. Every pairing clears 4.5:1.
+ */
 export const AD_TYPE_CHIP: Record<AdType, string> = {
-  HEADLINE: 'bg-tide-700 text-white',
-  FEATURE: 'bg-tide-500 text-white',
-  BULLETIN_CLASSIFIED: 'bg-sky-100 text-sky-900',
-  BULLETIN_BANNER: 'bg-sky-200 text-sky-900',
-  BULLETIN_TAKEOVER: 'bg-sky-700 text-white',
-  SECTION_SPONSOR: 'bg-indigo-100 text-indigo-900',
-  FEATURED_EVENT: 'bg-emerald-100 text-emerald-900',
+  HEADLINE: 'bg-tide-900 text-foam',
+  FEATURE: 'bg-tide-700 text-foam',
+  BULLETIN_TAKEOVER: 'bg-tide-600 text-foam',
+  BULLETIN_BANNER: 'bg-tide-300 text-tide-900',
+  BULLETIN_CLASSIFIED: 'bg-tide-100 text-tide-900',
+  SECTION_SPONSOR: 'bg-neutral-soft text-neutral',
+  FEATURED_EVENT: 'bg-success-soft text-success',
 }
 
 export function adTypeChipClass(adType: string): string {
-  return AD_TYPE_CHIP[adType as AdType] ?? 'bg-slate-100 text-slate-800'
+  return AD_TYPE_CHIP[adType as AdType] ?? 'bg-neutral-soft text-neutral'
 }
 
 export function AdTypeChip({
