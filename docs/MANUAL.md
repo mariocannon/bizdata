@@ -513,6 +513,11 @@ spreadsheet, plus a `When` column with the printed line.
 **in date order**, each with its when-and-where line under the title. Unlike
 classifieds they aren't grouped by category — a diary reads by date.
 
+Any event with a **Tickets / more info** link gets a **More info** button under
+its copy — Sea Glass fill, Deep Harbor label, the same button the signup page
+uses. It travels with the block whichever way you paste it, or you can copy just
+the button across on its own. Events without a link simply don't get one.
+
 If an event you're exporting has already been, the message says so and points
 you at the Upcoming filter. It doesn't stop you: sometimes a recap is the point.
 

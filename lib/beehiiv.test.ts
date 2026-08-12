@@ -133,6 +133,50 @@ describe('event listings', () => {
     assert.doesNotMatch(html, /font-size:14px;font-weight:600/)
   })
 
+  it('turns a ticket link into a More info button', () => {
+    const html = toBeehiivHtml([
+      listing({ headline: 'Ōrewa Night Market', url: 'https://example.co.nz/tickets' }),
+    ])
+    assert.match(html, /<a href="https:\/\/example\.co\.nz\/tickets"[^>]*>More info<\/a>/)
+  })
+
+  it('styles the button as the brand guide styles a primary one', () => {
+    const html = toBeehiivHtml([listing({ url: 'https://example.co.nz/tickets' })])
+    assert.match(html, /background:#a2c5d3/) // Sea Glass fill
+    assert.match(html, /color:#23313c/) // Deep Harbor label
+    assert.match(html, /display:inline-block/) // or the padding and fill collapse
+    assert.match(html, /text-decoration:none/)
+  })
+
+  it('sits the button between the copy and the contact line', () => {
+    const html = toBeehiivHtml([listing({ url: 'https://example.co.nz/tickets' })])
+    const body = html.indexOf('Well-kept boat')
+    const button = html.indexOf('More info')
+    const contact = html.indexOf('Jo Ngata')
+    assert.ok(body < button && button < contact, 'button should follow the copy')
+  })
+
+  it('leaves the button out when there is no link', () => {
+    assert.doesNotMatch(toBeehiivHtml([listing()]), /More info/)
+    assert.doesNotMatch(toBeehiivHtml([listing({ url: null })]), /More info/)
+    assert.doesNotMatch(toBeehiivHtml([listing({ url: '   ' })]), /More info/)
+  })
+
+  it('only puts http(s) behind the button', () => {
+    // eslint-disable-next-line no-script-url
+    const html = toBeehiivHtml([listing({ url: 'javascript:alert(1)' })])
+    assert.doesNotMatch(html, /More info/)
+    assert.doesNotMatch(html, /javascript:/)
+  })
+
+  it('escapes a link that would break out of the href', () => {
+    const html = toBeehiivHtml([
+      listing({ url: 'https://example.co.nz/?a=1&b=2" onclick="alert(1)' }),
+    ])
+    assert.match(html, /&amp;b=2&quot; onclick=&quot;/)
+    assert.doesNotMatch(html, /onclick="/)
+  })
+
   it('keeps date order instead of grouping when grouping is off', () => {
     const html = toBeehiivHtml(
       [

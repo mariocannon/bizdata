@@ -215,6 +215,8 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
       body: row.body,
       category: label(row.category),
       meta: eventMeta(row.startsAt, row.endsAt, row.location),
+      // Becomes the "More info" button under the copy.
+      url: row.ticketUrl,
       contactName: row.contactName,
       contactEmail: row.contactEmail,
       contactPhone: row.contactPhone,

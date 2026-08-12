@@ -24,6 +24,11 @@ export type BeehiivListing = {
    * it out.
    */
   meta?: string | null
+  /**
+   * Tickets or more info. Events only — classifieds have no link field. When
+   * there is one it becomes a "More info" button under the copy.
+   */
+  url?: string | null
   contactName: string | null
   contactEmail: string | null
   contactPhone: string | null
@@ -85,6 +90,23 @@ const STYLES = {
   // When and where, sitting between the title and the copy.
   meta: `font-size:14px;font-weight:600;color:${BRAND.steelBlue};margin:0 0 6px;`,
   body: `margin:0 0 8px;color:${BRAND.deepHarbor};`,
+  /**
+   * The primary button off the guide — Sea Glass fill, Deep Harbor label, the
+   * 0.65rem radius as the 10px the wrapper already uses. No hover: there is no
+   * hover in an inbox, and the guide says the button never changes colour
+   * anyway. `inline-block` so the padding and the fill actually take.
+   */
+  button: [
+    'display:inline-block',
+    `background:${BRAND.seaGlass}`,
+    `color:${BRAND.deepHarbor}`,
+    'font-size:14px',
+    'font-weight:700',
+    'text-decoration:none',
+    'padding:9px 18px',
+    'border-radius:10px',
+  ].join(';') + ';',
+  buttonWrap: 'margin:0 0 10px;',
   contact: `font-size:14px;color:${BRAND.slate};margin:0;`,
   link: `color:${BRAND.steelBlue};`,
   rule: `border:0;border-top:1px solid ${BRAND.rule};margin:18px 0;`,
@@ -126,11 +148,31 @@ function contactHtml(listing: BeehiivListing): string {
   return `<p style="${STYLES.contact}">${parts.join(' &middot; ')}</p>`
 }
 
+/**
+ * A link only becomes a button if it is one we can vouch for. The form already
+ * insists on http(s), but a listing seeded or imported around it shouldn't be
+ * able to put anything else behind a button in someone's newsletter.
+ */
+function linkUrl(value: string | null | undefined): string | null {
+  const trimmed = value?.trim() ?? ''
+  return /^https?:\/\/\S/i.test(trimmed) ? trimmed : null
+}
+
+/** The "More info" button under the copy, for listings that carry a link. */
+function moreInfoHtml(listing: BeehiivListing): string {
+  const url = linkUrl(listing.url)
+  if (!url) return ''
+  return `<p style="${STYLES.buttonWrap}"><a href="${escapeHtml(url)}" style="${
+    STYLES.button
+  }">More info</a></p>`
+}
+
 function listingHtml(listing: BeehiivListing): string {
   return [
     `<p style="${STYLES.headline}">${escapeHtml(listing.headline)}</p>`,
     listing.meta ? `<p style="${STYLES.meta}">${escapeHtml(listing.meta)}</p>` : '',
     `<p style="${STYLES.body}">${paragraphHtml(listing.body)}</p>`,
+    moreInfoHtml(listing),
     contactHtml(listing),
   ]
     .filter(Boolean)
