@@ -72,6 +72,25 @@ export function EventForm({
   const state = wordCountState(words)
   const blocking = requiresWordCount(status) && state !== 'ok'
 
+  // Copy and status are the only fields held in state — every other one is
+  // uncontrolled and gets rebuilt from `event` when the dialog remounts. These
+  // two have to be put back deliberately, and on the way *in* as well as out:
+  // the trigger on each row shares one component instance with the dialog, so
+  // copy left behind by a cancelled edit or a saved "New event" would otherwise
+  // still be sitting there the next time the dialog is opened — against a
+  // different event.
+  function resetFields() {
+    setErrors({})
+    setBody(event?.body ?? '')
+    setStatus(event?.status ?? 'DRAFT')
+  }
+
+  // Closing from our own buttons never reaches onOpenChange, so it resets here.
+  function close() {
+    setOpen(false)
+    resetFields()
+  }
+
   function handleSubmit(formEvent: React.FormEvent<HTMLFormElement>) {
     formEvent.preventDefault()
     const form = new FormData(formEvent.currentTarget)
@@ -79,8 +98,7 @@ export function EventForm({
     startTransition(async () => {
       const result = await saveEvent(form)
       if (result.ok) {
-        setErrors({})
-        setOpen(false)
+        close()
         toast.success(result.message ?? 'Saved.')
         router.refresh()
       } else {
@@ -95,11 +113,7 @@ export function EventForm({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) {
-          setErrors({})
-          setBody(event?.body ?? '')
-          setStatus(event?.status ?? 'DRAFT')
-        }
+        resetFields()
       }}
     >
       <DialogTrigger asChild>
@@ -334,7 +348,7 @@ export function EventForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={close}
               disabled={pending}
             >
               Cancel
