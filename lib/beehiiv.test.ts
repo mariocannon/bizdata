@@ -133,11 +133,14 @@ describe('event listings', () => {
     assert.doesNotMatch(html, /font-size:14px;font-weight:600/)
   })
 
-  it('turns a ticket link into a More info button', () => {
+  it('turns a ticket link into a button that says what to do with it', () => {
     const html = toBeehiivHtml([
       listing({ headline: 'Ōrewa Night Market', url: 'https://example.co.nz/tickets' }),
     ])
-    assert.match(html, /<a href="https:\/\/example\.co\.nz\/tickets"[^>]*>More info<\/a>/)
+    assert.match(
+      html,
+      /<a href="https:\/\/example\.co\.nz\/tickets"[^>]*>Click here for more info<\/a>/
+    )
   })
 
   it('styles the button as the brand guide styles a primary one', () => {
@@ -151,21 +154,21 @@ describe('event listings', () => {
   it('sits the button between the copy and the contact line', () => {
     const html = toBeehiivHtml([listing({ url: 'https://example.co.nz/tickets' })])
     const body = html.indexOf('Well-kept boat')
-    const button = html.indexOf('More info')
+    const button = html.indexOf('Click here for more info')
     const contact = html.indexOf('Jo Ngata')
     assert.ok(body < button && button < contact, 'button should follow the copy')
   })
 
   it('leaves the button out when there is no link', () => {
-    assert.doesNotMatch(toBeehiivHtml([listing()]), /More info/)
-    assert.doesNotMatch(toBeehiivHtml([listing({ url: null })]), /More info/)
-    assert.doesNotMatch(toBeehiivHtml([listing({ url: '   ' })]), /More info/)
+    assert.doesNotMatch(toBeehiivHtml([listing()]), /Click here/)
+    assert.doesNotMatch(toBeehiivHtml([listing({ url: null })]), /Click here/)
+    assert.doesNotMatch(toBeehiivHtml([listing({ url: '   ' })]), /Click here/)
   })
 
   it('only puts http(s) behind the button', () => {
     // eslint-disable-next-line no-script-url
     const html = toBeehiivHtml([listing({ url: 'javascript:alert(1)' })])
-    assert.doesNotMatch(html, /More info/)
+    assert.doesNotMatch(html, /Click here/)
     assert.doesNotMatch(html, /javascript:/)
   })
 

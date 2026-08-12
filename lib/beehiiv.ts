@@ -26,7 +26,7 @@ export type BeehiivListing = {
   meta?: string | null
   /**
    * Tickets or more info. Events only — classifieds have no link field. When
-   * there is one it becomes a "More info" button under the copy.
+   * there is one it becomes a "Click here for more info" button under the copy.
    */
   url?: string | null
   contactName: string | null
@@ -158,13 +158,13 @@ function linkUrl(value: string | null | undefined): string | null {
   return /^https?:\/\/\S/i.test(trimmed) ? trimmed : null
 }
 
-/** The "More info" button under the copy, for listings that carry a link. */
+/** The link button under the copy, for listings that carry a link. */
 function moreInfoHtml(listing: BeehiivListing): string {
   const url = linkUrl(listing.url)
   if (!url) return ''
   return `<p style="${STYLES.buttonWrap}"><a href="${escapeHtml(url)}" style="${
     STYLES.button
-  }">More info</a></p>`
+  }">Click here for more info</a></p>`
 }
 
 function listingHtml(listing: BeehiivListing): string {
