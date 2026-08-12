@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { AlertTriangle, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/db'
-import { getCapacityReports } from '@/lib/inventory'
+import { buildCapacityReports } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
 import { ADVERTISER_STATUSES, label } from '@/lib/enums'
 import { inRange, isPeriod, periodRange, type Period } from '@/lib/period'
@@ -35,7 +35,14 @@ export default async function DashboardPage({
     getSettings(),
   ])
 
-  const reports = await getCapacityReports(issues.map((issue) => issue.id))
+  // Every booking is already in hand, so the capacity reports are built here
+  // rather than re-read: a second scan of the same table, waiting on the first
+  // one to finish, is the slowest way to learn something we already know.
+  const reports = buildCapacityReports(
+    issues.map((issue) => issue.id),
+    bookings,
+    settings.bulletinCapacity
+  )
 
   // Revenue is attributed to the issue's publish date, and cancelled bookings
   // never count — anywhere on this page.

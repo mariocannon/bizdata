@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { ExternalLink, ImageOff, Plus } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { sumBookings } from '@/lib/rollups'
-import { getCapacityReport } from '@/lib/inventory'
+import { buildCapacityReport } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
 import { label } from '@/lib/enums'
 import { formatDate, formatMoney, toDateInput } from '@/lib/utils'
@@ -65,10 +65,10 @@ export default async function IssueDetailPage({
 
   if (!issue) notFound()
 
-  const [report, settings] = await Promise.all([
-    getCapacityReport(issue.id),
-    getSettings(),
-  ])
+  // `issue.bookings` is exactly what the capacity report counts, so it is built
+  // from those rather than fetched again.
+  const settings = await getSettings()
+  const report = buildCapacityReport(issue.bookings, settings.bulletinCapacity)
   const totals = sumBookings(issue.bookings)
 
   const csvRows = issue.bookings.map((booking) => ({

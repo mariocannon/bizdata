@@ -118,41 +118,29 @@ export function totalCapacityPerIssue(bulletinCap: number): number {
   )
 }
 
-/** Loads an issue's bookings and builds its report. */
-export async function getCapacityReport(issueId: string): Promise<CapacityReport> {
-  const [bookings, settings] = await Promise.all([
-    prisma.booking.findMany({
-      where: { issueId },
-      select: { id: true, adType: true, section: true, status: true },
-    }),
-    getSettings(),
-  ])
-  return buildCapacityReport(bookings, settings.bulletinCapacity)
-}
-
-/** Batched variant — one query for many issues. */
-export async function getCapacityReports(
-  issueIds: string[]
-): Promise<Record<string, CapacityReport>> {
-  const reports: Record<string, CapacityReport> = {}
-  if (issueIds.length === 0) return reports
-
-  const [bookings, settings] = await Promise.all([
-    prisma.booking.findMany({
-      where: { issueId: { in: issueIds } },
-      select: { id: true, issueId: true, adType: true, section: true, status: true },
-    }),
-    getSettings(),
-  ])
-
+/**
+ * Batched variant, and pure like the one above.
+ *
+ * Every page that wants capacity has already loaded the bookings it needs —
+ * the dashboard and the issues list both read the table for their own totals —
+ * so grouping happens here rather than in a second scan of the same rows. There
+ * is deliberately no query-issuing version of this: reaching for one is how the
+ * extra round trip creeps back in.
+ */
+export function buildCapacityReports(
+  issueIds: string[],
+  bookings: (BookingLike & { issueId: string })[],
+  bulletinCap: number
+): Record<string, CapacityReport> {
   const byIssue = new Map<string, BookingLike[]>()
   for (const id of issueIds) byIssue.set(id, [])
   for (const booking of bookings) {
     byIssue.get(booking.issueId)?.push(booking)
   }
 
+  const reports: Record<string, CapacityReport> = {}
   for (const [issueId, issueBookings] of byIssue) {
-    reports[issueId] = buildCapacityReport(issueBookings, settings.bulletinCapacity)
+    reports[issueId] = buildCapacityReport(issueBookings, bulletinCap)
   }
   return reports
 }

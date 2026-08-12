@@ -2,8 +2,9 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { AlertTriangle } from 'lucide-react'
 import { prisma } from '@/lib/db'
-import { getIssueTotals, ZERO_TOTALS } from '@/lib/rollups'
-import { getCapacityReports } from '@/lib/inventory'
+import { totalsBy, ZERO_TOTALS } from '@/lib/rollups'
+import { buildCapacityReports } from '@/lib/inventory'
+import { getSettings } from '@/lib/settings'
 import { ISSUE_STATUSES, label } from '@/lib/enums'
 import { formatDate, formatMoney, toDateInput } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
@@ -53,11 +54,31 @@ export default async function IssuesPage({ searchParams }: { searchParams: Searc
   const sort = searchParams.sort ?? 'publishDate'
   const dir = searchParams.dir === 'desc' ? 'desc' : 'asc'
 
-  const issues = await prisma.issue.findMany({ orderBy: { publishDate: 'asc' } })
-  const [totals, reports] = await Promise.all([
-    getIssueTotals(),
-    getCapacityReports(issues.map((issue) => issue.id)),
+  // Money and capacity are two readings off one set of bookings, so they come
+  // from one scan — and it no longer waits on the issue list to know which ids
+  // to ask for, which turns two round trips into one.
+  const [issues, bookings, settings] = await Promise.all([
+    prisma.issue.findMany({ orderBy: { publishDate: 'asc' } }),
+    prisma.booking.findMany({
+      where: { status: { not: 'CANCELLED' } },
+      select: {
+        issueId: true,
+        price: true,
+        paid: true,
+        status: true,
+        adType: true,
+        section: true,
+      },
+    }),
+    getSettings(),
   ])
+
+  const totals = totalsBy(bookings, (booking) => booking.issueId)
+  const reports = buildCapacityReports(
+    issues.map((issue) => issue.id),
+    bookings,
+    settings.bulletinCapacity
+  )
 
   const rows = issues
     .map((issue) => ({

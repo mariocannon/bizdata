@@ -31,6 +31,30 @@ export function sumBookings(bookings: BookingMoney[]): MoneyTotals {
   return totals
 }
 
+/**
+ * Pure rollup, grouped by whatever key you pick. Kept free of I/O so a page
+ * that has already loaded its bookings can total them without a second query.
+ */
+export function totalsBy<T extends BookingMoney>(
+  bookings: T[],
+  key: (booking: T) => string
+): Map<string, MoneyTotals> {
+  const totals = new Map<string, MoneyTotals>()
+
+  for (const booking of bookings) {
+    if (booking.status === 'CANCELLED') continue
+    const bucket = key(booking)
+    const current = totals.get(bucket) ?? { ...ZERO_TOTALS }
+    current.bookings += 1
+    current.booked += booking.price
+    if (booking.paid === 'PAID') current.paid += booking.price
+    else current.outstanding += booking.price
+    totals.set(bucket, current)
+  }
+
+  return totals
+}
+
 /** Rollup totals per advertiser, in one query. */
 export async function getAdvertiserTotals(): Promise<Map<string, MoneyTotals>> {
   const bookings = await prisma.booking.findMany({
@@ -38,35 +62,9 @@ export async function getAdvertiserTotals(): Promise<Map<string, MoneyTotals>> {
     select: { advertiserId: true, price: true, paid: true, status: true },
   })
 
-  const totals = new Map<string, MoneyTotals>()
-  for (const booking of bookings) {
-    const current = totals.get(booking.advertiserId) ?? { ...ZERO_TOTALS }
-    current.bookings += 1
-    current.booked += booking.price
-    if (booking.paid === 'PAID') current.paid += booking.price
-    else current.outstanding += booking.price
-    totals.set(booking.advertiserId, current)
-  }
-
-  return totals
+  return totalsBy(bookings, (booking) => booking.advertiserId)
 }
 
-/** Rollup totals per issue, in one query. */
-export async function getIssueTotals(): Promise<Map<string, MoneyTotals>> {
-  const bookings = await prisma.booking.findMany({
-    where: { status: { not: 'CANCELLED' } },
-    select: { issueId: true, price: true, paid: true, status: true },
-  })
-
-  const totals = new Map<string, MoneyTotals>()
-  for (const booking of bookings) {
-    const current = totals.get(booking.issueId) ?? { ...ZERO_TOTALS }
-    current.bookings += 1
-    current.booked += booking.price
-    if (booking.paid === 'PAID') current.paid += booking.price
-    else current.outstanding += booking.price
-    totals.set(booking.issueId, current)
-  }
-
-  return totals
-}
+// There is no `getIssueTotals` counterpart: the issues list needs each issue's
+// capacity as well as its money, and both come off one scan of the bookings it
+// already runs. It calls `totalsBy` directly.
