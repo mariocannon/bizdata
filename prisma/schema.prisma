@@ -84,6 +84,10 @@ model Booking {
 //
 // issueId is optional: listings are collected before they are placed, and an
 // unplaced one sits in the queue until an issue is picked.
+// `featured` is the same paid upgrade an Event carries, and for the same flat
+// fee: an image above the copy, and the top of the exported block. The fee is
+// copied onto the row rather than read from FEATURED_FEE at display time, so
+// raising the price never rewrites what somebody was already charged.
 model Classified {
   id           String   @id @default(cuid())
   headline     String
@@ -91,6 +95,10 @@ model Classified {
   category     String // ClassifiedCategory union
   status       String   @default("DRAFT") // ClassifiedStatus union
   source       String   @default("STAFF") // ClassifiedSource union — STAFF or PUBLIC (/submit)
+  featured     Boolean  @default(false)
+  imageUrl     String? // path/URL to the uploaded image — featured listings only
+  featuredFee  Float    @default(0) // what was charged, at the time it was charged
+  featuredPaid String   @default("UNPAID") // PaidStatus union
   contactName  String?
   contactEmail String?
   contactPhone String?

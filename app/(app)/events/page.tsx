@@ -26,12 +26,11 @@ import {
 import {
   EVENT_WORD_MAX,
   eventMeta,
-  featuredOwing,
   formatEventWhen,
-  isFeeOutstanding,
   isUpcoming,
   requiresWordCount,
 } from '@/lib/events'
+import { featuredOwing, isFeeOutstanding } from '@/lib/featured'
 import { cn, formatDate, formatMoney, toDateInput, toTimeInput } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
 import { FilterBar } from '@/components/filter-bar'

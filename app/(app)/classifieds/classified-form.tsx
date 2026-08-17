@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { ImageOff, Plus, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -14,11 +14,17 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Field } from '@/components/ui/field'
-import { CLASSIFIED_CATEGORIES, CLASSIFIED_STATUSES, label } from '@/lib/enums'
+import {
+  CLASSIFIED_CATEGORIES,
+  CLASSIFIED_STATUSES,
+  PAID_STATUSES,
+  label,
+} from '@/lib/enums'
 import {
   CLASSIFIED_WORD_MAX,
   countWords,
@@ -26,7 +32,8 @@ import {
   wordCountMessage,
   wordCountState,
 } from '@/lib/classifieds'
-import { cn } from '@/lib/utils'
+import { FEATURED_FEE } from '@/lib/featured'
+import { cn, formatMoney } from '@/lib/utils'
 import { saveClassified } from './actions'
 
 export type ClassifiedFormValues = {
@@ -40,6 +47,9 @@ export type ClassifiedFormValues = {
   contactPhone: string
   issueId: string
   notes: string
+  featured: boolean
+  imageUrl: string
+  featuredPaid: string
 }
 
 export type IssueOption = { id: string; title: string }
@@ -65,12 +75,26 @@ export function ClassifiedForm({
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [body, setBody] = React.useState(classified?.body ?? '')
   const [status, setStatus] = React.useState(classified?.status ?? 'DRAFT')
+  const [featured, setFeatured] = React.useState(classified?.featured ?? false)
+  const [preview, setPreview] = React.useState<string | null>(classified?.imageUrl || null)
 
   const editing = Boolean(classified?.id)
   const words = countWords(body)
   const state = wordCountState(words)
   // Drafts only get a nudge; approving or publishing is what the server blocks.
   const blocking = requiresWordCount(status) && state !== 'ok'
+
+  // Object URLs are only valid until revoked; drop the last one whenever the
+  // preview moves on so repeated picks don't leak.
+  React.useEffect(() => {
+    if (!preview?.startsWith('blob:')) return
+    return () => URL.revokeObjectURL(preview)
+  }, [preview])
+
+  function handleImageChange(changed: React.ChangeEvent<HTMLInputElement>) {
+    const selected = changed.target.files?.[0]
+    setPreview(selected ? URL.createObjectURL(selected) : classified?.imageUrl || null)
+  }
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -99,6 +123,8 @@ export function ClassifiedForm({
           setErrors({})
           setBody(classified?.body ?? '')
           setStatus(classified?.status ?? 'DRAFT')
+          setFeatured(classified?.featured ?? false)
+          setPreview(classified?.imageUrl || null)
         }
       }}
     >
@@ -124,6 +150,9 @@ export function ClassifiedForm({
           {classified?.id ? (
             <input type="hidden" name="id" value={classified.id} />
           ) : null}
+          {/* The image already stored, so saving without picking a new one
+              keeps it rather than reading as "featured with no image". */}
+          <input type="hidden" name="imageUrl" value={classified?.imageUrl ?? ''} />
 
           <Field label="Headline" htmlFor="headline" required error={errors.headline}>
             <Input
@@ -163,6 +192,85 @@ export function ClassifiedForm({
               {wordCountMessage(words)}
             </p>
           </Field>
+
+          {/* The one paid upgrade a listing can carry — the same one an event
+              carries. Ticking it opens the image picker; the fee is fixed and
+              the payment state is chased from the list. */}
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-3">
+            <label htmlFor="featured" className="flex cursor-pointer items-start gap-2.5">
+              <Checkbox
+                id="featured"
+                name="featured"
+                checked={featured}
+                onChange={(changed) => setFeatured(changed.target.checked)}
+                className="mt-0.5"
+              />
+              <span className="text-sm">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Star className="size-3.5 text-steel" />
+                  Featured listing — {formatMoney(FEATURED_FEE, true)}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  The listing runs with an image above its copy and leads the
+                  classifieds block in the beehiiv export.
+                </span>
+              </span>
+            </label>
+
+            {featured ? (
+              <div className="flex flex-col gap-3 border-t border-border pt-3">
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={preview}
+                    alt="Featured image preview"
+                    className="max-h-48 w-full rounded border border-border bg-muted object-contain"
+                  />
+                ) : (
+                  <div className="flex h-24 flex-col items-center justify-center gap-1.5 rounded border border-dashed border-border text-xs text-muted-foreground">
+                    <ImageOff className="size-5" />
+                    No image yet
+                  </div>
+                )}
+
+                <Field
+                  label="Image"
+                  htmlFor="image"
+                  required
+                  error={errors.image}
+                  hint="PNG, JPG, GIF, WEBP or SVG, up to 5MB. Landscape reads best."
+                >
+                  <Input
+                    id="image"
+                    name="image"
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+                    onChange={handleImageChange}
+                    aria-invalid={Boolean(errors.image)}
+                  />
+                </Field>
+
+                <Field
+                  label={`Fee (${formatMoney(FEATURED_FEE, true)})`}
+                  htmlFor="featuredPaid"
+                  error={errors.featuredPaid}
+                  hint="What's owed on the upgrade — chase it from the list."
+                >
+                  <Select
+                    id="featuredPaid"
+                    name="featuredPaid"
+                    defaultValue={classified?.featuredPaid || 'UNPAID'}
+                  >
+                    {PAID_STATUSES.map((value) => (
+                      <option key={value} value={value}>
+                        {label(value)}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+            ) : null}
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Category" htmlFor="category" required error={errors.category}>

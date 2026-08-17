@@ -1,9 +1,10 @@
 'use client'
 
 import * as React from 'react'
-import { CheckCircle2, Send } from 'lucide-react'
+import { CheckCircle2, ImageOff, Send, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -15,7 +16,8 @@ import {
   wordCountMessage,
   wordCountState,
 } from '@/lib/classifieds'
-import { cn } from '@/lib/utils'
+import { FEATURED_FEE } from '@/lib/featured'
+import { cn, formatMoney } from '@/lib/utils'
 
 const COUNTER_STYLES: Record<string, string> = {
   empty: 'text-muted-foreground',
@@ -35,6 +37,8 @@ export function SubmissionForm() {
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [message, setMessage] = React.useState<string | null>(null)
   const [body, setBody] = React.useState('')
+  const [featured, setFeatured] = React.useState(false)
+  const [preview, setPreview] = React.useState<string | null>(null)
 
   // Stamped when the form renders; the endpoint refuses submissions returned
   // faster than a person could type one.
@@ -44,26 +48,34 @@ export function SubmissionForm() {
   const words = countWords(body)
   const state = wordCountState(words)
 
+  // Object URLs are only valid until revoked; drop the last one whenever the
+  // preview moves on so repeated picks don't leak.
+  React.useEffect(() => {
+    if (!preview) return
+    return () => URL.revokeObjectURL(preview)
+  }, [preview])
+
+  function handleImageChange(changed: React.ChangeEvent<HTMLInputElement>) {
+    const selected = changed.target.files?.[0]
+    setPreview(selected ? URL.createObjectURL(selected) : null)
+  }
+
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
     setPending(true)
     setMessage(null)
 
+    // Multipart rather than JSON, because a featured listing carries an image.
+    // The endpoint reads the same field names either way.
+    form.set('featured', featured ? 'true' : 'false')
+    form.set('startedAt', String(startedAt.current))
+    if (!featured) form.delete('image')
+
     try {
       const response = await fetch('/api/classifieds/submit', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          headline: form.get('headline'),
-          body: form.get('body'),
-          category: form.get('category'),
-          contactName: form.get('contactName'),
-          contactEmail: form.get('contactEmail'),
-          contactPhone: form.get('contactPhone'),
-          website: form.get('website'),
-          startedAt: startedAt.current,
-        }),
+        body: form,
       })
 
       const result: Response = await response.json().catch(() => ({ ok: false }))
@@ -93,12 +105,21 @@ export function SubmissionForm() {
             question, we&rsquo;ll get in touch using the details you gave us, and
             we&rsquo;ll confirm which issue it appears in.
           </p>
+          {featured ? (
+            <p className="max-w-prose text-sm text-muted-foreground">
+              You asked to feature it, so your photo comes along with the
+              listing. We&rsquo;ll send you an invoice for the{' '}
+              {formatMoney(FEATURED_FEE, true)} when we confirm the issue.
+            </p>
+          ) : null}
           <Button
             type="button"
             variant="outline"
             onClick={() => {
               formRef.current?.reset()
               setBody('')
+              setFeatured(false)
+              setPreview(null)
               setSent(false)
               setMessage(null)
               startedAt.current = Date.now()
@@ -167,6 +188,67 @@ export function SubmissionForm() {
               ))}
             </Select>
           </Field>
+
+          {/* The one paid extra on this form. Ticking it opens the picker;
+              nothing is charged here — an invoice follows once we've read the
+              listing and picked an issue for it. */}
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-3">
+            <label htmlFor="featured" className="flex cursor-pointer items-start gap-2.5">
+              <Checkbox
+                id="featured"
+                name="featured"
+                checked={featured}
+                onChange={(changed) => setFeatured(changed.target.checked)}
+                className="mt-0.5"
+              />
+              <span className="text-sm">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Star className="size-3.5 text-steel" />
+                  Feature my listing — {formatMoney(FEATURED_FEE, true)}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  Add a photo and your listing runs with it, at the top of the
+                  classifieds. We&rsquo;ll invoice you once we&rsquo;ve confirmed
+                  the issue — nothing to pay now.
+                </span>
+              </span>
+            </label>
+
+            {featured ? (
+              <div className="flex flex-col gap-3 border-t border-border pt-3">
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={preview}
+                    alt="Your photo"
+                    className="max-h-48 w-full rounded border border-border bg-muted object-contain"
+                  />
+                ) : (
+                  <div className="flex h-24 flex-col items-center justify-center gap-1.5 rounded border border-dashed border-border text-xs text-muted-foreground">
+                    <ImageOff className="size-5" />
+                    No photo yet
+                  </div>
+                )}
+
+                <Field
+                  label="Your photo"
+                  htmlFor="image"
+                  required
+                  error={errors.image}
+                  hint="PNG, JPG, GIF, WEBP or SVG, up to 5MB. A landscape photo looks best."
+                >
+                  <Input
+                    id="image"
+                    name="image"
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+                    onChange={handleImageChange}
+                    aria-invalid={Boolean(errors.image)}
+                  />
+                </Field>
+              </div>
+            ) : null}
+          </div>
 
           <Field label="Your name" htmlFor="contactName" required error={errors.contactName}>
             <Input

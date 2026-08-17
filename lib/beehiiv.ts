@@ -219,6 +219,11 @@ function listingHtml(listing: BeehiivListing): string {
  * its image before anything else. Within each half the order the caller gave
  * still holds, so featured events read in date order among themselves and the
  * remainder is exactly the diary it was.
+ *
+ * It runs before grouping, which is what a grouped block wants too: a featured
+ * classified leads its own category and brings that category's heading to the
+ * top with it, rather than being printed adrift from the heading it belongs
+ * under.
  */
 function leadWithFeatured(listings: BeehiivListing[]): BeehiivListing[] {
   // Stable since ES2019, which is what keeps the two halves in the order they

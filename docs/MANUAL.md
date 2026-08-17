@@ -376,6 +376,34 @@ If a listing was approved and later edited past the cap some other way, the list
 flags it: the word count turns amber with a ⚠, and the number of listings over
 the limit appears under the page title.
 
+### Featuring a listing — $4.99
+
+Any classified can be **featured**, exactly as an event can: it runs with an
+image above its copy and leads the classifieds block, for a flat **$4.99**.
+Plain listings are still free.
+
+Tick **Featured listing** in the classified form and the image picker opens
+underneath.
+
+| Field | Notes |
+|---|---|
+| **Image** | Required once it's featured. PNG, JPG, GIF, WEBP or SVG, up to 5MB. Landscape reads best — it prints at the full width of the newsletter column, uncropped. |
+| **Fee** | **Unpaid → Invoiced → Paid**, the same three states bookings use. New featured listings start Unpaid. |
+
+Everything else works the way it does for events (see
+[Featuring an event](#9-events)): picking a new image replaces the old one and
+deletes the file it replaced, unticking **Featured** removes the image and
+clears the fee, and the fee is snapshotted on the listing so a later price
+change never rewrites what somebody was charged.
+
+Under the page title you get **"N featured"** and **"$X to collect"**, both
+links that filter the list; the **Featured** filter does the same from the
+filter bar, with **Fee to collect** for the chase list. A featured listing
+carries a star in the table with any uncollected fee under it, and **Export
+CSV** gains `Featured`, `Fee`, `Fee paid` and `Image URL`.
+
+Nothing in the app takes payment. Featuring is an invoice you send and mark off.
+
 ### Two views
 
 - **Table** — the working list. Sort by headline, category, issue, word count or
@@ -410,6 +438,12 @@ the contact line with the email as a clickable link. Categories only appear when
 there's more than one, so a run of three For sale listings doesn't get a
 pointless header.
 
+**Featured listings lead the block**, which is what the $4.99 buys, and they
+bring their category heading up with them — a listing is never printed away from
+the heading it belongs under. So a featured *Wanted* listing puts **Wanted**
+first, itself at the top of it, and the other categories follow in their usual
+order. Its image prints above its copy, full width of the column.
+
 The export follows the filters, so **filter to an issue first** and you get
 exactly that issue's listings, with the issue named under the heading.
 
@@ -430,6 +464,11 @@ It asks for exactly what a listing needs: headline, up to 70 words with the same
 live counter you see, category, name, and an email or phone. The cap is
 **enforced** there — a customer can't send you 200 words — and the submitter
 picks no status and no issue.
+
+It also offers **Feature my listing — $4.99**, with a photo picker underneath.
+The form takes no payment and says so: it tells them you'll invoice once you've
+confirmed the issue. A featured submission arrives with its photo attached and
+its fee **Unpaid**.
 
 What arrives:
 
@@ -725,7 +764,7 @@ you get exactly that list.
 | **Advertisers** | Name, Category, Status, Contact name, Email, Phone, Website, Reviews checked, Last contacted, Total booked, Total paid, Notes |
 | **Bookings** | Label, Advertiser, Ad type, Section, Issue, Publish date, Price, Status, Paid, CTA URL, Copy, Notes |
 | **Issues** | Title, Publish date, Status, Ads sold, Revenue, Theme |
-| **Classifieds** | Headline, Copy, Words, Category, Status, Source, Issue, Publish date, Contact name, Email, Phone, Notes |
+| **Classifieds** | Headline, Copy, Words, Category, Status, Source, Issue, Publish date, Featured, Fee, Fee paid, Image URL, Contact name, Email, Phone, Notes |
 | **Events** | Event, Start date, Start time, End date, End time, When, Where, Copy, Words, Category, Status, Source, Issue, Featured, Fee, Fee paid, Image URL, Tickets URL, Contact name, Email, Phone, Notes |
 
 The Classifieds page also has **Export for beehiiv**, which is a different

@@ -127,6 +127,13 @@ export const classifiedSchema = z
     contactPhone: optionalText,
     issueId: optionalText,
     notes: optionalText,
+    // The paid upgrade, exactly as an event carries it. The image itself never
+    // reaches this schema — a File can't be validated as text — so the action
+    // checks that a featured listing has one, either newly uploaded or already
+    // stored in `imageUrl`.
+    featured: z.boolean().default(false),
+    imageUrl: optionalText,
+    featuredPaid: paidStatusSchema.default('UNPAID'),
   })
   .superRefine((data, ctx) => {
     // "Contact or email" — either will do, but a listing nobody can reply to
@@ -187,6 +194,10 @@ export const publicClassifiedSchema = z
       (v) => v === undefined || v.length <= 40,
       'That phone number is too long'
     ),
+    // Asking for the upgrade is the submitter's to make; whether it has been
+    // paid for is not, so `featuredPaid` is absent here the same way `status`
+    // is. A submitted featured listing always lands unpaid.
+    featured: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
     if (!data.contactEmail && !data.contactPhone) {

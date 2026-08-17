@@ -270,6 +270,20 @@ describe('event listings', () => {
     )
   })
 
+  it('leads a grouped block with the featured listing, inside its own category', () => {
+    const html = toBeehiivHtml([
+      listing({ headline: 'Plain for sale', category: 'For sale' }),
+      listing({ headline: 'Plain wanted', category: 'Wanted' }),
+      listing({ headline: 'Paid to lead', category: 'Wanted', featured: true }),
+    ])
+
+    // The featured listing leads the block, and its category comes with it —
+    // a listing is never printed away from the heading it belongs under.
+    assert.ok(html.indexOf('Wanted') < html.indexOf('For sale'))
+    assert.ok(html.indexOf('Paid to lead') < html.indexOf('Plain wanted'))
+    assert.ok(html.indexOf('Plain wanted') < html.indexOf('Plain for sale'))
+  })
+
   it('keeps date order instead of grouping when grouping is off', () => {
     const html = toBeehiivHtml(
       [

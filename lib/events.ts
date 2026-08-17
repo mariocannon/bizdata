@@ -12,39 +12,11 @@ import { format, isValid } from 'date-fns'
 
 export const EVENT_WORD_MAX = 70
 
-/**
- * What featuring a listing costs: one flat fee for an image above the copy.
- *
- * The only place the current price lives. It is copied onto `Event.featuredFee`
- * when the upgrade is taken, so changing it here prices new listings without
- * touching what anyone has already been charged.
- */
-export const FEATURED_EVENT_FEE = 4.99
+// The featured upgrade is not an events idea — a classified carries the same
+// one — so its price and its arithmetic live in lib/featured.ts.
 
 /** Statuses where the word cap is enforced rather than merely flagged. */
 const ENFORCED_STATUSES = ['APPROVED', 'PUBLISHED']
-
-/** A fee is outstanding until it is marked paid — invoiced still counts. */
-export function isFeeOutstanding(featuredPaid: string): boolean {
-  return featuredPaid !== 'PAID'
-}
-
-/**
- * What the featured listings in a view still owe. Cents, so it adds up with
- * `formatMoney(total, true)` rather than being rounded on the way in.
- */
-export function featuredOwing(
-  rows: { featured: boolean; featuredFee: number; featuredPaid: string }[]
-): number {
-  const cents = rows.reduce(
-    (total, row) =>
-      row.featured && isFeeOutstanding(row.featuredPaid)
-        ? total + Math.round(row.featuredFee * 100)
-        : total,
-    0
-  )
-  return cents / 100
-}
 
 export function requiresWordCount(status: string): boolean {
   return ENFORCED_STATUSES.includes(status)

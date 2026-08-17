@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { AlertTriangle, ExternalLink, Inbox, Mail, Phone } from 'lucide-react'
+import { AlertTriangle, ExternalLink, Inbox, Mail, Phone, Star } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import {
   CLASSIFIED_CATEGORIES,
@@ -16,7 +16,8 @@ import {
   wordCountMessage,
   wordCountState,
 } from '@/lib/classifieds'
-import { cn, formatDate } from '@/lib/utils'
+import { featuredOwing, isFeeOutstanding } from '@/lib/featured'
+import { cn, formatDate, formatMoney } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
 import { FilterBar } from '@/components/filter-bar'
 import { ViewToggle } from '@/components/view-toggle'
@@ -49,6 +50,10 @@ const CSV_COLUMNS = [
   { header: 'Source', key: 'source' },
   { header: 'Issue', key: 'issue' },
   { header: 'Publish date', key: 'publishDate' },
+  { header: 'Featured', key: 'featured' },
+  { header: 'Fee', key: 'featuredFee' },
+  { header: 'Fee paid', key: 'featuredPaid' },
+  { header: 'Image URL', key: 'imageUrl' },
   { header: 'Contact name', key: 'contactName' },
   { header: 'Email', key: 'contactEmail' },
   { header: 'Phone', key: 'contactPhone' },
@@ -67,6 +72,7 @@ type SearchParams = {
   status?: string
   category?: string
   source?: string
+  featured?: string
   issueId?: string
   sort?: string
   dir?: string
@@ -82,6 +88,7 @@ export default async function ClassifiedsPage({
   const statusFilter = searchParams.status ?? ''
   const categoryFilter = searchParams.category ?? ''
   const sourceFilter = searchParams.source ?? ''
+  const featuredFilter = searchParams.featured ?? ''
   const issueFilter = searchParams.issueId ?? ''
   const sort = searchParams.sort ?? 'created'
   const dir = searchParams.dir === 'desc' ? 'desc' : 'asc'
@@ -120,6 +127,10 @@ export default async function ClassifiedsPage({
       if (statusFilter && row.status !== statusFilter) return false
       if (categoryFilter && row.category !== categoryFilter) return false
       if (sourceFilter && row.source !== sourceFilter) return false
+      if (featuredFilter === 'featured' && !row.featured) return false
+      // The upgrade sold but not yet collected — the chase list.
+      if (featuredFilter === 'owing' && !(row.featured && isFeeOutstanding(row.featuredPaid)))
+        return false
       if (issueFilter) {
         if (issueFilter === 'unassigned') {
           if (row.issueId) return false
@@ -167,6 +178,11 @@ export default async function ClassifiedsPage({
     source: label(row.source),
     issue: row.issue?.title ?? '',
     publishDate: row.issue ? row.issue.publishDate.toISOString().slice(0, 10) : '',
+    featured: row.featured ? 'Yes' : 'No',
+    // Blank rather than 0.00 on a plain listing — there is no fee to reconcile.
+    featuredFee: row.featured ? row.featuredFee.toFixed(2) : '',
+    featuredPaid: row.featured ? label(row.featuredPaid) : '',
+    imageUrl: row.imageUrl ?? '',
     contactName: row.contactName ?? '',
     contactEmail: row.contactEmail ?? '',
     contactPhone: row.contactPhone ?? '',
@@ -181,6 +197,10 @@ export default async function ClassifiedsPage({
       headline: row.headline,
       body: row.body,
       category: label(row.category),
+      // Only a featured listing carries its image into the newsletter, and
+      // only a featured listing leads the block.
+      imageUrl: row.featured ? row.imageUrl : null,
+      featured: row.featured,
       contactName: row.contactName,
       contactEmail: row.contactEmail,
       contactPhone: row.contactPhone,
@@ -201,6 +221,10 @@ export default async function ClassifiedsPage({
   const awaitingReview = classifieds.filter(
     (row) => row.source === 'PUBLIC' && row.status === 'DRAFT'
   ).length
+  // The featured upgrade, across every listing rather than the filtered view —
+  // money owed doesn't stop being owed because of a filter.
+  const featuredCount = classifieds.filter((row) => row.featured).length
+  const owing = featuredOwing(classifieds)
 
   return (
     <>
@@ -220,6 +244,23 @@ export default async function ClassifiedsPage({
                 className="font-medium text-steel hover:underline"
               >
                 {awaitingReview} submitted, awaiting review
+              </Link>
+            ) : null}
+            {featuredCount > 0 ? (
+              <Link
+                href="/classifieds?featured=featured"
+                className="inline-flex items-center gap-1 font-medium text-steel hover:underline"
+              >
+                <Star className="size-3.5" />
+                {featuredCount} featured
+              </Link>
+            ) : null}
+            {owing > 0 ? (
+              <Link
+                href="/classifieds?featured=owing"
+                className="tabular font-medium text-attention hover:underline"
+              >
+                {formatMoney(owing, true)} to collect
               </Link>
             ) : null}
             {needsWork > 0 ? (
@@ -273,6 +314,15 @@ export default async function ClassifiedsPage({
                 })),
               },
               {
+                param: 'featured',
+                label: 'Featured',
+                allLabel: 'All listings',
+                options: [
+                  { value: 'featured', label: 'Featured' },
+                  { value: 'owing', label: 'Fee to collect' },
+                ],
+              },
+              {
                 param: 'source',
                 label: 'Source',
                 allLabel: 'Any source',
@@ -320,7 +370,10 @@ export default async function ClassifiedsPage({
             <Card key={row.id}>
               <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
                 <div className="min-w-0">
-                  <CardTitle className="text-base">{row.headline}</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    {row.headline}
+                    {row.featured ? <FeaturedChip /> : null}
+                  </CardTitle>
                   <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                     <span>
                       {label(row.category)} ·{' '}
@@ -338,10 +391,38 @@ export default async function ClassifiedsPage({
                   >
                     {wordCountMessage(row.words)}
                   </span>
+                  {row.featured ? (
+                    // The fee, and where it has got to — "$4.99 unpaid" says
+                    // both at once, where a second pill next to the status
+                    // would only read as a second status.
+                    <span
+                      className={cn(
+                        'tabular whitespace-nowrap text-xs font-medium',
+                        isFeeOutstanding(row.featuredPaid)
+                          ? 'text-attention'
+                          : 'text-success'
+                      )}
+                    >
+                      {formatMoney(row.featuredFee, true)}{' '}
+                      {label(row.featuredPaid).toLowerCase()}
+                    </span>
+                  ) : null}
                   <StatusPill value={row.status} />
                 </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
+                {row.featured && row.imageUrl ? (
+                  // The image the reader will see above the copy, shown the
+                  // same way here. A plain <img> because an upload is an
+                  // arbitrary remote URL, which next/image would need every
+                  // host configured for.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={row.imageUrl}
+                    alt={`${row.headline} — featured image`}
+                    className="max-h-64 w-full rounded border border-border bg-muted object-contain"
+                  />
+                ) : null}
                 <p className="whitespace-pre-wrap">{row.body}</p>
                 <ContactLine
                   name={row.contactName}
@@ -386,10 +467,21 @@ export default async function ClassifiedsPage({
               {rows.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="max-w-[22rem]">
-                    <p className="truncate font-medium" title={row.headline}>
-                      {row.headline}
+                    <p className="flex items-center gap-1.5 font-medium" title={row.headline}>
+                      {row.featured ? (
+                        <Star aria-label="Featured" className="size-3.5 shrink-0 text-steel" />
+                      ) : null}
+                      <span className="truncate">{row.headline}</span>
                     </p>
-                    {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
+                      {row.featured && isFeeOutstanding(row.featuredPaid) ? (
+                        <span className="tabular text-[11px] font-medium text-attention">
+                          {formatMoney(row.featuredFee, true)}{' '}
+                          {label(row.featuredPaid).toLowerCase()}
+                        </span>
+                      ) : null}
+                    </span>
                     <p className="truncate text-xs text-muted-foreground">
                       {excerpt(row.body)}
                     </p>
@@ -450,6 +542,9 @@ export default async function ClassifiedsPage({
                           contactPhone: row.contactPhone ?? '',
                           issueId: row.issueId ?? '',
                           notes: row.notes ?? '',
+                          featured: row.featured,
+                          imageUrl: row.imageUrl ?? '',
+                          featuredPaid: row.featuredPaid,
                         }}
                         trigger={
                           <button
@@ -479,6 +574,16 @@ function SubmittedChip() {
     <span className="inline-flex items-center gap-1 rounded-full border border-progress-border bg-progress-soft px-1.5 py-0.5 text-[11px] font-medium text-progress">
       <Inbox className="size-3" />
       Submitted
+    </span>
+  )
+}
+
+/** Marks the paid upgrade: this listing runs with an image above its copy. */
+function FeaturedChip() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-tide-200 bg-tide-100 px-1.5 py-0.5 text-[11px] font-medium text-tide-800">
+      <Star className="size-3" />
+      Featured
     </span>
   )
 }

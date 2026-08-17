@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Field } from '@/components/ui/field'
 import { EVENT_CATEGORIES, label } from '@/lib/enums'
 import { countWords, wordCountMessage, wordCountState } from '@/lib/classifieds'
-import { EVENT_WORD_MAX, FEATURED_EVENT_FEE } from '@/lib/events'
+import { EVENT_WORD_MAX } from '@/lib/events'
+import { FEATURED_FEE } from '@/lib/featured'
 import { cn, formatMoney } from '@/lib/utils'
 
 const COUNTER_STYLES: Record<string, string> = {
@@ -104,7 +105,7 @@ export function EventSubmissionForm() {
             <p className="max-w-prose text-sm text-muted-foreground">
               You asked to feature it, so your photo comes along with the
               listing. We&rsquo;ll send you an invoice for the{' '}
-              {formatMoney(FEATURED_EVENT_FEE, true)} when we confirm the issue.
+              {formatMoney(FEATURED_FEE, true)} when we confirm the issue.
             </p>
           ) : null}
           <Button
@@ -257,7 +258,7 @@ export function EventSubmissionForm() {
               <span className="text-sm">
                 <span className="flex items-center gap-1.5 font-medium">
                   <Star className="size-3.5 text-steel" />
-                  Feature my event — {formatMoney(FEATURED_EVENT_FEE, true)}
+                  Feature my event — {formatMoney(FEATURED_FEE, true)}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   Add a photo and it runs with your listing in the newsletter.
