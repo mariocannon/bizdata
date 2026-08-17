@@ -239,6 +239,12 @@ export const eventSchema = z
     ticketUrl: optionalUrl,
     issueId: optionalText,
     notes: optionalText,
+    // The paid upgrade. The image itself never reaches this schema — a File
+    // can't be validated as text — so the action checks that a featured
+    // listing has one, either newly uploaded or already stored in `imageUrl`.
+    featured: z.boolean().default(false),
+    imageUrl: optionalText,
+    featuredPaid: paidStatusSchema.default('UNPAID'),
   })
   .superRefine((data, ctx) => {
     // A time without a date has nothing to attach itself to.
@@ -325,6 +331,10 @@ export const publicEventSchema = z
       'That phone number is too long'
     ),
     ticketUrl: optionalUrl,
+    // Asking for the upgrade is the submitter's to make; whether it has been
+    // paid for is not, so `featuredPaid` is absent here the same way `status`
+    // is. A submitted featured listing always lands unpaid.
+    featured: z.boolean().default(false),
   })
   .superRefine((data, ctx) => {
     if (!data.contactEmail && !data.contactPhone) {

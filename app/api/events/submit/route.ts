@@ -1,7 +1,10 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { fieldErrors, publicEventSchema } from '@/lib/validation'
+import { file, text } from '@/lib/actions'
 import { check, clientIp } from '@/lib/rate-limit'
+import { FEATURED_EVENT_FEE } from '@/lib/events'
+import { UploadError, deleteFile, saveFile } from '@/lib/upload'
 import { parseDateTimeInput } from '@/lib/utils'
 
 /**
@@ -13,15 +16,24 @@ import { parseDateTimeInput } from '@/lib/utils'
  * unauthenticated route that accepts them is a doorway to every action in the
  * app. `middleware.ts` refuses action posts on public paths.
  *
- * Everything it writes is an unassigned DRAFT tagged source=PUBLIC. Nothing
- * reaches a reader until the operator approves it.
+ * The body is multipart rather than JSON, because a featured listing brings an
+ * image with it. That is the only reason — every other field is still plain
+ * text, and the size guards below keep a text-only submission as small as it
+ * ever was.
+ *
+ * Everything it writes is an unassigned DRAFT tagged source=PUBLIC, and a
+ * featured one lands UNPAID: asking for the upgrade is not paying for it.
+ * Nothing reaches a reader until the operator approves it.
  */
 
 export const dynamic = 'force-dynamic'
 
 const LIMIT = 5
 const WINDOW_MS = 10 * 60 * 1000
-const MAX_BYTES = 16 * 1024
+/** Plenty for 70 words, a venue and a contact, and nowhere near an image. */
+const MAX_TEXT_BYTES = 16 * 1024
+/** With an image: the 5MB `lib/upload.ts` allows, plus multipart overhead. */
+const MAX_BYTES = 6 * 1024 * 1024
 const MIN_SECONDS = 3
 
 function bad(message: string, errors?: Record<string, string>, status = 400) {
@@ -37,48 +49,55 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const raw = await request.text()
-  if (raw.length > MAX_BYTES) {
+  // Checked before the body is read, so an oversized one is refused rather
+  // than buffered.
+  const declared = Number(request.headers.get('content-length'))
+  if (Number.isFinite(declared) && declared > MAX_BYTES) {
     return bad('That submission is too large.', undefined, 413)
   }
 
-  let payload: unknown
+  let form: FormData
   try {
-    payload = JSON.parse(raw)
+    form = await request.formData()
   } catch {
     return bad('Could not read that submission.')
   }
 
-  if (typeof payload !== 'object' || payload === null) {
-    return bad('Could not read that submission.')
-  }
-
-  const body = payload as Record<string, unknown>
-
   // Honeypot: hidden from people, irresistible to bots. Answer the way a
   // success does, so a script learns nothing from being refused.
-  if (typeof body.website === 'string' && body.website.trim() !== '') {
+  if (text(form, 'website') !== '') {
     return NextResponse.json({ ok: true, message: 'Thanks — your event is in.' })
   }
 
-  const startedAt = Number(body.startedAt)
+  const startedAt = Number(text(form, 'startedAt'))
   if (Number.isFinite(startedAt) && (Date.now() - startedAt) / 1000 < MIN_SECONDS) {
     return bad('That was quick — give it another go.')
   }
 
+  const featured = text(form, 'featured') === 'true'
+  // Only a featured listing may carry one; anything else attached is ignored.
+  const image = featured ? file(form, 'image') : null
+
+  // Without an image there is nothing here but text, and text this big is not
+  // a person filling in a form.
+  if (!image && Number.isFinite(declared) && declared > MAX_TEXT_BYTES) {
+    return bad('That submission is too large.', undefined, 413)
+  }
+
   const parsed = publicEventSchema.safeParse({
-    title: body.title,
-    body: body.body,
-    startDate: body.startDate,
-    startTime: body.startTime,
-    endDate: body.endDate,
-    endTime: body.endTime,
-    location: body.location,
-    category: body.category,
-    contactName: body.contactName,
-    contactEmail: body.contactEmail,
-    contactPhone: body.contactPhone,
-    ticketUrl: body.ticketUrl,
+    title: text(form, 'title'),
+    body: text(form, 'body'),
+    startDate: text(form, 'startDate'),
+    startTime: text(form, 'startTime'),
+    endDate: text(form, 'endDate'),
+    endTime: text(form, 'endTime'),
+    location: text(form, 'location'),
+    category: text(form, 'category'),
+    contactName: text(form, 'contactName'),
+    contactEmail: text(form, 'contactEmail'),
+    contactPhone: text(form, 'contactPhone'),
+    ticketUrl: text(form, 'ticketUrl'),
+    featured,
   })
 
   if (!parsed.success) {
@@ -93,8 +112,31 @@ export async function POST(request: NextRequest) {
     contactEmail,
     contactPhone,
     ticketUrl,
+    featured: wantsFeature,
     ...values
   } = parsed.data
+
+  // Upload last, so a rejected submission never leaves a file behind.
+  let imageUrl: string | null = null
+
+  if (wantsFeature) {
+    if (!image) {
+      return bad('Add a photo to feature your event.', {
+        image: 'Add a photo, or untick featuring it',
+      })
+    }
+
+    try {
+      imageUrl = await saveFile(image)
+    } catch (error) {
+      if (error instanceof UploadError) return bad(error.message, { image: error.message })
+      console.error('public event image upload failed', error)
+      return NextResponse.json(
+        { ok: false, message: 'Something went wrong saving that photo. Please try again.' },
+        { status: 500 }
+      )
+    }
+  }
 
   try {
     await prisma.event.create({
@@ -105,16 +147,22 @@ export async function POST(request: NextRequest) {
         contactEmail: contactEmail ?? null,
         contactPhone: contactPhone ?? null,
         ticketUrl: ticketUrl ?? null,
-        // Not negotiable from outside: submissions are unassigned drafts.
+        // Not negotiable from outside: submissions are unassigned drafts, and
+        // the fee is what we charge today, not what the form says it is.
         status: 'DRAFT',
         source: 'PUBLIC',
         issueId: null,
+        featured: wantsFeature,
+        imageUrl,
+        featuredFee: wantsFeature ? FEATURED_EVENT_FEE : 0,
+        featuredPaid: 'UNPAID',
       },
     })
 
     return NextResponse.json({ ok: true, message: 'Thanks — your event is in.' })
   } catch (error) {
     console.error('public event submission failed', error)
+    if (imageUrl) await deleteFile(imageUrl)
     return NextResponse.json(
       { ok: false, message: 'Something went wrong saving that. Please try again.' },
       { status: 500 }

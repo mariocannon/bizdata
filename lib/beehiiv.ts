@@ -29,6 +29,12 @@ export type BeehiivListing = {
    * there is one it becomes a "More info" button under the copy.
    */
   url?: string | null
+  /**
+   * A featured event's image, printed above the copy. Only an absolute http(s)
+   * URL travels — a local `/uploads` path means nothing in someone's inbox, so
+   * one is skipped rather than printed as a broken image.
+   */
+  imageUrl?: string | null
   contactName: string | null
   contactEmail: string | null
   contactPhone: string | null
@@ -107,6 +113,13 @@ const STYLES = {
     'border-radius:10px',
   ].join(';') + ';',
   buttonWrap: 'margin:0 0 10px;',
+  /**
+   * A featured event's image. Capped at the wrapper's inner width — 600 less
+   * its 28px padding either side — and `height:auto` so it scales rather than
+   * being letterboxed. `display:block` kills the descender gap inline images
+   * leave under themselves in most clients.
+   */
+  image: 'display:block;width:100%;max-width:544px;height:auto;border-radius:10px;margin:0 0 10px;',
   contact: `font-size:14px;color:${BRAND.slate};margin:0;`,
   link: `color:${BRAND.steelBlue};`,
   rule: `border:0;border-top:1px solid ${BRAND.rule};margin:18px 0;`,
@@ -167,10 +180,24 @@ function moreInfoHtml(listing: BeehiivListing): string {
   }">More info</a></p>`
 }
 
+/**
+ * The image on a featured listing, printed between the when-and-where line and
+ * the copy. Same vouching as the button: only an absolute http(s) URL is
+ * printed, so nothing else can be loaded into a reader's inbox.
+ */
+function imageHtml(listing: BeehiivListing): string {
+  const url = linkUrl(listing.imageUrl)
+  if (!url) return ''
+  return `<img src="${escapeHtml(url)}" alt="${escapeHtml(
+    listing.headline
+  )}" style="${STYLES.image}" />`
+}
+
 function listingHtml(listing: BeehiivListing): string {
   return [
     `<p style="${STYLES.headline}">${escapeHtml(listing.headline)}</p>`,
     listing.meta ? `<p style="${STYLES.meta}">${escapeHtml(listing.meta)}</p>` : '',
+    imageHtml(listing),
     `<p style="${STYLES.body}">${paragraphHtml(listing.body)}</p>`,
     moreInfoHtml(listing),
     contactHtml(listing),

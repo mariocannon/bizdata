@@ -159,6 +159,22 @@ motif in a Deep Navy tile. It is the only sanctioned alternative lockup.
 
 `--radius` is `0.65rem`, taken from the signup control.
 
+### Listing images (extension)
+
+> The source guide has no photography rules — The Tide had no reader-supplied
+> images until featured events. This is the minimum needed to keep one from
+> fighting the layout.
+
+A featured event's image runs **full width of the content column**, at the same
+`0.65rem`/10px radius as the primary button, with no crop: the picture is
+somebody's event, and cropping it to a ratio is a judgement we don't get to
+make. On screen it sits on a Sand tint so a transparent PNG still reads as an
+image; in the newsletter it sits directly on Paper.
+
+The image never carries the words. Whatever a reader needs to know is in the
+copy underneath, so a listing still reads with images turned off — most inboxes
+block them by default.
+
 ---
 
 ## 6. Semantic states (extension)

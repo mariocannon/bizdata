@@ -109,6 +109,11 @@ model Classified {
 // Midnight on startsAt/endsAt means "no time given" — the form has a date field
 // and a separate optional time field, so a market that just runs "on Saturday"
 // reads as a date rather than as 12am.
+//
+// `featured` is the one paid upgrade a listing can carry: an image above the
+// copy, for a flat fee. The fee is copied onto the row rather than read from
+// FEATURED_EVENT_FEE at display time, so raising the price never rewrites what
+// somebody was already charged.
 model Event {
   id           String    @id @default(cuid())
   title        String
@@ -119,6 +124,10 @@ model Event {
   category     String // EventCategory union
   status       String    @default("DRAFT") // EventStatus union
   source       String    @default("STAFF") // ClassifiedSource union — STAFF or PUBLIC (/submit/event)
+  featured     Boolean   @default(false)
+  imageUrl     String? // path/URL to the uploaded image — featured listings only
+  featuredFee  Float     @default(0) // what was charged, at the time it was charged
+  featuredPaid String    @default("UNPAID") // PaidStatus union
   contactName  String?
   contactEmail String?
   contactPhone String?

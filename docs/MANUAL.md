@@ -475,6 +475,43 @@ The dates come out as one line, in whichever shape fits:
 - `Sat 15 Aug 2026, 10am – 2pm` — same day, both times
 - `Sat 15 Aug 2026, 10am – Sun 16 Aug 2026, 4pm` — runs across days
 
+### Featuring an event — $4.99
+
+Any event listing can be **featured**: it runs with an image above its copy, for
+a flat **$4.99**. It's the only paid extra on a listing, and it's optional
+everywhere — plain listings are still free.
+
+Tick **Featured event** in the event form and the image picker opens underneath.
+
+| Field | Notes |
+|---|---|
+| **Image** | Required once it's featured. PNG, JPG, GIF, WEBP or SVG, up to 5MB. Landscape reads best — it prints at the full width of the newsletter column, uncropped. |
+| **Fee** | **Unpaid → Invoiced → Paid**, the same three states bookings use. New featured listings start Unpaid. |
+
+Picking a new image replaces the old one, and the file it replaced is deleted.
+**Unticking Featured** removes the image and clears the fee — do that on a
+listing somebody has already paid for and you're giving the money back, so
+untick it only when the upgrade genuinely isn't running.
+
+The fee is **snapshotted on the listing** when it's featured. If the price ever
+changes, everything already sold keeps the price it was sold at.
+
+Under the page title you get **"N featured"** and **"$X to collect"** — the
+second is every featured listing not yet marked Paid, Invoiced included. Both
+are links: they filter the list to exactly those. The **Featured** filter does
+the same from the filter bar, with **Fee to collect** for the chase list. In the
+table, a featured listing carries a star, and an uncollected fee sits under the
+title in Ochre. **Export CSV** carries `Featured`, `Fee`, `Fee paid` and
+`Image URL`, so a spreadsheet totals what's owed.
+
+Nothing in the app takes payment. Featuring is an invoice you send and mark off,
+the same as an ad booking.
+
+> **Not the same as a Featured Event booking.** *Featured Event* in
+> [Bookings](#6-bookings) is an ad slot sold to an advertiser out of the issue's
+> inventory, at its own price. This is a $4.99 upgrade on a community listing:
+> no advertiser, no inventory, no capacity check.
+
 ### The list is in date order
 
 The page **opens sorted by date**, soonest first — that's the order you'd read
@@ -499,6 +536,11 @@ words, a category, an optional tickets link, and a name plus an email or phone.
 Two things it checks that the classifieds form doesn't: the date has to be
 **still ahead of us**, and an end date can't come before the start.
 
+It also offers **Feature my event — $4.99**, with a photo picker underneath. The
+form takes no payment and says so: it tells them you'll invoice once you've
+confirmed the issue. A featured submission arrives with its photo attached and
+its fee **Unpaid**, waiting for you to invoice it.
+
 Submissions arrive exactly like classifieds do — **Draft**, **Unassigned**,
 tagged **Submitted** — with the count waiting on you under the page title and a
 **Source** filter to separate them from what you typed in.
@@ -512,6 +554,12 @@ spreadsheet, plus a `When` column with the printed line.
 **Export for beehiiv** gives you the published events as a *What's on* block,
 **in date order**, each with its when-and-where line under the title. Unlike
 classifieds they aren't grouped by category — a diary reads by date.
+
+A **featured** event carries its image into the block too, full width of the
+column and above the copy. One thing to know: the image has to be at a public
+web address for an inbox to load it, which it is on the live site. Running the
+app locally, uploads are saved to a folder on your own machine instead, so those
+images are left out of the export rather than pasted in broken.
 
 Any event with a **Tickets / more info** link gets a **More info** button under
 its copy — Sea Glass fill, Deep Harbor label, the same button the signup page
@@ -673,7 +721,7 @@ you get exactly that list.
 | **Bookings** | Label, Advertiser, Ad type, Section, Issue, Publish date, Price, Status, Paid, CTA URL, Copy, Notes |
 | **Issues** | Title, Publish date, Status, Ads sold, Revenue, Theme |
 | **Classifieds** | Headline, Copy, Words, Category, Status, Source, Issue, Publish date, Contact name, Email, Phone, Notes |
-| **Events** | Event, Start date, Start time, End date, End time, When, Where, Copy, Words, Category, Status, Issue, Tickets URL, Contact name, Email, Phone, Notes |
+| **Events** | Event, Start date, Start time, End date, End time, When, Where, Copy, Words, Category, Status, Source, Issue, Featured, Fee, Fee paid, Image URL, Tickets URL, Contact name, Email, Phone, Notes |
 
 The Classifieds page also has **Export for beehiiv**, which is a different
 thing: an HTML block of the published listings for pasting into a post, rather

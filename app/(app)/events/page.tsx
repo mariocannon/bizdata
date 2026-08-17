@@ -7,6 +7,7 @@ import {
   Mail,
   MapPin,
   Phone,
+  Star,
 } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import {
@@ -25,11 +26,13 @@ import {
 import {
   EVENT_WORD_MAX,
   eventMeta,
+  featuredOwing,
   formatEventWhen,
+  isFeeOutstanding,
   isUpcoming,
   requiresWordCount,
 } from '@/lib/events'
-import { cn, formatDate, toDateInput, toTimeInput } from '@/lib/utils'
+import { cn, formatDate, formatMoney, toDateInput, toTimeInput } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
 import { FilterBar } from '@/components/filter-bar'
 import { ViewToggle } from '@/components/view-toggle'
@@ -67,6 +70,10 @@ const CSV_COLUMNS = [
   { header: 'Status', key: 'status' },
   { header: 'Source', key: 'source' },
   { header: 'Issue', key: 'issue' },
+  { header: 'Featured', key: 'featured' },
+  { header: 'Fee', key: 'featuredFee' },
+  { header: 'Fee paid', key: 'featuredPaid' },
+  { header: 'Image URL', key: 'imageUrl' },
   { header: 'Tickets URL', key: 'ticketUrl' },
   { header: 'Contact name', key: 'contactName' },
   { header: 'Email', key: 'contactEmail' },
@@ -87,6 +94,7 @@ type SearchParams = {
   category?: string
   source?: string
   when?: string
+  featured?: string
   issueId?: string
   sort?: string
   dir?: string
@@ -99,6 +107,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   const categoryFilter = searchParams.category ?? ''
   const sourceFilter = searchParams.source ?? ''
   const whenFilter = searchParams.when ?? ''
+  const featuredFilter = searchParams.featured ?? ''
   const issueFilter = searchParams.issueId ?? ''
   // Dates are what an events list is for, so it opens in date order.
   const sort = searchParams.sort ?? 'when'
@@ -143,6 +152,10 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
       if (sourceFilter && row.source !== sourceFilter) return false
       if (whenFilter === 'upcoming' && !row.upcoming) return false
       if (whenFilter === 'past' && row.upcoming) return false
+      if (featuredFilter === 'featured' && !row.featured) return false
+      // The upgrade sold but not yet collected — the chase list.
+      if (featuredFilter === 'owing' && !(row.featured && isFeeOutstanding(row.featuredPaid)))
+        return false
       if (issueFilter) {
         if (issueFilter === 'unassigned') {
           if (row.issueId) return false
@@ -200,6 +213,11 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
     status: label(row.status),
     source: label(row.source),
     issue: row.issue?.title ?? '',
+    featured: row.featured ? 'Yes' : 'No',
+    // Blank rather than 0.00 on a plain listing — there is no fee to reconcile.
+    featuredFee: row.featured ? row.featuredFee.toFixed(2) : '',
+    featuredPaid: row.featured ? label(row.featuredPaid) : '',
+    imageUrl: row.imageUrl ?? '',
     ticketUrl: row.ticketUrl ?? '',
     contactName: row.contactName ?? '',
     contactEmail: row.contactEmail ?? '',
@@ -217,6 +235,8 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
       meta: eventMeta(row.startsAt, row.endsAt, row.location),
       // Becomes the "More info" button under the copy.
       url: row.ticketUrl,
+      // Only a featured listing carries its image into the newsletter.
+      imageUrl: row.featured ? row.imageUrl : null,
       contactName: row.contactName,
       contactEmail: row.contactEmail,
       contactPhone: row.contactPhone,
@@ -244,6 +264,10 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   const awaitingReview = events.filter(
     (row) => row.source === 'PUBLIC' && row.status === 'DRAFT'
   ).length
+  // The featured upgrade, across every event rather than the filtered view —
+  // money owed doesn't stop being owed because of a filter.
+  const featuredCount = events.filter((event) => event.featured).length
+  const owing = featuredOwing(events)
 
   return (
     <>
@@ -261,6 +285,23 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                 className="font-medium text-steel hover:underline"
               >
                 {awaitingReview} submitted, awaiting review
+              </Link>
+            ) : null}
+            {featuredCount > 0 ? (
+              <Link
+                href="/events?featured=featured"
+                className="inline-flex items-center gap-1 font-medium text-steel hover:underline"
+              >
+                <Star className="size-3.5" />
+                {featuredCount} featured
+              </Link>
+            ) : null}
+            {owing > 0 ? (
+              <Link
+                href="/events?featured=owing"
+                className="tabular font-medium text-attention hover:underline"
+              >
+                {formatMoney(owing, true)} to collect
               </Link>
             ) : null}
             <span>Up to {EVENT_WORD_MAX} words, when, where and a contact</span>
@@ -335,6 +376,15 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                 })),
               },
               {
+                param: 'featured',
+                label: 'Featured',
+                allLabel: 'All listings',
+                options: [
+                  { value: 'featured', label: 'Featured' },
+                  { value: 'owing', label: 'Fee to collect' },
+                ],
+              },
+              {
                 param: 'source',
                 label: 'Source',
                 allLabel: 'Any source',
@@ -380,7 +430,10 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
             <Card key={row.id}>
               <CardHeader className="flex-row items-start justify-between gap-3 space-y-0">
                 <div className="min-w-0">
-                  <CardTitle className="text-base">{row.title}</CardTitle>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    {row.title}
+                    {row.featured ? <FeaturedChip /> : null}
+                  </CardTitle>
                   <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs font-medium text-steel">
                     <CalendarDays className="size-3.5 shrink-0" />
                     {eventMeta(row.startsAt, row.endsAt, row.location)}
@@ -402,10 +455,38 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                   >
                     {wordCountMessage(row.words)}
                   </span>
+                  {row.featured ? (
+                    // The fee, and where it has got to — "$4.99 unpaid" says
+                    // both at once, where a second pill next to the status
+                    // would only read as a second status.
+                    <span
+                      className={cn(
+                        'tabular whitespace-nowrap text-xs font-medium',
+                        isFeeOutstanding(row.featuredPaid)
+                          ? 'text-attention'
+                          : 'text-success'
+                      )}
+                    >
+                      {formatMoney(row.featuredFee, true)}{' '}
+                      {label(row.featuredPaid).toLowerCase()}
+                    </span>
+                  ) : null}
                   <StatusPill value={row.status} />
                 </div>
               </CardHeader>
               <CardContent className="space-y-2 text-sm">
+                {row.featured && row.imageUrl ? (
+                  // The image the reader will see above the copy, shown the
+                  // same way here. A plain <img> because an upload is an
+                  // arbitrary remote URL, which next/image would need every
+                  // host configured for.
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={row.imageUrl}
+                    alt={`${row.title} — featured image`}
+                    className="max-h-64 w-full rounded border border-border bg-muted object-contain"
+                  />
+                ) : null}
                 <p className="whitespace-pre-wrap">{row.body}</p>
                 {row.ticketUrl ? (
                   <a
@@ -474,10 +555,21 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                     ) : null}
                   </TableCell>
                   <TableCell className="max-w-[16rem]">
-                    <p className="truncate font-medium" title={row.title}>
-                      {row.title}
+                    <p className="flex items-center gap-1.5 font-medium" title={row.title}>
+                      {row.featured ? (
+                        <Star aria-label="Featured" className="size-3.5 shrink-0 text-steel" />
+                      ) : null}
+                      <span className="truncate">{row.title}</span>
                     </p>
-                    {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
+                    <span className="flex flex-wrap items-center gap-1.5">
+                      {row.source === 'PUBLIC' ? <SubmittedChip /> : null}
+                      {row.featured && isFeeOutstanding(row.featuredPaid) ? (
+                        <span className="tabular text-[11px] font-medium text-attention">
+                          {formatMoney(row.featuredFee, true)}{' '}
+                          {label(row.featuredPaid).toLowerCase()}
+                        </span>
+                      ) : null}
+                    </span>
                     <p className="truncate text-xs text-muted-foreground">
                       {excerpt(row.body)}
                     </p>
@@ -544,6 +636,9 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                           ticketUrl: row.ticketUrl ?? '',
                           issueId: row.issueId ?? '',
                           notes: row.notes ?? '',
+                          featured: row.featured,
+                          imageUrl: row.imageUrl ?? '',
+                          featuredPaid: row.featuredPaid,
                         }}
                         trigger={
                           <button
@@ -573,6 +668,16 @@ function SubmittedChip() {
     <span className="inline-flex items-center gap-1 rounded-full border border-progress-border bg-progress-soft px-1.5 py-0.5 text-[11px] font-medium text-progress">
       <Inbox className="size-3" />
       Submitted
+    </span>
+  )
+}
+
+/** Marks the paid upgrade: this listing runs with an image above its copy. */
+function FeaturedChip() {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-tide-200 bg-tide-100 px-1.5 py-0.5 text-[11px] font-medium text-tide-800">
+      <Star className="size-3" />
+      Featured
     </span>
   )
 }

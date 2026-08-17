@@ -14,7 +14,8 @@ import { createClient } from '@supabase/supabase-js'
  *     with no external services.
  *
  * Callers only ever see the returned string, which is stored on
- * `Booking.creativeUrl`. Adding a third driver means changing this file only.
+ * `Booking.creativeUrl` (ad creative) or `Event.imageUrl` (a featured event's
+ * image). Adding a third driver means changing this file only.
  */
 
 const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads')
@@ -49,12 +50,12 @@ function supabase() {
 function validate(file: File): string {
   if (file.size === 0) throw new UploadError('That file is empty.')
   if (file.size > MAX_BYTES) {
-    throw new UploadError('Creative must be 5MB or smaller.')
+    throw new UploadError('That image must be 5MB or smaller.')
   }
 
   const extension = ALLOWED[file.type]
   if (!extension) {
-    throw new UploadError('Creative must be a PNG, JPG, GIF, WEBP or SVG image.')
+    throw new UploadError('That image must be a PNG, JPG, GIF, WEBP or SVG.')
   }
   return extension
 }

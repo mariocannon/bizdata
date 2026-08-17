@@ -2,7 +2,7 @@
 
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus } from 'lucide-react'
+import { ImageOff, Plus, Star } from 'lucide-react'
 import { toast } from 'sonner'
 import {
   Dialog,
@@ -14,14 +14,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Field } from '@/components/ui/field'
-import { EVENT_CATEGORIES, EVENT_STATUSES, label } from '@/lib/enums'
+import { EVENT_CATEGORIES, EVENT_STATUSES, PAID_STATUSES, label } from '@/lib/enums'
 import { countWords, wordCountMessage, wordCountState } from '@/lib/classifieds'
-import { EVENT_WORD_MAX, requiresWordCount } from '@/lib/events'
-import { cn } from '@/lib/utils'
+import { EVENT_WORD_MAX, FEATURED_EVENT_FEE, requiresWordCount } from '@/lib/events'
+import { cn, formatMoney } from '@/lib/utils'
 import { saveEvent } from './actions'
 
 export type EventFormValues = {
@@ -41,6 +42,9 @@ export type EventFormValues = {
   ticketUrl: string
   issueId: string
   notes: string
+  featured: boolean
+  imageUrl: string
+  featuredPaid: string
 }
 
 export type IssueOption = { id: string; title: string }
@@ -66,23 +70,39 @@ export function EventForm({
   const [errors, setErrors] = React.useState<Record<string, string>>({})
   const [body, setBody] = React.useState(event?.body ?? '')
   const [status, setStatus] = React.useState(event?.status ?? 'DRAFT')
+  const [featured, setFeatured] = React.useState(event?.featured ?? false)
+  const [preview, setPreview] = React.useState<string | null>(event?.imageUrl || null)
 
   const editing = Boolean(event?.id)
   const words = countWords(body)
   const state = wordCountState(words)
   const blocking = requiresWordCount(status) && state !== 'ok'
 
-  // Copy and status are the only fields held in state — every other one is
-  // uncontrolled and gets rebuilt from `event` when the dialog remounts. These
-  // two have to be put back deliberately, and on the way *in* as well as out:
-  // the trigger on each row shares one component instance with the dialog, so
-  // copy left behind by a cancelled edit or a saved "New event" would otherwise
-  // still be sitting there the next time the dialog is opened — against a
-  // different event.
+  // Copy, status and the featured upgrade are the only fields held in state —
+  // every other one is uncontrolled and gets rebuilt from `event` when the
+  // dialog remounts. These have to be put back deliberately, and on the way
+  // *in* as well as out: the trigger on each row shares one component instance
+  // with the dialog, so copy left behind by a cancelled edit or a saved "New
+  // event" would otherwise still be sitting there the next time the dialog is
+  // opened — against a different event.
   function resetFields() {
     setErrors({})
     setBody(event?.body ?? '')
     setStatus(event?.status ?? 'DRAFT')
+    setFeatured(event?.featured ?? false)
+    setPreview(event?.imageUrl || null)
+  }
+
+  // Object URLs are only valid until revoked; drop the last one whenever the
+  // preview moves on so repeated picks don't leak.
+  React.useEffect(() => {
+    if (!preview?.startsWith('blob:')) return
+    return () => URL.revokeObjectURL(preview)
+  }, [preview])
+
+  function handleImageChange(changed: React.ChangeEvent<HTMLInputElement>) {
+    const selected = changed.target.files?.[0]
+    setPreview(selected ? URL.createObjectURL(selected) : event?.imageUrl || null)
   }
 
   // Closing from our own buttons never reaches onOpenChange, so it resets here.
@@ -135,6 +155,9 @@ export function EventForm({
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {event?.id ? <input type="hidden" name="id" value={event.id} /> : null}
+          {/* The image already stored, so saving without picking a new one
+              keeps it rather than reading as "featured with no image". */}
+          <input type="hidden" name="imageUrl" value={event?.imageUrl ?? ''} />
 
           <Field label="Event" htmlFor="title" required error={errors.title}>
             <Input
@@ -241,6 +264,85 @@ export function EventForm({
               {wordCountMessage(words)}
             </p>
           </Field>
+
+          {/* The one paid upgrade a listing can carry. Ticking it opens the
+              image picker; the fee is fixed and the payment state is chased
+              from the list. */}
+          <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-3">
+            <label htmlFor="featured" className="flex cursor-pointer items-start gap-2.5">
+              <Checkbox
+                id="featured"
+                name="featured"
+                checked={featured}
+                onChange={(changed) => setFeatured(changed.target.checked)}
+                className="mt-0.5"
+              />
+              <span className="text-sm">
+                <span className="flex items-center gap-1.5 font-medium">
+                  <Star className="size-3.5 text-steel" />
+                  Featured event — {formatMoney(FEATURED_EVENT_FEE, true)}
+                </span>
+                <span className="mt-0.5 block text-xs text-muted-foreground">
+                  The listing runs with an image above its copy, and the image
+                  travels with the beehiiv export.
+                </span>
+              </span>
+            </label>
+
+            {featured ? (
+              <div className="flex flex-col gap-3 border-t border-border pt-3">
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={preview}
+                    alt="Featured image preview"
+                    className="max-h-48 w-full rounded border border-border bg-muted object-contain"
+                  />
+                ) : (
+                  <div className="flex h-24 flex-col items-center justify-center gap-1.5 rounded border border-dashed border-border text-xs text-muted-foreground">
+                    <ImageOff className="size-5" />
+                    No image yet
+                  </div>
+                )}
+
+                <Field
+                  label="Image"
+                  htmlFor="image"
+                  required
+                  error={errors.image}
+                  hint="PNG, JPG, GIF, WEBP or SVG, up to 5MB. Landscape reads best."
+                >
+                  <Input
+                    id="image"
+                    name="image"
+                    type="file"
+                    accept="image/png,image/jpeg,image/gif,image/webp,image/svg+xml"
+                    onChange={handleImageChange}
+                    aria-invalid={Boolean(errors.image)}
+                  />
+                </Field>
+
+                <Field
+                  label={`Fee (${formatMoney(FEATURED_EVENT_FEE, true)})`}
+                  htmlFor="featuredPaid"
+                  error={errors.featuredPaid}
+                  hint="What's owed on the upgrade — chase it from the list."
+                >
+                  <Select
+                    id="featuredPaid"
+                    name="featuredPaid"
+                    defaultValue={event?.featuredPaid || 'UNPAID'}
+                  >
+                    {PAID_STATUSES.map((value) => (
+                      <option key={value} value={value}>
+                        {label(value)}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
+            ) : null}
+          </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Category" htmlFor="category" required error={errors.category}>

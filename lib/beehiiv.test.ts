@@ -177,6 +177,52 @@ describe('event listings', () => {
     assert.doesNotMatch(html, /onclick="/)
   })
 
+  it('prints a featured image between the meta line and the copy', () => {
+    const html = toBeehiivHtml([
+      listing({
+        meta: 'Sat 15 Aug 2026, 10am',
+        imageUrl: 'https://cdn.example.co.nz/night-market.jpg',
+      }),
+    ])
+    assert.match(html, /<img src="https:\/\/cdn\.example\.co\.nz\/night-market\.jpg"/)
+    assert.ok(
+      html.indexOf('Sat 15 Aug 2026') < html.indexOf('<img') &&
+        html.indexOf('<img') < html.indexOf('Well-kept boat')
+    )
+  })
+
+  it('captions the image with the headline, escaped', () => {
+    const html = toBeehiivHtml([
+      listing({
+        headline: 'Fish & chips "night"',
+        imageUrl: 'https://cdn.example.co.nz/a.png',
+      }),
+    ])
+    assert.match(html, /alt="Fish &amp; chips &quot;night&quot;"/)
+  })
+
+  it('leaves the image out when there is none', () => {
+    assert.doesNotMatch(toBeehiivHtml([listing()]), /<img/)
+    assert.doesNotMatch(toBeehiivHtml([listing({ imageUrl: null })]), /<img/)
+  })
+
+  it('skips an image that is not a public http(s) URL', () => {
+    // The local-disk driver returns a path, which means nothing in an inbox.
+    assert.doesNotMatch(toBeehiivHtml([listing({ imageUrl: '/uploads/a.png' })]), /<img/)
+    assert.doesNotMatch(
+      toBeehiivHtml([listing({ imageUrl: 'data:image/png;base64,AAAA' })]),
+      /<img/
+    )
+  })
+
+  it('escapes an image URL that would break out of the attribute', () => {
+    const html = toBeehiivHtml([
+      listing({ imageUrl: 'https://example.co.nz/a.png" onerror="alert(1)' }),
+    ])
+    assert.match(html, /&quot; onerror=&quot;/)
+    assert.doesNotMatch(html, /onerror="/)
+  })
+
   it('keeps date order instead of grouping when grouping is off', () => {
     const html = toBeehiivHtml(
       [
