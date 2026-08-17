@@ -235,8 +235,10 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
       meta: eventMeta(row.startsAt, row.endsAt, row.location),
       // Becomes the "More info" button under the copy.
       url: row.ticketUrl,
-      // Only a featured listing carries its image into the newsletter.
+      // Only a featured listing carries its image into the newsletter, and
+      // only a featured listing leads the block.
       imageUrl: row.featured ? row.imageUrl : null,
+      featured: row.featured,
       contactName: row.contactName,
       contactEmail: row.contactEmail,
       contactPhone: row.contactPhone,

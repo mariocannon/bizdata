@@ -223,6 +223,53 @@ describe('event listings', () => {
     assert.doesNotMatch(html, /onerror="/)
   })
 
+  it('leads with the featured listing, wherever it falls in date order', () => {
+    const html = toBeehiivHtml(
+      [
+        listing({ headline: 'First up' }),
+        listing({ headline: 'Then this' }),
+        listing({ headline: 'Paid to lead', featured: true }),
+      ],
+      { groupByCategory: false }
+    )
+
+    assert.ok(html.indexOf('Paid to lead') < html.indexOf('First up'))
+    // The rest keeps the diary order it arrived in.
+    assert.ok(html.indexOf('First up') < html.indexOf('Then this'))
+  })
+
+  it('keeps featured listings in the order they arrived in', () => {
+    const html = toBeehiivHtml(
+      [
+        listing({ headline: 'Plain one' }),
+        listing({ headline: 'Featured in August', featured: true }),
+        listing({ headline: 'Featured in September', featured: true }),
+      ],
+      { groupByCategory: false }
+    )
+
+    assert.ok(
+      html.indexOf('Featured in August') < html.indexOf('Featured in September') &&
+        html.indexOf('Featured in September') < html.indexOf('Plain one')
+    )
+  })
+
+  it('leaves the order alone when nothing is featured', () => {
+    const html = toBeehiivHtml(
+      [
+        listing({ headline: 'First up' }),
+        listing({ headline: 'Then this', featured: false }),
+        listing({ headline: 'Last', featured: null }),
+      ],
+      { groupByCategory: false }
+    )
+
+    assert.ok(
+      html.indexOf('First up') < html.indexOf('Then this') &&
+        html.indexOf('Then this') < html.indexOf('Last')
+    )
+  })
+
   it('keeps date order instead of grouping when grouping is off', () => {
     const html = toBeehiivHtml(
       [

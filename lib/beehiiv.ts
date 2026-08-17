@@ -35,6 +35,11 @@ export type BeehiivListing = {
    * one is skipped rather than printed as a broken image.
    */
   imageUrl?: string | null
+  /**
+   * Whether this listing paid to lead the section. See `leadWithFeatured()`.
+   * Classifieds have no such thing and leave it out.
+   */
+  featured?: boolean | null
   contactName: string | null
   contactEmail: string | null
   contactPhone: string | null
@@ -206,6 +211,23 @@ function listingHtml(listing: BeehiivListing): string {
     .join('\n      ')
 }
 
+/**
+ * Featured listings first, everything else untouched behind them.
+ *
+ * Top of the section is what the fee buys, so it beats the date order the rest
+ * of the block keeps — a reader scanning What's On meets the paid listing and
+ * its image before anything else. Within each half the order the caller gave
+ * still holds, so featured events read in date order among themselves and the
+ * remainder is exactly the diary it was.
+ */
+function leadWithFeatured(listings: BeehiivListing[]): BeehiivListing[] {
+  // Stable since ES2019, which is what keeps the two halves in the order they
+  // arrived in rather than an arbitrary one.
+  return [...listings].sort(
+    (left, right) => Number(Boolean(right.featured)) - Number(Boolean(left.featured))
+  )
+}
+
 /** Groups listings by category label, keeping the order they arrived in. */
 function groupByCategory(listings: BeehiivListing[]): [string, BeehiivListing[]][] {
   const groups = new Map<string, BeehiivListing[]>()
@@ -236,9 +258,12 @@ export function toBeehiivHtml(
 ): string {
   const title = options.title ?? 'Classifieds'
   const grouped = options.groupByCategory ?? true
+  // A no-op for a block where nothing is featured, which is every classified
+  // block and most event ones.
+  const ordered = leadWithFeatured(listings)
   const groups: [string, BeehiivListing[]][] = grouped
-    ? groupByCategory(listings)
-    : [['', listings]]
+    ? groupByCategory(ordered)
+    : [['', ordered]]
 
   // With everything in one category, the category heading says nothing the
   // section heading hasn't already said.

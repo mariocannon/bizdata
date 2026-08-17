@@ -412,8 +412,8 @@ chopping them into categories breaks the date order a reader scans. It warns
 when a published event in view has already been, since a finished event in next
 week's newsletter is the obvious way to get this wrong.
 
-`featured` is the one paid upgrade a listing carries: an image above the copy for
-a flat fee. The current price lives in `FEATURED_EVENT_FEE` (`lib/events.ts`) and
+`featured` is the one paid upgrade a listing carries: an image above the copy and
+the top of the exported block, for a flat fee. The current price lives in `FEATURED_EVENT_FEE` (`lib/events.ts`) and
 is copied onto `Event.featuredFee` when the upgrade is taken, so repricing never
 rewrites what somebody was charged; `featuredPaid` reuses the booking payment
 statuses so the fee is chased the same way. It has nothing to do with the

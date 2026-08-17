@@ -477,9 +477,9 @@ The dates come out as one line, in whichever shape fits:
 
 ### Featuring an event — $4.99
 
-Any event listing can be **featured**: it runs with an image above its copy, for
-a flat **$4.99**. It's the only paid extra on a listing, and it's optional
-everywhere — plain listings are still free.
+Any event listing can be **featured**: it runs with an image above its copy and
+leads the What's On block, for a flat **$4.99**. It's the only paid extra on a
+listing, and it's optional everywhere — plain listings are still free.
 
 Tick **Featured event** in the event form and the image picker opens underneath.
 
@@ -554,6 +554,11 @@ spreadsheet, plus a `When` column with the printed line.
 **Export for beehiiv** gives you the published events as a *What's on* block,
 **in date order**, each with its when-and-where line under the title. Unlike
 classifieds they aren't grouped by category — a diary reads by date.
+
+**Featured events lead the block**, ahead of the date order, which is what the
+$4.99 buys: a reader meets the paid listing and its image first. Several
+featured events keep their own date order among themselves, and everything
+behind them is the diary exactly as it was.
 
 A **featured** event carries its image into the block too, full width of the
 column and above the copy. One thing to know: the image has to be at a public
