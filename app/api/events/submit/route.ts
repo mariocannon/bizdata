@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { fieldErrors, publicEventSchema } from '@/lib/validation'
 import { file, text } from '@/lib/actions'
 import { check, clientIp } from '@/lib/rate-limit'
-import { FEATURED_FEE } from '@/lib/featured'
+import { FEATURED_EVENT_FEE } from '@/lib/featured'
 import { UploadError, deleteFile, saveFile } from '@/lib/upload'
 import { parseDateTimeInput } from '@/lib/utils'
 
@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         issueId: null,
         featured: wantsFeature,
         imageUrl,
-        featuredFee: wantsFeature ? FEATURED_FEE : 0,
+        featuredFee: wantsFeature ? FEATURED_EVENT_FEE : 0,
         featuredPaid: 'UNPAID',
       },
     })

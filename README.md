@@ -131,12 +131,13 @@ nothing on it to leak. The endpoint's only effect is to create one row:
   ID in the `Next-Action` header rather than by the route they were posted to,
   so an open route that accepts them is a doorway to *every* action in the app.
   Middleware refuses action posts on public paths outright.
-- **Featuring is a request, never a fact.** Either form can ask for the $1.99
-  featured upgrade and attach an image, so both endpoints take
-  `multipart/form-data` rather than JSON. The fee is read from `FEATURED_FEE`
-  server-side and the listing always lands `UNPAID` — the payload doesn't get to
-  price itself or claim it has paid. The image is saved only after validation
-  passes, and removed again if the insert fails.
+- **Featuring is a request, never a fact.** Either form can ask for the featured
+  upgrade and attach an image, so both endpoints take `multipart/form-data`
+  rather than JSON. The fee is read server-side — `FEATURED_EVENT_FEE` or
+  `FEATURED_CLASSIFIED_FEE`, whichever the form is for — and the listing always
+  lands `UNPAID`; the payload doesn't get to price itself or claim it has paid.
+  The image is saved only after validation passes, and removed again if the
+  insert fails.
 - **Rate limit** of 5 submissions per IP per 10 minutes, counted separately per
   form (`lib/rate-limit.ts`), plus a honeypot field, a minimum time-on-page, and
   a body cap — 16 KB for a text submission, 6 MB for one carrying an image,
@@ -414,12 +415,15 @@ week's newsletter is the obvious way to get this wrong.
 
 `featured` is the one paid upgrade a listing carries: an image above the copy and
 the top of the exported block, for a flat fee. `Classified` carries the same four
-columns for the same upgrade — the two are one product on two shapes of listing,
-priced and chased by one `lib/featured.ts`. The current price lives in `FEATURED_FEE` (`lib/featured.ts`) and
-is copied onto the row's `featuredFee` when the upgrade is taken, so repricing
-never rewrites what somebody was charged; `featuredPaid` reuses the booking
-payment statuses so the fee is chased the same way. It has nothing to do with the
-`FEATURED_EVENT` ad type, which is an inventory slot sold to an advertiser.
+columns for the same upgrade — the two are one mechanism on two shapes of
+listing, chased by one `lib/featured.ts`. That file holds a price per listing
+type, `FEATURED_EVENT_FEE` ($4.99) and `FEATURED_CLASSIFIED_FEE` ($1.99), and
+fee arithmetic that reads neither: it totals what each row was actually
+charged. The relevant price is copied onto the row's `featuredFee` when the
+upgrade is taken, so repricing never rewrites what somebody was charged;
+`featuredPaid` reuses the booking payment statuses so the fee is chased the same
+way. None of it has anything to do with the `FEATURED_EVENT` ad type, which is
+an inventory slot sold to an advertiser — the similar name is worth watching.
 Only an absolute `http(s)` image URL is printed in the beehiiv block — the
 local-disk driver's `/uploads/…` path would be a broken image in an inbox.
 

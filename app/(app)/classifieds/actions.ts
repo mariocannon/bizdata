@@ -13,7 +13,7 @@ import {
   type ActionResult,
 } from '@/lib/actions'
 import { UploadError, deleteFile, saveFile } from '@/lib/upload'
-import { FEATURED_FEE } from '@/lib/featured'
+import { FEATURED_CLASSIFIED_FEE } from '@/lib/featured'
 
 function revalidateClassifieds() {
   revalidatePath('/classifieds')
@@ -99,7 +99,7 @@ export async function saveClassified(form: FormData): Promise<ActionResult<{ id:
     imageUrl: image,
     // Charged once, at the price of the day. Un-featuring clears it — there is
     // nothing to invoice for a listing that isn't running an image.
-    featuredFee: featured ? (previous?.featuredFee || FEATURED_FEE) : 0,
+    featuredFee: featured ? (previous?.featuredFee || FEATURED_CLASSIFIED_FEE) : 0,
     featuredPaid: featured ? featuredPaid : 'UNPAID',
   }
 

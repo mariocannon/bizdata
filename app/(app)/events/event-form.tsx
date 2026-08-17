@@ -22,7 +22,7 @@ import { Field } from '@/components/ui/field'
 import { EVENT_CATEGORIES, EVENT_STATUSES, PAID_STATUSES, label } from '@/lib/enums'
 import { countWords, wordCountMessage, wordCountState } from '@/lib/classifieds'
 import { EVENT_WORD_MAX, requiresWordCount } from '@/lib/events'
-import { FEATURED_FEE } from '@/lib/featured'
+import { FEATURED_EVENT_FEE } from '@/lib/featured'
 import { cn, formatMoney } from '@/lib/utils'
 import { saveEvent } from './actions'
 
@@ -281,7 +281,7 @@ export function EventForm({
               <span className="text-sm">
                 <span className="flex items-center gap-1.5 font-medium">
                   <Star className="size-3.5 text-steel" />
-                  Featured event — {formatMoney(FEATURED_FEE, true)}
+                  Featured event — {formatMoney(FEATURED_EVENT_FEE, true)}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   The listing runs with an image above its copy, and the image
@@ -324,7 +324,7 @@ export function EventForm({
                 </Field>
 
                 <Field
-                  label={`Fee (${formatMoney(FEATURED_FEE, true)})`}
+                  label={`Fee (${formatMoney(FEATURED_EVENT_FEE, true)})`}
                   htmlFor="featuredPaid"
                   error={errors.featuredPaid}
                   hint="What's owed on the upgrade — chase it from the list."

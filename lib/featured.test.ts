@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { FEATURED_FEE, featuredOwing, isFeeOutstanding } from './featured'
+import {
+  FEATURED_CLASSIFIED_FEE,
+  FEATURED_EVENT_FEE,
+  featuredOwing,
+  isFeeOutstanding,
+} from './featured'
 
 describe('the featured upgrade', () => {
   /** A row as either listing page holds it — only the fee fields matter here. */
@@ -8,8 +13,9 @@ describe('the featured upgrade', () => {
     return { featured, featuredFee, featuredPaid }
   }
 
-  it('costs $1.99', () => {
-    assert.equal(FEATURED_FEE, 1.99)
+  it('costs $4.99 on an event and $1.99 on a classified', () => {
+    assert.equal(FEATURED_EVENT_FEE, 4.99)
+    assert.equal(FEATURED_CLASSIFIED_FEE, 1.99)
   })
 
   it('adds up only what featured listings still owe', () => {
@@ -25,16 +31,17 @@ describe('the featured upgrade', () => {
     )
   })
 
-  it('adds up what each listing was actually charged, not the current price', () => {
-    // The fee is snapshotted on the row, so a listing sold at the old price is
-    // still owed at the old price. Totalling at FEATURED_FEE would quietly
-    // rewrite the invoice.
+  it('adds up what each listing was actually charged, not a current price', () => {
+    // The fee is snapshotted on the row, which is what lets one list hold
+    // listings sold at different prices — an old price, or the other listing
+    // type's. Totalling at a constant would quietly rewrite the invoice.
     assert.equal(
       featuredOwing([
-        row(true, 4.99, 'UNPAID'), // sold before the price came down
+        row(true, 4.99, 'UNPAID'),
         row(true, 1.99, 'UNPAID'),
+        row(true, 2.99, 'UNPAID'), // whatever it was sold at
       ]),
-      6.98
+      9.97
     )
   })
 

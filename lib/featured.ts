@@ -10,14 +10,21 @@
  */
 
 /**
- * What featuring a listing costs.
+ * What featuring an event costs, and what featuring a classified costs.
  *
- * The only place the current price lives. It is copied onto `featuredFee` when
- * the upgrade is taken, so changing it here prices new listings without
- * touching what anyone has already been charged. If events and classifieds ever
- * need different prices, this is the constant that splits in two.
+ * The prices are separate because they are separate products to price — an
+ * event listing is worth more at the top of What's On than a classified is at
+ * the top of the classifieds — even though everything else about the upgrade
+ * is identical. The arithmetic below stays shared: it never looks at either
+ * number, only at what each row was actually charged.
+ *
+ * The only place the current prices live. Each is copied onto the row's
+ * `featuredFee` when the upgrade is taken, so changing one here prices new
+ * listings without touching what anyone has already been charged — and the
+ * two move independently.
  */
-export const FEATURED_FEE = 1.99
+export const FEATURED_EVENT_FEE = 4.99
+export const FEATURED_CLASSIFIED_FEE = 1.99
 
 /** A fee is outstanding until it is marked paid — invoiced still counts. */
 export function isFeeOutstanding(featuredPaid: string): boolean {

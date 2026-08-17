@@ -16,7 +16,7 @@ import {
   wordCountMessage,
   wordCountState,
 } from '@/lib/classifieds'
-import { FEATURED_FEE } from '@/lib/featured'
+import { FEATURED_CLASSIFIED_FEE } from '@/lib/featured'
 import { cn, formatMoney } from '@/lib/utils'
 
 const COUNTER_STYLES: Record<string, string> = {
@@ -109,7 +109,7 @@ export function SubmissionForm() {
             <p className="max-w-prose text-sm text-muted-foreground">
               You asked to feature it, so your photo comes along with the
               listing. We&rsquo;ll send you an invoice for the{' '}
-              {formatMoney(FEATURED_FEE, true)} when we confirm the issue.
+              {formatMoney(FEATURED_CLASSIFIED_FEE, true)} when we confirm the issue.
             </p>
           ) : null}
           <Button
@@ -204,7 +204,7 @@ export function SubmissionForm() {
               <span className="text-sm">
                 <span className="flex items-center gap-1.5 font-medium">
                   <Star className="size-3.5 text-steel" />
-                  Feature my listing — {formatMoney(FEATURED_FEE, true)}
+                  Feature my listing — {formatMoney(FEATURED_CLASSIFIED_FEE, true)}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   Add a photo and your listing runs with it, at the top of the

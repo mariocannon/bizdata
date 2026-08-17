@@ -32,7 +32,7 @@ import {
   wordCountMessage,
   wordCountState,
 } from '@/lib/classifieds'
-import { FEATURED_FEE } from '@/lib/featured'
+import { FEATURED_CLASSIFIED_FEE } from '@/lib/featured'
 import { cn, formatMoney } from '@/lib/utils'
 import { saveClassified } from './actions'
 
@@ -208,7 +208,7 @@ export function ClassifiedForm({
               <span className="text-sm">
                 <span className="flex items-center gap-1.5 font-medium">
                   <Star className="size-3.5 text-steel" />
-                  Featured listing — {formatMoney(FEATURED_FEE, true)}
+                  Featured listing — {formatMoney(FEATURED_CLASSIFIED_FEE, true)}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   The listing runs with an image above its copy and leads the
@@ -251,7 +251,7 @@ export function ClassifiedForm({
                 </Field>
 
                 <Field
-                  label={`Fee (${formatMoney(FEATURED_FEE, true)})`}
+                  label={`Fee (${formatMoney(FEATURED_CLASSIFIED_FEE, true)})`}
                   htmlFor="featuredPaid"
                   error={errors.featuredPaid}
                   hint="What's owed on the upgrade — chase it from the list."
