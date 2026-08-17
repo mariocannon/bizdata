@@ -457,7 +457,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
                     {wordCountMessage(row.words)}
                   </span>
                   {row.featured ? (
-                    // The fee, and where it has got to — "$4.99 unpaid" says
+                    // The fee, and where it has got to — "$1.99 unpaid" says
                     // both at once, where a second pill next to the status
                     // would only read as a second status.
                     <span

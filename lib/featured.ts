@@ -17,7 +17,7 @@
  * touching what anyone has already been charged. If events and classifieds ever
  * need different prices, this is the constant that splits in two.
  */
-export const FEATURED_FEE = 4.99
+export const FEATURED_FEE = 1.99
 
 /** A fee is outstanding until it is marked paid — invoiced still counts. */
 export function isFeeOutstanding(featuredPaid: string): boolean {

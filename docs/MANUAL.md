@@ -376,10 +376,10 @@ If a listing was approved and later edited past the cap some other way, the list
 flags it: the word count turns amber with a ⚠, and the number of listings over
 the limit appears under the page title.
 
-### Featuring a listing — $4.99
+### Featuring a listing — $1.99
 
 Any classified can be **featured**, exactly as an event can: it runs with an
-image above its copy and leads the classifieds block, for a flat **$4.99**.
+image above its copy and leads the classifieds block, for a flat **$1.99**.
 Plain listings are still free.
 
 Tick **Featured listing** in the classified form and the image picker opens
@@ -438,7 +438,7 @@ the contact line with the email as a clickable link. Categories only appear when
 there's more than one, so a run of three For sale listings doesn't get a
 pointless header.
 
-**Featured listings lead the block**, which is what the $4.99 buys, and they
+**Featured listings lead the block**, which is what the $1.99 buys, and they
 bring their category heading up with them — a listing is never printed away from
 the heading it belongs under. So a featured *Wanted* listing puts **Wanted**
 first, itself at the top of it, and the other categories follow in their usual
@@ -465,7 +465,7 @@ live counter you see, category, name, and an email or phone. The cap is
 **enforced** there — a customer can't send you 200 words — and the submitter
 picks no status and no issue.
 
-It also offers **Feature my listing — $4.99**, with a photo picker underneath.
+It also offers **Feature my listing — $1.99**, with a photo picker underneath.
 The form takes no payment and says so: it tells them you'll invoice once you've
 confirmed the issue. A featured submission arrives with its photo attached and
 its fee **Unpaid**.
@@ -514,10 +514,10 @@ The dates come out as one line, in whichever shape fits:
 - `Sat 15 Aug 2026, 10am – 2pm` — same day, both times
 - `Sat 15 Aug 2026, 10am – Sun 16 Aug 2026, 4pm` — runs across days
 
-### Featuring an event — $4.99
+### Featuring an event — $1.99
 
 Any event listing can be **featured**: it runs with an image above its copy and
-leads the What's On block, for a flat **$4.99**. It's the only paid extra on a
+leads the What's On block, for a flat **$1.99**. It's the only paid extra on a
 listing, and it's optional everywhere — plain listings are still free.
 
 Tick **Featured event** in the event form and the image picker opens underneath.
@@ -548,7 +548,7 @@ the same as an ad booking.
 
 > **Not the same as a Featured Event booking.** *Featured Event* in
 > [Bookings](#6-bookings) is an ad slot sold to an advertiser out of the issue's
-> inventory, at its own price. This is a $4.99 upgrade on a community listing:
+> inventory, at its own price. This is a $1.99 upgrade on a community listing:
 > no advertiser, no inventory, no capacity check.
 
 ### The list is in date order
@@ -575,7 +575,7 @@ words, a category, an optional tickets link, and a name plus an email or phone.
 Two things it checks that the classifieds form doesn't: the date has to be
 **still ahead of us**, and an end date can't come before the start.
 
-It also offers **Feature my event — $4.99**, with a photo picker underneath. The
+It also offers **Feature my event — $1.99**, with a photo picker underneath. The
 form takes no payment and says so: it tells them you'll invoice once you've
 confirmed the issue. A featured submission arrives with its photo attached and
 its fee **Unpaid**, waiting for you to invoice it.
@@ -595,7 +595,7 @@ spreadsheet, plus a `When` column with the printed line.
 classifieds they aren't grouped by category — a diary reads by date.
 
 **Featured events lead the block**, ahead of the date order, which is what the
-$4.99 buys: a reader meets the paid listing and its image first. Several
+$1.99 buys: a reader meets the paid listing and its image first. Several
 featured events keep their own date order among themselves, and everything
 behind them is the diary exactly as it was.
 

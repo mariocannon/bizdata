@@ -131,7 +131,7 @@ nothing on it to leak. The endpoint's only effect is to create one row:
   ID in the `Next-Action` header rather than by the route they were posted to,
   so an open route that accepts them is a doorway to *every* action in the app.
   Middleware refuses action posts on public paths outright.
-- **Featuring is a request, never a fact.** Either form can ask for the $4.99
+- **Featuring is a request, never a fact.** Either form can ask for the $1.99
   featured upgrade and attach an image, so both endpoints take
   `multipart/form-data` rather than JSON. The fee is read from `FEATURED_FEE`
   server-side and the listing always lands `UNPAID` — the payload doesn't get to
