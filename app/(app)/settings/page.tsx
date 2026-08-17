@@ -11,7 +11,7 @@ export default async function SettingsPage() {
     <>
       <PageHeader
         title="Settings"
-        description="Defaults used across inventory and the booking form."
+        description="Defaults used across inventory, the booking form and the media kit."
       />
       <SettingsForm settings={settings} />
     </>

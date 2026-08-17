@@ -21,10 +21,11 @@ it, that's the [README](../README.md).
 10. [The dashboard](#10-the-dashboard)
 11. [Reader survey](#11-reader-survey)
 12. [Settings](#12-settings)
-13. [Exporting to CSV](#13-exporting-to-csv)
-14. [Recipes](#14-recipes)
-15. [Troubleshooting](#15-troubleshooting)
-16. [Limits and things to know](#16-limits-and-things-to-know)
+13. [The media kit](#13-the-media-kit)
+14. [Exporting to CSV](#14-exporting-to-csv)
+15. [Recipes](#15-recipes)
+16. [Troubleshooting](#16-troubleshooting)
+17. [Limits and things to know](#17-limits-and-things-to-know)
 
 ---
 
@@ -633,7 +634,7 @@ fault: see the Reader survey section of `README.md`.
 
 ## 12. Settings
 
-Three things, all optional to change.
+Four groups of things, all optional to change.
 
 **Bulletin slots per issue** (default 3) — how many bulletin ads an issue
 carries. Changing this immediately changes what counts as full or oversold on
@@ -657,9 +658,61 @@ rules; any booking can be priced however you agreed.
 
 Changing a default doesn't touch existing bookings.
 
+**Media kit** — the audience numbers and contact address on the public rate
+card, and the switch that publishes it. See [The media kit](#13-the-media-kit).
+
 ---
 
-## 13. Exporting to CSV
+## 13. The media kit
+
+The page you send someone who asks "what does it cost to advertise?" — at
+`/media-kit`, public, no password.
+
+It builds itself from Settings: the audience numbers you type in, and the same
+default prices the booking form uses. There is no second rate card to keep in
+step — change a price in Settings and the media kit quotes the new one.
+
+### Turning it on
+
+**Settings → Media kit.**
+
+| Field | What it does |
+|---|---|
+| **Subscribers** | Shown as the headline audience number. Left at 0, the line is left off rather than showing a zero. |
+| **Open rate** | Whole percent. Same rule — 0 leaves it off. |
+| **Contact email** | Where the **Book a spot** button writes to. |
+| **Publish the media kit** | Opens the page to anyone with the link. |
+
+Until you tick **Publish**, `/media-kit` is **not found** — so a fresh deploy
+never puts your rate card on the internet by accident. Publishing needs a
+contact email; a rate card nobody can reply to is a dead end, so the app won't
+save that combination.
+
+Once it's published, a **Media kit** button appears on the Advertisers page.
+That's the link to paste into a pitch email.
+
+### What an advertiser sees
+
+- Your audience numbers, and that it goes out once a week.
+- Every ad type, what it actually is in plain words, how many exist per issue,
+  and the price.
+- Three lines on how it works — pick a spot, send words and artwork, invoiced
+  once it runs.
+- One button: **Book a spot**, which opens an email to you with the subject and
+  a short template already filled in.
+
+The page reads nothing but Settings. No advertiser, booking or revenue figure is
+on it, and there is nothing on it to fill in — the only action is the email.
+
+### Keeping it honest
+
+Subscribers and open rate are typed, not counted: the list lives in beehiiv, not
+in this database. Nothing reminds you to update them, so make it part of the
+same habit as putting prices up — check both when a season turns.
+
+---
+
+## 14. Exporting to CSV
 
 **Export CSV** on Advertisers, Bookings, Issues, Classifieds and Events, plus on each
 issue's detail page for just that issue's bookings.
@@ -685,7 +738,7 @@ nothing.
 
 ---
 
-## 14. Recipes
+## 15. Recipes
 
 ### Selling a new advertiser their first ad
 
@@ -736,7 +789,7 @@ the takeover into a different issue.
 
 ---
 
-## 15. Troubleshooting
+## 16. Troubleshooting
 
 **"This issue already has a Headline booking"**
 Working as intended — one Headline per issue. Cancel the existing one, pick a
@@ -771,7 +824,7 @@ Netlify → Deploys → your deploy → Functions.
 
 ---
 
-## 16. Limits and things to know
+## 17. Limits and things to know
 
 **One password, not accounts.** Everyone shares it, and the app can't tell who
 did what. Fine for one operator; if more people need access, that's the point to

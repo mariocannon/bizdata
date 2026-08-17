@@ -140,5 +140,14 @@ model Settings {
   bulletinCapacity Int      @default(3)
   soldOutTarget    Int      @default(10)
   defaultPrices    String   @default("{}") // JSON: Record<AdType, number>
-  updatedAt        DateTime @updatedAt
+
+  // The media kit at /media-kit — the one page an advertiser is sent. It is
+  // public, so it stays dark until the operator turns it on, and the numbers
+  // on it are typed here rather than guessed from the database.
+  mediaKitPublished    Boolean @default(false)
+  mediaKitSubscribers  Int     @default(0)
+  mediaKitOpenRate     Int     @default(0) // whole percent
+  mediaKitContactEmail String?
+
+  updatedAt DateTime @updatedAt
 }

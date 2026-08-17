@@ -19,12 +19,33 @@ export type AppSettings = {
   bulletinCapacity: number
   soldOutTarget: number
   defaultPrices: Record<AdType, number>
+  /** Whether /media-kit answers. Off until the operator opens it. */
+  mediaKitPublished: boolean
+  mediaKitSubscribers: number
+  /** Whole percent. */
+  mediaKitOpenRate: number
+  mediaKitContactEmail: string | null
 }
+
+/** Blank clears the address rather than storing an empty string. */
+const mediaKitEmail = z
+  .string()
+  .trim()
+  .transform((v) => (v === '' ? null : v))
+  .nullable()
+  .refine(
+    (v) => v === null || z.string().email().safeParse(v).success,
+    'Enter a valid email address'
+  )
 
 export const settingsSchema = z.object({
   bulletinCapacity: z.coerce.number().int().min(1).max(20),
   soldOutTarget: z.coerce.number().int().min(1).max(50),
   defaultPrices: z.record(z.enum(AD_TYPES), z.coerce.number().min(0)),
+  mediaKitPublished: z.boolean(),
+  mediaKitSubscribers: z.coerce.number().int().min(0).max(10_000_000),
+  mediaKitOpenRate: z.coerce.number().int().min(0).max(100),
+  mediaKitContactEmail: mediaKitEmail,
 })
 
 function parsePrices(raw: string): Record<AdType, number> {
@@ -58,6 +79,10 @@ export async function getSettings(): Promise<AppSettings> {
     bulletinCapacity: row.bulletinCapacity,
     soldOutTarget: row.soldOutTarget,
     defaultPrices: parsePrices(row.defaultPrices),
+    mediaKitPublished: row.mediaKitPublished,
+    mediaKitSubscribers: row.mediaKitSubscribers,
+    mediaKitOpenRate: row.mediaKitOpenRate,
+    mediaKitContactEmail: row.mediaKitContactEmail,
   }
 }
 
@@ -65,19 +90,20 @@ export async function saveSettings(input: AppSettings): Promise<AppSettings> {
   const data = settingsSchema.parse(input)
   const prices = { ...DEFAULT_PRICES, ...data.defaultPrices }
 
+  const row = {
+    bulletinCapacity: data.bulletinCapacity,
+    soldOutTarget: data.soldOutTarget,
+    defaultPrices: JSON.stringify(prices),
+    mediaKitPublished: data.mediaKitPublished,
+    mediaKitSubscribers: data.mediaKitSubscribers,
+    mediaKitOpenRate: data.mediaKitOpenRate,
+    mediaKitContactEmail: data.mediaKitContactEmail,
+  }
+
   await prisma.settings.upsert({
     where: { id: 'settings' },
-    update: {
-      bulletinCapacity: data.bulletinCapacity,
-      soldOutTarget: data.soldOutTarget,
-      defaultPrices: JSON.stringify(prices),
-    },
-    create: {
-      id: 'settings',
-      bulletinCapacity: data.bulletinCapacity,
-      soldOutTarget: data.soldOutTarget,
-      defaultPrices: JSON.stringify(prices),
-    },
+    update: row,
+    create: { id: 'settings', ...row },
   })
 
   return { ...data, defaultPrices: prices }

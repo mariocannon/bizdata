@@ -3,14 +3,16 @@ import { SESSION_COOKIE, gateMode, verifySessionToken } from '@/lib/auth'
 
 /**
  * The public forms and the endpoints they post to — a classified at /submit and
- * an event at /submit/event. Everything else in the app stays behind the
- * password.
+ * an event at /submit/event — plus the media kit at /media-kit, which is a
+ * read-only page an advertiser is sent and which 404s until it is published in
+ * Settings. Everything else in the app stays behind the password.
  */
 const PUBLIC_PATHS = new Set([
   '/submit',
   '/api/classifieds/submit',
   '/submit/event',
   '/api/events/submit',
+  '/media-kit',
 ])
 
 /**

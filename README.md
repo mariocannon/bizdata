@@ -110,7 +110,13 @@ Two pages you can send to people, and the endpoints they post to:
 | `/submit` | `/api/classifieds/submit` | a `Classified` |
 | `/submit/event` | `/api/events/submit` | an `Event` |
 
-Those four paths are `PUBLIC_PATHS` in `middleware.ts`; everything else still
+A third public page, `/media-kit`, is read-only: the rate card an advertiser is
+sent. It reads the `Settings` row and nothing else, and it answers only once
+`mediaKitPublished` is set from the Settings page — until then it is a 404, so a
+fresh deploy never publishes a rate card by itself. Publishing also requires a
+contact email, since the page's one action is a `mailto:`.
+
+Those five paths are `PUBLIC_PATHS` in `middleware.ts`; everything else still
 needs the password.
 
 The page reads nothing from the database and renders no app chrome, so there is
@@ -406,6 +412,23 @@ week's newsletter is the obvious way to get this wrong.
 Target 3:1 content-to-ad. Informational only: the issue detail shows ads sold
 against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 
+### The media kit
+
+`/media-kit` is the rate card an advertiser is sent, and it is derived rather
+than written: `lib/media-kit.ts` builds every row from the `Settings` row — the
+default price per ad type, and the slot counts the inventory rules enforce. A
+price rise in Settings is a price rise on the kit, and the kit can never quote a
+slot the booking form won't sell. The module is pure and covered by
+`lib/media-kit.test.ts`.
+
+Two gates, both in `isMediaKitOpen()`: the operator has to publish it, and there
+has to be a contact email for the page's one action to reach. Fail either and
+the route is a 404.
+
+Audience figures (subscribers, open rate) are typed into Settings, not counted —
+the list lives in beehiiv. A figure left at 0 is omitted from the page rather
+than rendered as a zero.
+
 ### Statuses
 
 - **Advertiser pipeline:** `PROSPECT → PITCHED → WON → ACTIVE`, plus `PAUSED`, `LOST`
@@ -427,9 +450,10 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/classifieds` | Reader classifieds — headline, up to 70 words, contact. Table and copy views, filters, CSV export |
 | `/events` | Community events — the same shape plus when and where. Opens in date order, filterable to Upcoming, CSV and beehiiv exports |
 | `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
-| `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
+| `/settings` | Bulletin capacity, soft sold-out target, default price per ad type, and the media kit's numbers and publish switch |
 | `/submit` | **Public.** The form you send to customers to place a classified. No password, reads nothing, writes an unassigned draft |
 | `/submit/event` | **Public.** The same, for an event — plus when and where |
+| `/media-kit` | **Public once published.** The rate card you send an advertiser — audience, every ad type with its price and how many exist per issue, and a mailto. Built from `Settings`, so it can't drift from the booking form |
 
 List filters and view toggles live in the URL, so any filtered view is a
 shareable link and the dashboard deep-links straight into one.
@@ -460,11 +484,12 @@ app/
   login/                the password gate
   submit/               the public classified form (no password)
     event/              the public event form
+  media-kit/            the public rate card (no password, 404 until published)
   api/classifieds/
     submit/             the endpoint the classified form posts to
   api/events/
     submit/             the endpoint the event form posts to
-middleware.ts           enforces the gate on every route bar the two public ones
+middleware.ts           enforces the gate on every route bar the public ones
 components/
   ui/                   shadcn/ui-style primitives
   dashboard/            KPI card, charts
@@ -477,6 +502,7 @@ lib/
   classifieds.ts        word counting and the 70-word cap
   events.ts             event dates: formatting, upcoming, the no-time rule
   beehiiv.ts            renders published listings as pasteable HTML
+  media-kit.ts          the public rate card, built from Settings
   rate-limit.ts         fixed-window limiter for the public endpoint
   validation.ts         Zod schemas shared by forms and actions
   survey-db.ts          client for the separate survey Supabase project

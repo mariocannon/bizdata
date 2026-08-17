@@ -1,7 +1,9 @@
 import Link from 'next/link'
-import { CheckCircle2, ExternalLink } from 'lucide-react'
+import { CheckCircle2, ExternalLink, FileText } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { getAdvertiserTotals, ZERO_TOTALS } from '@/lib/rollups'
+import { getSettings } from '@/lib/settings'
+import { isMediaKitOpen } from '@/lib/media-kit'
 import { ADVERTISER_CATEGORIES, ADVERTISER_STATUSES, label } from '@/lib/enums'
 import { formatDate, formatMoney, toDateInput } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
@@ -11,6 +13,7 @@ import { SortHeader } from '@/components/sort-header'
 import { StatusPill } from '@/components/status-pill'
 import { ExportCsvButton } from '@/components/export-csv-button'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import {
   Table,
@@ -61,9 +64,10 @@ export default async function AdvertisersPage({
   const sort = searchParams.sort ?? 'name'
   const dir = searchParams.dir === 'desc' ? 'desc' : 'asc'
 
-  const [advertisers, totals] = await Promise.all([
+  const [advertisers, totals, settings] = await Promise.all([
     prisma.advertiser.findMany({ orderBy: { name: 'asc' } }),
     getAdvertiserTotals(),
+    getSettings(),
   ])
 
   const rows = advertisers
@@ -130,6 +134,16 @@ export default async function AdvertisersPage({
         }
         actions={
           <>
+            {/* The link you paste into a pitch email. Only offered once the kit
+                is published — an unpublished one 404s for the advertiser. */}
+            {isMediaKitOpen(settings) ? (
+              <Button asChild variant="outline">
+                <a href="/media-kit" target="_blank" rel="noreferrer">
+                  <FileText />
+                  Media kit
+                </a>
+              </Button>
+            ) : null}
             <ExportCsvButton
               rows={csvRows}
               columns={CSV_COLUMNS}

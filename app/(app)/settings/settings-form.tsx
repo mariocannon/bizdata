@@ -3,7 +3,10 @@
 import * as React from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
+import Link from 'next/link'
+import { ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Field } from '@/components/ui/field'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -108,6 +111,93 @@ export function SettingsForm({ settings }: { settings: AppSettings }) {
               </div>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card className="lg:col-span-2">
+        <CardHeader>
+          <CardTitle>Media kit</CardTitle>
+          <CardDescription>
+            The page you send a prospective advertiser. It shows these numbers and
+            the default prices above, at{' '}
+            <Link href="/media-kit" className="font-medium text-steel hover:underline">
+              /media-kit
+              <ExternalLink className="ml-1 inline size-3 align-[-0.1em]" />
+            </Link>
+            .
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field
+              label="Subscribers"
+              htmlFor="mediaKitSubscribers"
+              error={errors.mediaKitSubscribers}
+              hint="From beehiiv. Left at 0 the line is left off the page."
+            >
+              <Input
+                id="mediaKitSubscribers"
+                name="mediaKitSubscribers"
+                type="number"
+                min="0"
+                step="1"
+                defaultValue={settings.mediaKitSubscribers}
+                aria-invalid={Boolean(errors.mediaKitSubscribers)}
+                className="tabular"
+              />
+            </Field>
+
+            <Field
+              label="Open rate (%)"
+              htmlFor="mediaKitOpenRate"
+              error={errors.mediaKitOpenRate}
+              hint="Whole percent, averaged over recent issues."
+            >
+              <Input
+                id="mediaKitOpenRate"
+                name="mediaKitOpenRate"
+                type="number"
+                min="0"
+                max="100"
+                step="1"
+                defaultValue={settings.mediaKitOpenRate}
+                aria-invalid={Boolean(errors.mediaKitOpenRate)}
+                className="tabular"
+              />
+            </Field>
+          </div>
+
+          <Field
+            label="Contact email"
+            htmlFor="mediaKitContactEmail"
+            error={errors.mediaKitContactEmail}
+            hint="Where the “Book a spot” button on the media kit writes to."
+          >
+            <Input
+              id="mediaKitContactEmail"
+              name="mediaKitContactEmail"
+              type="email"
+              placeholder="ads@thetide.co.nz"
+              defaultValue={settings.mediaKitContactEmail ?? ''}
+              aria-invalid={Boolean(errors.mediaKitContactEmail)}
+            />
+          </Field>
+
+          <label className="flex items-start gap-2.5 text-sm">
+            <Checkbox
+              id="mediaKitPublished"
+              name="mediaKitPublished"
+              defaultChecked={settings.mediaKitPublished}
+              className="mt-0.5"
+            />
+            <span>
+              <span className="font-medium">Publish the media kit</span>
+              <span className="block text-muted-foreground">
+                Opens /media-kit to anyone with the link — no password. Until then
+                the page is not found.
+              </span>
+            </span>
+          </label>
         </CardContent>
       </Card>
 
