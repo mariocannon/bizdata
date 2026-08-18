@@ -7,6 +7,7 @@ import {
   hasTime,
   isUpcoming,
   requiresWordCount,
+  shouldAutoArchive,
 } from './events'
 
 /** Local-time constructor, matching how the form stores what was typed. */
@@ -129,5 +130,77 @@ describe('requiresWordCount', () => {
 
   it('lets drafts run long', () => {
     assert.equal(requiresWordCount('DRAFT'), false)
+  })
+})
+
+describe('shouldAutoArchive', () => {
+  const now = at(2026, 8, 15, 12)
+
+  it('leaves an event that is still to come alone', () => {
+    assert.equal(
+      shouldAutoArchive({ startsAt: at(2026, 8, 20, 10), endsAt: null, status: 'PUBLISHED' }, now),
+      false
+    )
+  })
+
+  it('leaves one that is running right now alone', () => {
+    assert.equal(
+      shouldAutoArchive(
+        { startsAt: at(2026, 8, 15, 9), endsAt: at(2026, 8, 15, 17), status: 'PUBLISHED' },
+        now
+      ),
+      false
+    )
+  })
+
+  it('archives one that finished this morning', () => {
+    assert.equal(
+      shouldAutoArchive(
+        { startsAt: at(2026, 8, 15, 9), endsAt: at(2026, 8, 15, 11), status: 'PUBLISHED' },
+        now
+      ),
+      true
+    )
+  })
+
+  it('keeps a date-only event for the whole of its day', () => {
+    assert.equal(
+      shouldAutoArchive({ startsAt: at(2026, 8, 15), endsAt: null, status: 'PUBLISHED' }, now),
+      false
+    )
+  })
+
+  it('archives a date-only event the day after', () => {
+    assert.equal(
+      shouldAutoArchive({ startsAt: at(2026, 8, 14), endsAt: null, status: 'PUBLISHED' }, now),
+      true
+    )
+  })
+
+  it('waits for the end date on a multi-day event', () => {
+    assert.equal(
+      shouldAutoArchive(
+        { startsAt: at(2026, 8, 10), endsAt: at(2026, 8, 20), status: 'PUBLISHED' },
+        now
+      ),
+      false
+    )
+  })
+
+  it('sweeps drafts and approved listings too — a past event is past', () => {
+    for (const status of ['DRAFT', 'APPROVED', 'PUBLISHED']) {
+      assert.equal(
+        shouldAutoArchive({ startsAt: at(2026, 8, 1, 10), endsAt: null, status }, now),
+        true,
+        status
+      )
+    }
+  })
+
+  it('leaves an already archived listing alone, so nothing is written twice', () => {
+    assert.equal(
+      shouldAutoArchive({ startsAt: at(2026, 8, 1, 10), endsAt: null, status: 'ARCHIVED' }, now),
+      false
+    )
   })
 })

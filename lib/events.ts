@@ -104,3 +104,24 @@ export function eventMeta(
   const when = formatEventWhen(startsAt, endsAt)
   return location ? `${when} · ${location}` : when
 }
+
+/**
+ * Whether the automatic sweep should archive this listing: it has been and
+ * gone, and it isn't archived already.
+ *
+ * An event is only ever interesting until it happens, so once it's over it goes
+ * where a run classified goes — Archived, still there, out of the way. It uses
+ * the same `isUpcoming` rule the list dims rows with, so a date-only Saturday
+ * market survives its own day rather than archiving itself at 12:01am on the
+ * morning it runs.
+ *
+ * Every other status sweeps: a draft nobody approved and an approved listing
+ * that never made an issue are as finished as one that ran.
+ */
+export function shouldAutoArchive(
+  event: { startsAt: Date; endsAt?: Date | null; status: string },
+  now = new Date()
+): boolean {
+  if (event.status === 'ARCHIVED') return false
+  return !isUpcoming(event.startsAt, event.endsAt, now)
+}

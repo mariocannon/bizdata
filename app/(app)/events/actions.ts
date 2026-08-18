@@ -13,12 +13,54 @@ import {
   type ActionResult,
 } from '@/lib/actions'
 import { UploadError, deleteFile, saveFile } from '@/lib/upload'
+import { shouldAutoArchive } from '@/lib/events'
 import { FEATURED_EVENT_FEE } from '@/lib/featured'
 import { parseDateTimeInput } from '@/lib/utils'
 
 function revalidateEvents() {
   revalidatePath('/events')
   revalidatePath('/issues')
+}
+
+/**
+ * Archive everything that has been and gone. The events page runs this before
+ * it reads, so a listing retires itself the first time anyone looks at the
+ * list after its date — there is no scheduler on this deployment, and a
+ * single-operator tool that is only ever read by one person doesn't need one.
+ *
+ * Two queries and only when there is something to do: the database throws out
+ * everything that hasn't started yet, then `shouldAutoArchive` applies the same
+ * end-of-day rule the list dims rows with.
+ *
+ * Returns how many were archived, and never throws — a sweep that fails is not
+ * a reason to fail the page it was about to render.
+ */
+export async function archivePastEvents(): Promise<number> {
+  const now = new Date()
+
+  try {
+    const candidates = await prisma.event.findMany({
+      // Nothing that starts in the future can have finished, so the rest of the
+      // table never leaves the database.
+      where: { status: { not: 'ARCHIVED' }, startsAt: { lt: now } },
+      select: { id: true, startsAt: true, endsAt: true, status: true },
+    })
+
+    const finished = candidates
+      .filter((event) => shouldAutoArchive(event, now))
+      .map((event) => event.id)
+
+    if (finished.length === 0) return 0
+
+    const { count } = await prisma.event.updateMany({
+      where: { id: { in: finished } },
+      data: { status: 'ARCHIVED' },
+    })
+    return count
+  } catch (error) {
+    console.error('archivePastEvents failed', error)
+    return 0
+  }
 }
 
 export async function saveEvent(form: FormData): Promise<ActionResult<{ id: string }>> {

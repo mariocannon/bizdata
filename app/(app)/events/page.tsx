@@ -50,6 +50,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { archivePastEvents } from './actions'
 import { EventForm } from './event-form'
 import { DeleteEventButton } from './delete-event-button'
 
@@ -111,6 +112,12 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   // Dates are what an events list is for, so it opens in date order.
   const sort = searchParams.sort ?? 'when'
   const dir = searchParams.dir === 'desc' ? 'desc' : 'asc'
+
+  // An event that has been is done with, so it retires itself before the list
+  // is read: anything past its date comes back Archived rather than sitting in
+  // Published waiting to be noticed. There is no scheduler on this deployment,
+  // and this page is the only place events are read.
+  await archivePastEvents()
 
   const [events, issues] = await Promise.all([
     prisma.event.findMany({ include: { issue: true }, orderBy: { startsAt: 'asc' } }),
@@ -246,7 +253,10 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   const approvedInView = rows.filter((row) => row.status === 'APPROVED').length
 
   // A finished event in next week's newsletter is the obvious way to get this
-  // wrong, so the export says so rather than quietly including it.
+  // wrong, so the export says so rather than quietly including it. The sweep at
+  // the top of the page normally leaves nothing here — this is the backstop for
+  // anything it couldn't reach, such as an event that ended mid-render or a
+  // sweep the database refused.
   const pastPublished = rows.filter(
     (row) => row.status === 'PUBLISHED' && !row.upcoming
   ).length

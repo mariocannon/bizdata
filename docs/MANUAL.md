@@ -566,6 +566,34 @@ An event with no time stays "upcoming" for the whole of its day, so a Saturday
 market doesn't vanish from the list at one minute past midnight on the morning
 it runs.
 
+### Past events archive themselves
+
+**Once an event's date has passed, it archives itself.** Nothing to remember and
+nothing to tidy up: the next time you open **Events**, anything that has been
+and gone comes back **Archived**, whatever status it was in before — a draft
+nobody got to, an approved listing that never made an issue, and one that ran.
+
+It uses the same rule as **Been and gone**, so it never jumps the gun:
+
+- An event **with a time** archives once that time is past — the end time if you
+  gave one, otherwise the start.
+- An **all-day** event (no time given) stays put until the end of its day, so a
+  Saturday market is still live all Saturday.
+- A **multi-day** event waits for its **end** date.
+
+Nothing is deleted, and nothing is hidden. Archived events stay in the list, in
+date order, dimmed and marked **Been and gone**, and the **Status → Archived**
+and **When → Past** filters both find them. Only **Delete** removes a listing for
+good.
+
+The one thing it changes downstream: an event that has been can no longer be
+**Published**, so **Export for beehiiv** can't carry a finished event into next
+week's newsletter by accident.
+
+**To run something again**, don't reopen the old listing — edit it to the new
+date and set the status back to **Approved** or **Published**, and it stays put
+until that date passes too.
+
 ### The public form
 
 **Public form** in the top right opens **`/submit/event`** — the events version
