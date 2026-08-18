@@ -84,6 +84,21 @@ export function ClassifiedForm({
   // Drafts only get a nudge; approving or publishing is what the server blocks.
   const blocking = requiresWordCount(status) && state !== 'ok'
 
+  // Copy, status and the featured upgrade are the only fields held in state —
+  // every other one is uncontrolled and gets rebuilt from `classified` when the
+  // dialog remounts. These have to be put back deliberately, and on the way
+  // *in* as well as out: the trigger shares one component instance with the
+  // dialog, so copy left behind by a cancelled edit or a saved "New classified"
+  // would otherwise still be sitting there the next time the dialog is opened —
+  // against a different listing, or against a listing that no longer exists.
+  function resetFields() {
+    setErrors({})
+    setBody(classified?.body ?? '')
+    setStatus(classified?.status ?? 'DRAFT')
+    setFeatured(classified?.featured ?? false)
+    setPreview(classified?.imageUrl || null)
+  }
+
   // Object URLs are only valid until revoked; drop the last one whenever the
   // preview moves on so repeated picks don't leak.
   React.useEffect(() => {
@@ -96,6 +111,12 @@ export function ClassifiedForm({
     setPreview(selected ? URL.createObjectURL(selected) : classified?.imageUrl || null)
   }
 
+  // Closing from our own buttons never reaches onOpenChange, so it resets here.
+  function close() {
+    setOpen(false)
+    resetFields()
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
@@ -103,8 +124,7 @@ export function ClassifiedForm({
     startTransition(async () => {
       const result = await saveClassified(form)
       if (result.ok) {
-        setErrors({})
-        setOpen(false)
+        close()
         toast.success(result.message ?? 'Saved.')
         router.refresh()
       } else {
@@ -119,13 +139,7 @@ export function ClassifiedForm({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) {
-          setErrors({})
-          setBody(classified?.body ?? '')
-          setStatus(classified?.status ?? 'DRAFT')
-          setFeatured(classified?.featured ?? false)
-          setPreview(classified?.imageUrl || null)
-        }
+        resetFields()
       }}
     >
       <DialogTrigger asChild>
@@ -373,7 +387,7 @@ export function ClassifiedForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={close}
               disabled={pending}
             >
               Cancel

@@ -58,6 +58,24 @@ export function IssueForm({
 
   const editing = Boolean(issue?.id)
 
+  // The title is the one field held in state — the rest are uncontrolled and
+  // rebuilt from `issue` when the dialog remounts. It has to be put back
+  // deliberately, on the way *in* as well as out: the trigger shares one
+  // component instance with the dialog, so a title left behind by a cancelled
+  // edit or a saved "New issue" would otherwise still be there the next time
+  // the dialog is opened.
+  function resetFields() {
+    setErrors({})
+    setTitle(issue?.title ?? '')
+    setTitleTouched(Boolean(issue?.title))
+  }
+
+  // Closing from our own buttons never reaches onOpenChange, so it resets here.
+  function close() {
+    setOpen(false)
+    resetFields()
+  }
+
   function handleDateChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (!titleTouched) setTitle(suggestTitle(event.target.value))
   }
@@ -69,8 +87,7 @@ export function IssueForm({
     startTransition(async () => {
       const result = await saveIssue(form)
       if (result.ok) {
-        setErrors({})
-        setOpen(false)
+        close()
         toast.success(result.message ?? 'Saved.')
         router.refresh()
       } else {
@@ -85,11 +102,7 @@ export function IssueForm({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) {
-          setErrors({})
-          setTitle(issue?.title ?? '')
-          setTitleTouched(Boolean(issue?.title))
-        }
+        resetFields()
       }}
     >
       <DialogTrigger asChild>
@@ -167,7 +180,7 @@ export function IssueForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={close}
               disabled={pending}
             >
               Cancel

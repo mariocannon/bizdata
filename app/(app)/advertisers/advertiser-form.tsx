@@ -50,6 +50,15 @@ export function AdvertiserForm({
 
   const editing = Boolean(advertiser?.id)
 
+  // Every field here is uncontrolled and rebuilt from `advertiser` when the
+  // dialog remounts; only the error list survives, so it is cleared on the way
+  // *in* as well as out. Closing from our own buttons never reaches
+  // onOpenChange, so those route through `close` too.
+  function close() {
+    setOpen(false)
+    setErrors({})
+  }
+
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const form = new FormData(event.currentTarget)
@@ -57,8 +66,7 @@ export function AdvertiserForm({
     startTransition(async () => {
       const result = await saveAdvertiser(form)
       if (result.ok) {
-        setErrors({})
-        setOpen(false)
+        close()
         toast.success(result.message ?? 'Saved.')
         router.refresh()
       } else {
@@ -73,7 +81,7 @@ export function AdvertiserForm({
       open={open}
       onOpenChange={(next) => {
         setOpen(next)
-        if (!next) setErrors({})
+        setErrors({})
       }}
     >
       <DialogTrigger asChild>
@@ -217,7 +225,7 @@ export function AdvertiserForm({
             <Button
               type="button"
               variant="outline"
-              onClick={() => setOpen(false)}
+              onClick={close}
               disabled={pending}
             >
               Cancel
