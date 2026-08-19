@@ -16,7 +16,11 @@ import {
   wordCountMessage,
   wordCountState,
 } from '@/lib/classifieds'
-import { featuredOwing, isFeeOutstanding } from '@/lib/featured'
+import {
+  featuredClassifiedPaymentUrl,
+  featuredOwing,
+  isFeeOutstanding,
+} from '@/lib/featured'
 import { cn, formatDate, formatMoney } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
 import { FilterBar } from '@/components/filter-bar'
@@ -38,6 +42,7 @@ import {
 import { ExportBeehiivButton } from '@/components/export-beehiiv-button'
 import { ClassifiedForm } from './classified-form'
 import { DeleteClassifiedButton } from './delete-classified-button'
+import { PaymentLinkButton } from './payment-link-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -407,6 +412,12 @@ export default async function ClassifiedsPage({
                       {label(row.featuredPaid).toLowerCase()}
                     </span>
                   ) : null}
+                  {row.featured && isFeeOutstanding(row.featuredPaid) ? (
+                    <PaymentLinkButton
+                      url={featuredClassifiedPaymentUrl(row.id)}
+                      headline={row.headline}
+                    />
+                  ) : null}
                   <StatusPill value={row.status} />
                 </div>
               </CardHeader>
@@ -529,6 +540,13 @@ export default async function ClassifiedsPage({
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-end gap-1">
+                      {row.featured && isFeeOutstanding(row.featuredPaid) ? (
+                        <PaymentLinkButton
+                          url={featuredClassifiedPaymentUrl(row.id)}
+                          headline={row.headline}
+                          compact
+                        />
+                      ) : null}
                       <ClassifiedForm
                         issues={issueOptions}
                         classified={{

@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { CheckCircle2, ImageOff, Send, Star } from 'lucide-react'
+import { CheckCircle2, CreditCard, ImageOff, Send, Star } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -29,6 +29,9 @@ type Response = {
   ok: boolean
   message?: string
   errors?: Record<string, string>
+  /** Set only on a featured submission: where to pay the fee, if they want to
+   *  pay it now. The listing is already saved either way. */
+  payUrl?: string
 }
 
 export function SubmissionForm() {
@@ -39,6 +42,7 @@ export function SubmissionForm() {
   const [body, setBody] = React.useState('')
   const [featured, setFeatured] = React.useState(false)
   const [preview, setPreview] = React.useState<string | null>(null)
+  const [payUrl, setPayUrl] = React.useState<string | null>(null)
 
   // Stamped when the form renders; the endpoint refuses submissions returned
   // faster than a person could type one.
@@ -82,6 +86,7 @@ export function SubmissionForm() {
 
       if (result.ok) {
         setErrors({})
+        setPayUrl(result.payUrl ?? null)
         setSent(true)
       } else {
         setErrors(result.errors ?? {})
@@ -108,9 +113,20 @@ export function SubmissionForm() {
           {featured ? (
             <p className="max-w-prose text-sm text-muted-foreground">
               You asked to feature it, so your photo comes along with the
-              listing. We&rsquo;ll send you an invoice for the{' '}
-              {formatMoney(FEATURED_CLASSIFIED_FEE, true)} when we confirm the issue.
+              listing. You can pay the {formatMoney(FEATURED_CLASSIFIED_FEE, true)}{' '}
+              now if that&rsquo;s easiest — otherwise we&rsquo;ll send you the same
+              link when we confirm the issue.
             </p>
+          ) : null}
+          {payUrl ? (
+            // Opens in a new tab, so the listing they just sent is still behind
+            // them if they change their mind.
+            <Button asChild>
+              <a href={payUrl} target="_blank" rel="noopener noreferrer">
+                <CreditCard className="size-4" />
+                Pay {formatMoney(FEATURED_CLASSIFIED_FEE, true)} now
+              </a>
+            </Button>
           ) : null}
           <Button
             type="button"
@@ -120,6 +136,7 @@ export function SubmissionForm() {
               setBody('')
               setFeatured(false)
               setPreview(null)
+              setPayUrl(null)
               setSent(false)
               setMessage(null)
               startedAt.current = Date.now()
@@ -190,8 +207,9 @@ export function SubmissionForm() {
           </Field>
 
           {/* The one paid extra on this form. Ticking it opens the picker;
-              nothing is charged here — an invoice follows once we've read the
-              listing and picked an issue for it. */}
+              nothing is charged here — the fee is offered as a payment link on
+              the way out, and chased once we've read the listing and picked an
+              issue for it. */}
           <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-3">
             <label htmlFor="featured" className="flex cursor-pointer items-start gap-2.5">
               <Checkbox
@@ -208,8 +226,9 @@ export function SubmissionForm() {
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   Add a photo and your listing runs with it, at the top of the
-                  classifieds. We&rsquo;ll invoice you once we&rsquo;ve confirmed
-                  the issue — nothing to pay now.
+                  classifieds. You can pay as soon as you&rsquo;ve sent it, or
+                  wait — we&rsquo;ll send you the link once we&rsquo;ve confirmed
+                  the issue.
                 </span>
               </span>
             </label>

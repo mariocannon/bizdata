@@ -3,6 +3,7 @@ import { describe, it } from 'node:test'
 import {
   FEATURED_CLASSIFIED_FEE,
   FEATURED_EVENT_FEE,
+  featuredClassifiedPaymentUrl,
   featuredOwing,
   isFeeOutstanding,
 } from './featured'
@@ -66,5 +67,29 @@ describe('the featured upgrade', () => {
   it('is zero when nothing is featured', () => {
     assert.equal(featuredOwing([row(false, 0, 'UNPAID')]), 0)
     assert.equal(featuredOwing([]), 0)
+  })
+})
+
+describe('the featured classified payment link', () => {
+  it('tags the payment with the listing it belongs to', () => {
+    const url = new URL(featuredClassifiedPaymentUrl('clx123abc'))
+    assert.equal(url.origin, 'https://buy.stripe.com')
+    assert.equal(url.searchParams.get('client_reference_id'), 'clx123abc')
+  })
+
+  it('is the bare link when there is no listing to tag it with', () => {
+    // The public form's success screen has an id; a link pasted from anywhere
+    // else may not, and an untagged payment still has to reach Stripe.
+    assert.equal(featuredClassifiedPaymentUrl().includes('?'), false)
+    assert.equal(featuredClassifiedPaymentUrl(null).includes('?'), false)
+    assert.equal(featuredClassifiedPaymentUrl('').includes('?'), false)
+  })
+
+  it('drops a reference Stripe would reject rather than sending it', () => {
+    assert.equal(featuredClassifiedPaymentUrl('has spaces').includes('?'), false)
+    assert.equal(featuredClassifiedPaymentUrl('../../escape').includes('?'), false)
+    assert.equal(featuredClassifiedPaymentUrl('a'.repeat(201)).includes('?'), false)
+    // 200 is the limit, not one past it.
+    assert.equal(featuredClassifiedPaymentUrl('a'.repeat(200)).includes('?'), true)
   })
 })

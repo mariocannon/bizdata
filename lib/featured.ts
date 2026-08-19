@@ -47,3 +47,38 @@ export function featuredOwing(
   )
   return cents / 100
 }
+
+/**
+ * The Stripe Payment Link the featured-classified fee is paid through.
+ *
+ * A payment *link* rather than a Stripe integration on purpose: it is a plain
+ * URL, so nothing here holds an API key, opens a webhook, or adds a second
+ * unauthenticated write path to the app. The trade is that Stripe never tells
+ * us a payment happened — `featuredPaid` is still set by hand, off the Stripe
+ * dashboard, exactly as it was before.
+ *
+ * The amount is fixed at Stripe's end, not here. FEATURED_CLASSIFIED_FEE and
+ * this link have to be changed together — raising the fee above without
+ * building a new link keeps charging the old price.
+ */
+const FEATURED_CLASSIFIED_PAYMENT_LINK =
+  'https://buy.stripe.com/6oU14pdDt8nF2uoaX64gg04'
+
+/** Stripe accepts letters, digits, `-` and `_` here, up to 200 characters. */
+const CLIENT_REFERENCE = /^[A-Za-z0-9_-]{1,200}$/
+
+/**
+ * Where to send someone to pay for featuring their classified.
+ *
+ * Passing the listing's id tags the payment with `client_reference_id`, which
+ * Stripe shows against it in the dashboard — so a payment can be matched back
+ * to the listing it belongs to rather than guessed at from the amount and the
+ * name. An id Stripe would reject is dropped rather than sent: an untagged
+ * payment is a small nuisance, a broken checkout is a lost sale.
+ */
+export function featuredClassifiedPaymentUrl(classifiedId?: string | null): string {
+  if (!classifiedId || !CLIENT_REFERENCE.test(classifiedId)) {
+    return FEATURED_CLASSIFIED_PAYMENT_LINK
+  }
+  return `${FEATURED_CLASSIFIED_PAYMENT_LINK}?client_reference_id=${classifiedId}`
+}

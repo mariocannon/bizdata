@@ -424,6 +424,16 @@ upgrade is taken, so repricing never rewrites what somebody was charged;
 `featuredPaid` reuses the booking payment statuses so the fee is chased the same
 way. None of it has anything to do with the `FEATURED_EVENT` ad type, which is
 an inventory slot sold to an advertiser — the similar name is worth watching.
+
+The classified fee also has a **Stripe Payment Link**, held in the same file and
+handed out by `featuredClassifiedPaymentUrl()`: the public form offers it on its
+thank-you screen, and the classifieds list copies it for the email that chases
+the fee. A link, deliberately, and not a Stripe integration — no API key, no
+webhook, and no second unauthenticated write path. Stripe therefore never tells
+the app anything, so `featuredPaid` is still set by hand; the listing id rides
+along as `client_reference_id` so a payment can be matched back to its listing.
+The amount lives at Stripe's end, which means `FEATURED_CLASSIFIED_FEE` and the
+link have to be changed together.
 Only an absolute `http(s)` image URL is printed in the beehiiv block — the
 local-disk driver's `/uploads/…` path would be a broken image in an inbox.
 
@@ -521,9 +531,13 @@ leaves your Settings untouched.
 
 ## Not in v1
 
-Multi-date booking packages, invoice PDFs and Stripe links, client-facing
-advertiser reports, a recurring-issue generator, and a rate card generated from
-Settings prices.
+Multi-date booking packages, invoice PDFs, Stripe checkout for bookings (the
+featured classified fee has a payment link; nothing else does, and no payment
+reconciles itself), client-facing advertiser reports, a recurring-issue
+generator, and a rate card generated from Settings prices.
+
+Outbound email of any kind: the app has no mail sender, so every link it
+produces is one the operator copies and sends.
 
 Auth is a single shared password, which suits one operator. If more people need
 access, that's the point to move to per-user accounts.

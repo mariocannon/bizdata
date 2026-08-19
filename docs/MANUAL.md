@@ -403,7 +403,30 @@ filter bar, with **Fee to collect** for the chase list. A featured listing
 carries a star in the table with any uncollected fee under it, and **Export
 CSV** gains `Featured`, `Fee`, `Fee paid` and `Image URL`.
 
-Nothing in the app takes payment. Featuring is an invoice you send and mark off.
+**Collecting the $1.99.** There is a Stripe Payment Link for the featured
+classified fee, and two places it appears:
+
+- On the public form, a submitter who ticked **Feature my listing** gets a
+  **Pay $1.99 now** button on the thank-you screen. Paying is optional — their
+  listing is already saved and waiting for you either way.
+- In the list, any featured listing with the fee still outstanding carries a
+  **Pay link** button next to it. It copies that listing's link to the
+  clipboard, ready to paste into the email you send confirming the issue.
+
+The link is tagged with the listing's id, which Stripe records against the
+payment as `client_reference_id` — so a payment in the dashboard can be matched
+back to the listing it paid for.
+
+**Stripe does not tell the app anything.** Nothing here watches for payments:
+**Fee** is still **Unpaid → Invoiced → Paid**, set by you, off the Stripe
+dashboard. That is the whole trade for not running a payment integration.
+
+> **The price lives in two places.** The $1.99 in the app and the amount on the
+> Stripe link are set separately. Changing `FEATURED_CLASSIFIED_FEE` does not
+> change what Stripe charges — a new price needs a new payment link too.
+
+Featuring an **event** is $4.99 and has no payment link: that one is still an
+invoice you send and mark off.
 
 ### Two views
 
@@ -467,9 +490,12 @@ live counter you see, category, name, and an email or phone. The cap is
 picks no status and no issue.
 
 It also offers **Feature my listing — $1.99**, with a photo picker underneath.
-The form takes no payment and says so: it tells them you'll invoice once you've
-confirmed the issue. A featured submission arrives with its photo attached and
-its fee **Unpaid**.
+Nothing is charged to send the form — the thank-you screen offers a **Pay $1.99
+now** button (the Stripe Payment Link, tagged with their listing), and says
+you'll send the same link once you've confirmed the issue if they'd rather wait.
+A featured submission arrives with its photo attached and its fee **Unpaid**,
+whether or not they paid on the way out: mark it **Paid** yourself once you see
+it in Stripe.
 
 What arrives:
 

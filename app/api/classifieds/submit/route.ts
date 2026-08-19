@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db'
 import { fieldErrors, publicClassifiedSchema } from '@/lib/validation'
 import { file, text } from '@/lib/actions'
 import { check, clientIp } from '@/lib/rate-limit'
-import { FEATURED_CLASSIFIED_FEE } from '@/lib/featured'
+import { FEATURED_CLASSIFIED_FEE, featuredClassifiedPaymentUrl } from '@/lib/featured'
 import { UploadError, deleteFile, saveFile } from '@/lib/upload'
 
 /**
@@ -25,6 +25,12 @@ import { UploadError, deleteFile, saveFile } from '@/lib/upload'
  * featured one lands UNPAID: asking for the upgrade is not paying for it.
  * Nothing reaches a reader until the operator approves it, so the blast radius
  * of a bad submission is one row in a review queue.
+ *
+ * A featured submission comes back with `payUrl`, the Stripe Payment Link for
+ * the fee, tagged with the row it belongs to. It is an offer, not a gate — the
+ * listing is already saved by the time the submitter sees it, and paying stays
+ * optional because the operator still has to read the listing and pick an
+ * issue for it. Nothing on this side marks it PAID; that is read off Stripe.
  */
 
 export const dynamic = 'force-dynamic'
@@ -133,7 +139,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await prisma.classified.create({
+    const created = await prisma.classified.create({
       data: {
         ...values,
         contactEmail: contactEmail ?? null,
@@ -150,7 +156,11 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ ok: true, message: 'Thanks — your listing is in.' })
+    return NextResponse.json({
+      ok: true,
+      message: 'Thanks — your listing is in.',
+      payUrl: wantsFeature ? featuredClassifiedPaymentUrl(created.id) : undefined,
+    })
   } catch (error) {
     console.error('public classified submission failed', error)
     if (imageUrl) await deleteFile(imageUrl)
