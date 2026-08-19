@@ -409,9 +409,11 @@ classified fee, and two places it appears:
 - On the public form, a submitter who ticked **Feature my listing** gets a
   **Pay $1.99 now** button on the thank-you screen. Paying is optional — their
   listing is already saved and waiting for you either way.
-- In the list, any featured listing with the fee still outstanding carries a
-  **Pay link** button next to it. It copies that listing's link to the
-  clipboard, ready to paste into the email you send confirming the issue.
+- In the list, any featured listing with the fee still outstanding carries two
+  small controls next to it. **Pay link** opens that listing's payment page in
+  a new tab — how you check the link is live and see what the submitter sees.
+  The **copy** icon beside it puts the URL on your clipboard, ready to paste
+  into the email you send confirming the issue.
 
 The link is tagged with the listing's id, which Stripe records against the
 payment as `client_reference_id` — so a payment in the dashboard can be matched
