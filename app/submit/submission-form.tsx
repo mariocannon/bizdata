@@ -16,7 +16,7 @@ import {
   wordCountMessage,
   wordCountState,
 } from '@/lib/classifieds'
-import { FEATURED_CLASSIFIED_FEE } from '@/lib/featured'
+import { FEATURED_CLASSIFIED_FEE, featuredClassifiedPaymentUrl } from '@/lib/featured'
 import { cn, formatMoney } from '@/lib/utils'
 
 const COUNTER_STYLES: Record<string, string> = {
@@ -99,6 +99,14 @@ export function SubmissionForm() {
     }
   }
 
+  // Where the fee gets paid. Normally the endpoint hands back a link tagged
+  // with the row it just wrote, which is what lets a payment be matched to a
+  // listing. If that never arrived — an older cached bundle, a response the
+  // browser mangled — someone who asked to feature their listing still gets a
+  // way to pay, on the untagged link, rather than a screen that quietly forgets
+  // they were charging for something.
+  const payHref = payUrl ?? (featured ? featuredClassifiedPaymentUrl() : null)
+
   if (sent) {
     return (
       <Card>
@@ -117,11 +125,11 @@ export function SubmissionForm() {
               and it&rsquo;s sorted.
             </p>
           ) : null}
-          {payUrl ? (
+          {payHref ? (
             // Opens in a new tab, so the listing they just sent is still behind
             // them if they change their mind.
             <Button asChild>
-              <a href={payUrl} target="_blank" rel="noopener noreferrer">
+              <a href={payHref} target="_blank" rel="noopener noreferrer">
                 <CreditCard className="size-4" />
                 Pay here
               </a>
