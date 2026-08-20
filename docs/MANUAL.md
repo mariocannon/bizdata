@@ -407,13 +407,16 @@ CSV** gains `Featured`, `Fee`, `Fee paid` and `Image URL`.
 classified fee, and two places it appears:
 
 - On the public form, a submitter who ticked **Feature my listing** gets a
-  **Pay $1.99 now** button on the thank-you screen. Paying is optional — their
-  listing is already saved and waiting for you either way.
+  **Pay here** button on the thank-you screen, and the form tells them up front
+  that the fee is paid on the way out. It no longer promises an invoice later.
+  The listing is saved before the button is shown, so one that goes unpaid
+  still reaches you — it just sits in the chase list below.
 - In the list, any featured listing with the fee still outstanding carries two
   small controls next to it. **Pay link** opens that listing's payment page in
   a new tab — how you check the link is live and see what the submitter sees.
-  The **copy** icon beside it puts the URL on your clipboard, ready to paste
-  into the email you send confirming the issue.
+  The **copy** icon beside it puts the URL on your clipboard — for chasing a
+  submitter who didn't pay on the way out, in the email you send confirming
+  the issue.
 
 The link is tagged with the listing's id, which Stripe records against the
 payment as `client_reference_id` — so a payment in the dashboard can be matched
@@ -491,13 +494,12 @@ live counter you see, category, name, and an email or phone. The cap is
 **enforced** there — a customer can't send you 200 words — and the submitter
 picks no status and no issue.
 
-It also offers **Feature my listing — $1.99**, with a photo picker underneath.
-Nothing is charged to send the form — the thank-you screen offers a **Pay $1.99
-now** button (the Stripe Payment Link, tagged with their listing), and says
-you'll send the same link once you've confirmed the issue if they'd rather wait.
-A featured submission arrives with its photo attached and its fee **Unpaid**,
-whether or not they paid on the way out: mark it **Paid** yourself once you see
-it in Stripe.
+It also offers **Feature my listing — $1.99**, and says the fee is paid as soon
+as the form is sent. Nothing is charged to send it: the thank-you screen hands
+over a **Pay here** button (the Stripe Payment Link, tagged with their listing).
+A featured submission arrives with its photo attached and its fee **Unpaid**
+whether or not they paid on the way out — Stripe doesn't tell the app anything,
+so mark it **Paid** yourself once you see it in the dashboard.
 
 What arrives:
 

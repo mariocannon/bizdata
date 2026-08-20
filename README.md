@@ -426,9 +426,9 @@ way. None of it has anything to do with the `FEATURED_EVENT` ad type, which is
 an inventory slot sold to an advertiser — the similar name is worth watching.
 
 The classified fee also has a **Stripe Payment Link**, held in the same file and
-handed out by `featuredClassifiedPaymentUrl()`: the public form offers it on its
-thank-you screen, and the classifieds list copies it for the email that chases
-the fee. A link, deliberately, and not a Stripe integration — no API key, no
+handed out by `featuredClassifiedPaymentUrl()`: the public form hands it over on
+its thank-you screen — the fee is paid there rather than invoiced later — and
+the classifieds list opens or copies it for chasing whoever didn't. A link, deliberately, and not a Stripe integration — no API key, no
 webhook, and no second unauthenticated write path. Stripe therefore never tells
 the app anything, so `featuredPaid` is still set by hand; the listing id rides
 along as `client_reference_id` so a payment can be matched back to its listing.

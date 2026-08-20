@@ -113,9 +113,8 @@ export function SubmissionForm() {
           {featured ? (
             <p className="max-w-prose text-sm text-muted-foreground">
               You asked to feature it, so your photo comes along with the
-              listing. You can pay the {formatMoney(FEATURED_CLASSIFIED_FEE, true)}{' '}
-              now if that&rsquo;s easiest — otherwise we&rsquo;ll send you the same
-              link when we confirm the issue.
+              listing. Pay the {formatMoney(FEATURED_CLASSIFIED_FEE, true)} below
+              and it&rsquo;s sorted.
             </p>
           ) : null}
           {payUrl ? (
@@ -207,9 +206,8 @@ export function SubmissionForm() {
           </Field>
 
           {/* The one paid extra on this form. Ticking it opens the picker;
-              nothing is charged here — the fee is offered as a payment link on
-              the way out, and chased once we've read the listing and picked an
-              issue for it. */}
+              nothing is charged here — the fee is paid on the way out, through
+              the payment link the thank-you screen hands over. */}
           <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/40 p-3">
             <label htmlFor="featured" className="flex cursor-pointer items-start gap-2.5">
               <Checkbox
@@ -226,9 +224,8 @@ export function SubmissionForm() {
                 </span>
                 <span className="mt-0.5 block text-xs text-muted-foreground">
                   Add a photo and your listing runs with it, at the top of the
-                  classifieds. You can pay as soon as you&rsquo;ve sent it, or
-                  wait — we&rsquo;ll send you the link once we&rsquo;ve confirmed
-                  the issue.
+                  classifieds. You&rsquo;ll pay the fee as soon as you&rsquo;ve
+                  sent this.
                 </span>
               </span>
             </label>
