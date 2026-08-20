@@ -124,7 +124,7 @@ export function SubmissionForm() {
             <Button asChild>
               <a href={payUrl} target="_blank" rel="noopener noreferrer">
                 <CreditCard className="size-4" />
-                Pay {formatMoney(FEATURED_CLASSIFIED_FEE, true)} now
+                Pay here
               </a>
             </Button>
           ) : null}
