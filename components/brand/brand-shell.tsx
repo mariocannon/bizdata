@@ -46,7 +46,16 @@ export function BrandShell({
         <header className="mb-6 flex flex-col items-center gap-3 text-center">
           <TideLogo className="max-w-[6.5rem]" priority />
           <p className="eyebrow">The Coast&rsquo;s newsletter</p>
-          <h1 className="text-balance text-2xl font-extrabold tracking-tight">{title}</h1>
+          <h1
+            className={cn(
+              'text-balance font-extrabold tracking-tight',
+              // A document opens on a display-size title; a box or a form
+              // doesn't need one that loud.
+              width === 'page' ? 'text-3xl sm:text-4xl' : 'text-2xl'
+            )}
+          >
+            {title}
+          </h1>
           {intro ? (
             <p className="max-w-prose text-pretty text-sm text-muted-foreground">{intro}</p>
           ) : null}

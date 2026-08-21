@@ -34,6 +34,14 @@ const ALLOWED: Record<string, string> = {
   'image/svg+xml': '.svg',
 }
 
+/**
+ * What the uploader will take, for anywhere that has to *state* the rules
+ * rather than enforce them — the media kit tells an advertiser what to send us,
+ * and reads it from here so the two can't drift apart.
+ */
+export const MAX_UPLOAD_BYTES = MAX_BYTES
+export const ALLOWED_UPLOAD_TYPES = Object.keys(ALLOWED)
+
 export class UploadError extends Error {}
 
 export function usingSupabaseStorage(): boolean {

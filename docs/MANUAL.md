@@ -786,16 +786,24 @@ fault: see the Reader survey section of `README.md`.
 Unlike the rest of the app it needs **no password**, so you can put the link in
 an email, on the site or at the bottom of an issue.
 
-It shows four things:
+It reads like a media kit — one idea to a panel, top to bottom:
 
-1. **At a glance** — weekly, free, opt-in, and (if you've set them up) roughly
-   how many people are on the list and how many open it.
-2. **Who reads The Tide** — the headline claims, in words: "2 in 3 own their
+1. **The numbers** — weekly, free, and (if you've set them up) roughly how many
+   people are on the list and how many open it.
+2. **Why The Tide** — an inbox rather than a feed, everyone local, few ads.
+3. **Who reads The Tide** — the headline claims, in words: "2 in 3 own their
    home", "1 in 3 have children at home".
-3. **The profile, the topics, the interests and the suburbs** — the same survey
+4. **The profile, the topics, the interests and the suburbs** — the same survey
    answers, grouped into bands.
-4. **What you can book** — your ad types and your Settings prices, and one
-   button that opens an email to you.
+5. **In good company** — the Coast businesses whose ads have already run. Only
+   advertisers with a booking marked **Ran** appear, by name and nothing else,
+   and only once there are three of them. Mark a booking **Ran** and that
+   advertiser joins the list; the panel disappears entirely if none have.
+6. **What you can book** — your ad types, your Settings prices, and how many of
+   each an issue holds.
+7. **What we need from you** — words, a picture (the formats and size limit the
+   app itself accepts), and two days' notice.
+8. **Next step** — one button that opens an email to you.
 
 **Every number on it is deliberately rounded.** Shares are grouped into three or
 four bands, rounded to the nearest 5% and often written as "1 in 3" rather than

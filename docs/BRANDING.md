@@ -192,8 +192,30 @@ three.
 | `wide` | `max-w-2xl` | A form — the two submission pages |
 | `page` | `max-w-4xl` | A document somebody reads down — the media kit |
 
-`page` also starts at the top of the viewport rather than centring in it.
-Centring a long page pushes its own heading below the fold on a short screen.
+`page` also starts at the top of the viewport rather than centring in it —
+centring a long page pushes its own heading below the fold on a short screen —
+and takes the h1 up to display size (`text-3xl sm:text-4xl`). A document opens
+on a title; a box or a form doesn't need one that loud.
+
+### Media kit panels (extension)
+
+> A media kit is read the way a deck is read: one idea to a panel, scrolled top
+> to bottom. That needs a block bigger than a card and a way to keep consecutive
+> blocks from merging into one another.
+
+Three grounds, alternated down the page, all at the standard `--radius` and all
+inside the `page`-width `<BrandShell>`:
+
+| Tone | Ground | For |
+|---|---|---|
+| `paper` | Paper on a Deep Navy 14% border | The default panel |
+| `tint` | `tide-50` on a `tide-100` border | Every second panel, so two never run together |
+| `dark` | `tide-900` (Deep Harbor) | The two panels that have to land: the numbers at the top and the ask at the bottom |
+
+**On the dark ground the ramp replaces the light-ground tokens.** Steel Blue
+disappears on Deep Harbor, so the eyebrow steps up to `tide-200`; supporting
+copy is `tide-200`, headings are Foam, and a display figure is `tide-100`. Sea
+Glass stays a fill — it is the button on that panel, never a letter on it.
 
 ### Audience figures (extension)
 

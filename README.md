@@ -325,6 +325,12 @@ build). One page load is one query.
 public — advertisers can't be asked for a password — and it is the only public
 path that reads anything.
 
+It is laid out the way a media kit is laid out, one idea to a panel: the numbers,
+why the list is worth buying, who reads it, the reader profile, what they want
+covered, who already advertises, the placements, what we need from you, and one
+way to get in touch. Sections with nothing behind them don't render — there are
+no placeholder testimonials and no borrowed logos on it.
+
 ### What it publishes, and what it won't
 
 `/survey` shows the survey as it is: exact counts, exact shares, every bucket.
@@ -357,9 +363,25 @@ every option of every grouped question and fails if a band stopped covering one.
 
 Prices come from **Settings** — the same defaults that pre-fill a booking — so
 the page an advertiser reads and the price you charge them can't drift apart.
-The capacity line ("about 10 ads an issue, 3 in the bulletin") is read from
-Settings too. If the database is unreachable the card falls back to the built-in
+Each placement also says how many of it exist in an issue, composed from
+`SINGLE_SLOT_CAP`, `SECTION_CAP`, `SECTION_SLOTS` and your bulletin capacity, so
+the page can't promise a slot the booking form would refuse. The specs section
+reads `MAX_UPLOAD_BYTES` and `ALLOWED_UPLOAD_TYPES` off `lib/upload.ts` for the
+same reason. If the database is unreachable the card falls back to the built-in
 defaults rather than showing a stranger a 500.
+
+### Who else advertises
+
+The "in good company" panel lists advertisers with **at least one booking marked
+`RAN`**, by name, alphabetically, capped at 24, and only once there are three of
+them. Nothing else about them is published — not what they paid, not how often,
+and not the order they'd rank in.
+
+The reasoning: that ad went out to the whole list with their name on it, so the
+fact that they advertised is already public. A reserved or confirmed booking is
+not — until it runs, the advertiser hasn't chosen to be seen in The Tide, so it
+doesn't count. If you'd rather not list anyone, delete the panel; it is one
+block in `app/media-kit/page.tsx` and the query behind it.
 
 ### Caching
 
@@ -569,6 +591,7 @@ components/
   ui/                   shadcn/ui-style primitives
   dashboard/            KPI card, charts
   survey/               survey distribution + responses-per-day charts
+  media-kit/            the public kit's panels and its banded figures
   *.tsx                 page header, sidebar, status pill, filters, calendar
 lib/
   auth.ts               password check + signed session cookie
