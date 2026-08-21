@@ -684,7 +684,7 @@ created it. An ad sold in June for a July issue is July revenue.
 
 **Cancelled bookings are excluded everywhere on this page.**
 
-### The six numbers
+### The eight numbers
 
 | Card | Exactly what it is |
 |---|---|
@@ -694,12 +694,33 @@ created it. An ad sold in June for a July issue is July revenue.
 | **Ads sold** | How many bookings, counted as bookings |
 | **Sell-through** | Slots filled ÷ slots available across the period's issues |
 | **Active partners** | Advertisers whose status is Active |
+| **Featured classifieds** | Featured-listing fees charged in the period, with what's still to collect underneath |
+| **Featured events** | The same, for featured events |
 
 One subtlety on **Sell-through**: it counts *slots*, not bookings, because a
 Bulletin Takeover is one booking that consumes three slots. That's why the card's
 sublabel reads "X of Y slots" — so the number reconciles with the issue pages.
 
 Every card links through to the matching filtered view.
+
+### Featured-listing fees
+
+The two featured cards are the $1.99 and $4.99 upgrades readers pay for, kept
+separate from the six ad-sales numbers above them: a featured listing isn't sold
+to an advertiser and doesn't consume a slot, so it never moves Booked revenue,
+Ads sold or Sell-through.
+
+Three things to know about how they count:
+
+- **A placed listing counts on its issue's publish date**, exactly like a
+  booking. A listing still sitting in the queue has no issue date to use, so it
+  counts from the day it came in — and moves to the issue's date once you place
+  it.
+- **Status doesn't matter.** A fee is owed from the moment the upgrade is taken,
+  so a draft and an archived listing both still count. That's the same rule
+  behind the "to collect" figure on the Classifieds and Events pages.
+- **The value is what was charged**, paid or not — the sublabel says how much of
+  it is still to collect, and "all paid" when none of it is.
 
 ### The charts
 

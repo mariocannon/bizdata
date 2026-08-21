@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { getCapacityReports } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
 import { ADVERTISER_STATUSES, label } from '@/lib/enums'
+import { featuredEarnedOn, featuredTotals, type FeaturedTotals } from '@/lib/featured'
 import { inRange, isPeriod, periodRange, type Period } from '@/lib/period'
 import { formatDate, formatMoney, formatPercent } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
@@ -25,15 +26,28 @@ export default async function DashboardPage({
   const period: Period = isPeriod(searchParams.period) ? searchParams.period : 'month'
   const range = periodRange(period)
 
-  const [issues, bookings, advertisers, settings] = await Promise.all([
-    prisma.issue.findMany({ orderBy: { publishDate: 'asc' } }),
-    prisma.booking.findMany({
-      include: { advertiser: true, issue: true },
-      orderBy: { issue: { publishDate: 'asc' } },
-    }),
-    prisma.advertiser.findMany(),
-    getSettings(),
-  ])
+  // Only the fee fields are needed off a listing, and only featured listings
+  // carry a fee — the rest of both tables is the listing pages' business.
+  const featuredSelect = {
+    featured: true,
+    featuredFee: true,
+    featuredPaid: true,
+    createdAt: true,
+    issue: { select: { publishDate: true } },
+  } as const
+
+  const [issues, bookings, advertisers, settings, classifieds, events] =
+    await Promise.all([
+      prisma.issue.findMany({ orderBy: { publishDate: 'asc' } }),
+      prisma.booking.findMany({
+        include: { advertiser: true, issue: true },
+        orderBy: { issue: { publishDate: 'asc' } },
+      }),
+      prisma.advertiser.findMany(),
+      getSettings(),
+      prisma.classified.findMany({ where: { featured: true }, select: featuredSelect }),
+      prisma.event.findMany({ where: { featured: true }, select: featuredSelect }),
+    ])
 
   const reports = await getCapacityReports(issues.map((issue) => issue.id))
 
@@ -66,6 +80,26 @@ export default async function DashboardPage({
   const activePartners = advertisers.filter(
     (advertiser) => advertiser.status === 'ACTIVE'
   ).length
+
+  // The featured upgrade — the one thing a reader pays for. It is not a booking
+  // and doesn't consume a slot, so it stays out of the six ad-sales numbers
+  // above and gets its own two cards rather than quietly inflating theirs.
+  function feesInPeriod(listings: typeof classifieds | typeof events) {
+    return featuredTotals(
+      listings.filter((listing) => inRange(featuredEarnedOn(listing), range))
+    )
+  }
+
+  /** "3 featured · $5.97 to collect", "2 featured · all paid". */
+  function feeSublabel(fees: FeaturedTotals, noun: string): string {
+    if (fees.count === 0) return `No featured ${noun}s in period`
+    return fees.outstanding > 0
+      ? `${fees.count} featured · ${formatMoney(fees.outstanding, true)} to collect`
+      : `${fees.count} featured · all paid`
+  }
+
+  const classifiedFees = feesInPeriod(classifieds)
+  const eventFees = feesInPeriod(events)
 
   // --- Charts -------------------------------------------------------------
   const revenueByIssue = issuesInPeriod.map((issue) => {
@@ -122,11 +156,11 @@ export default async function DashboardPage({
     <>
       <PageHeader
         title="Dashboard"
-        description={`${range.label} · revenue is counted against each booking's issue publish date`}
+        description={`${range.label} · revenue is counted against the issue publish date — a listing still in the queue, against the day it came in`}
         actions={<PeriodSelector current={period} />}
       />
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <KpiCard
           label="Booked revenue"
           value={formatMoney(booked)}
@@ -164,6 +198,18 @@ export default async function DashboardPage({
           value={String(activePartners)}
           sublabel={`of ${advertisers.length} advertisers`}
           href="/advertisers?status=ACTIVE"
+        />
+        <KpiCard
+          label="Featured classifieds"
+          value={formatMoney(classifiedFees.booked, true)}
+          sublabel={feeSublabel(classifiedFees, 'listing')}
+          href="/classifieds?featured=featured"
+        />
+        <KpiCard
+          label="Featured events"
+          value={formatMoney(eventFees.booked, true)}
+          sublabel={feeSublabel(eventFees, 'event')}
+          href="/events?featured=featured"
         />
       </section>
 

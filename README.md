@@ -453,7 +453,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 
 | Route | What's there |
 |---|---|
-| `/` | Dashboard — KPI cards, three charts, upcoming issues, chase list, pipeline snapshot. Period selector (month/quarter/year/all) drives every widget. |
+| `/` | Dashboard — KPI cards (ad sales plus featured classified and event fees), three charts, upcoming issues, chase list, pipeline snapshot. Period selector (month/quarter/year/all) drives every widget. |
 | `/advertisers` | Table and pipeline (Kanban) views, filters, search, CSV export |
 | `/advertisers/[id]` | Contact details, rollup totals, that advertiser's bookings |
 | `/bookings` | Table, calendar and unpaid ("chase list") views, filters, CSV export |

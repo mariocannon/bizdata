@@ -4,7 +4,9 @@ import {
   FEATURED_CLASSIFIED_FEE,
   FEATURED_EVENT_FEE,
   featuredClassifiedPaymentUrl,
+  featuredEarnedOn,
   featuredOwing,
+  featuredTotals,
   isFeeOutstanding,
 } from './featured'
 
@@ -67,6 +69,73 @@ describe('the featured upgrade', () => {
   it('is zero when nothing is featured', () => {
     assert.equal(featuredOwing([row(false, 0, 'UNPAID')]), 0)
     assert.equal(featuredOwing([]), 0)
+  })
+})
+
+describe('what the featured upgrade is worth', () => {
+  function row(featured: boolean, featuredFee: number, featuredPaid: string) {
+    return { featured, featuredFee, featuredPaid }
+  }
+
+  it('splits what was charged into collected and still owed', () => {
+    const totals = featuredTotals([
+      row(true, 4.99, 'PAID'),
+      row(true, 4.99, 'INVOICED'),
+      row(true, 1.99, 'UNPAID'),
+      // A plain listing is not a sale, whatever sits in its fee column.
+      row(false, 1.99, 'UNPAID'),
+    ])
+
+    assert.deepEqual(totals, {
+      count: 3,
+      booked: 11.97,
+      collected: 4.99,
+      outstanding: 6.98,
+    })
+  })
+
+  it('adds in cents, so the halves still make the whole', () => {
+    const totals = featuredTotals([
+      row(true, 1.99, 'PAID'),
+      row(true, 1.99, 'UNPAID'),
+      row(true, 1.99, 'UNPAID'),
+    ])
+
+    assert.equal(totals.booked, 5.97)
+    assert.equal(totals.collected + totals.outstanding, totals.booked)
+  })
+
+  it('is all zeroes when nothing is featured', () => {
+    assert.deepEqual(featuredTotals([]), {
+      count: 0,
+      booked: 0,
+      collected: 0,
+      outstanding: 0,
+    })
+  })
+
+  it('owes exactly what the totals say is outstanding', () => {
+    const rows = [row(true, 4.99, 'INVOICED'), row(true, 1.99, 'PAID')]
+    assert.equal(featuredOwing(rows), featuredTotals(rows).outstanding)
+  })
+})
+
+describe('when a featured fee counts', () => {
+  const created = new Date('2026-07-02T09:00:00Z')
+  const published = new Date('2026-08-14T00:00:00Z')
+
+  it('counts a placed listing on the day its issue goes out', () => {
+    // Sold in July for an August issue: August money, the same way a booking's
+    // revenue follows its issue rather than its paperwork.
+    assert.equal(
+      featuredEarnedOn({ createdAt: created, issue: { publishDate: published } }).getTime(),
+      published.getTime()
+    )
+  })
+
+  it('counts a listing still in the queue from the day it came in', () => {
+    assert.equal(featuredEarnedOn({ createdAt: created, issue: null }).getTime(), created.getTime())
+    assert.equal(featuredEarnedOn({ createdAt: created }).getTime(), created.getTime())
   })
 })
 
