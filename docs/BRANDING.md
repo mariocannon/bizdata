@@ -176,6 +176,41 @@ The image never carries the words. Whatever a reader needs to know is in the
 copy underneath, so a listing still reads with images turned off — most inboxes
 block them by default.
 
+### Public page widths (extension)
+
+> The source guide has one public page — the signup — and it is a box. The media
+> kit is the first public page somebody *scrolls*, which needs a wider column
+> and a different vertical rhythm.
+
+`<BrandShell>` runs at three widths, and everything else about it is unchanged:
+the wash, the logo, the eyebrow and the wave clearance are the same at all
+three.
+
+| Width | Column | For |
+|---|---|---|
+| `narrow` | `max-w-sm` | A box — the sign-in screen |
+| `wide` | `max-w-2xl` | A form — the two submission pages |
+| `page` | `max-w-4xl` | A document somebody reads down — the media kit |
+
+`page` also starts at the top of the viewport rather than centring in it.
+Centring a long page pushes its own heading below the fold on a short screen.
+
+### Audience figures (extension)
+
+> The source guide has no data display, and the chart exemption in §6 doesn't
+> reach here: the media kit's bars carry one measure in one hue, so nothing is
+> being told apart by colour and the palette applies in full.
+
+- **A bar is a Sea Glass fill on a Secondary track**, `h-2.5`, fully rounded,
+  with the figure written at the end of it. No axis and no gridlines — there is
+  one number per row and it is spelled out.
+- **A headline figure is Steel Blue at display size** — `text-2xl` and bolder,
+  which clears the 3:1 large-text floor that Steel Blue misses for body copy.
+  Never Sea Glass: it is a fill, not a letter.
+- **The figures themselves are banded and rounded before they reach the page**,
+  in `lib/media-kit.ts`. That is a product rule rather than a visual one, but it
+  is why a bar can sit next to "~35%" and never next to "37.4%".
+
 ---
 
 ## 6. Semantic states (extension)
@@ -255,6 +290,7 @@ same way.
 | You need | Reach for |
 |---|---|
 | A public-facing page | `<BrandShell>` — wash, logo, eyebrow, waves and spacing, all correct by default |
+| A public page that scrolls | `<BrandShell width="page">` — the same, at reading width |
 | The logo | `<TideLogo>` on light, `<TideMark>` on dark |
 | The wave motif | `<TideWaves>` inside a `relative overflow-hidden` parent |
 | A brand colour | The named Tailwind token — `bg-sand`, `text-harbor`, `text-steel` |

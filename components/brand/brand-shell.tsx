@@ -21,7 +21,12 @@ export function BrandShell({
   intro?: React.ReactNode
   children: React.ReactNode
   footer?: React.ReactNode
-  width?: 'narrow' | 'wide'
+  /**
+   * How wide the column runs. 'narrow' is a sign-in box, 'wide' a form, and
+   * 'page' a document somebody scrolls — the media kit (docs/BRANDING.md §2,
+   * extension).
+   */
+  width?: 'narrow' | 'wide' | 'page'
 }) {
   return (
     <div className="brand-wash relative min-h-screen overflow-hidden">
@@ -29,9 +34,13 @@ export function BrandShell({
           them — copy must never sit on top of the motif. */}
       <div
         className={cn(
-          'page-shell relative z-10 mx-auto flex min-h-screen flex-col justify-center pt-10',
+          'page-shell relative z-10 mx-auto flex min-h-screen flex-col pt-10',
           'pb-[clamp(7rem,20vh,11rem)]',
-          width === 'narrow' ? 'max-w-sm' : 'max-w-2xl'
+          // A box or a form is centred in the viewport. A page that scrolls
+          // starts at the top — centring it would push its own heading below
+          // the fold on a short screen.
+          width === 'page' ? 'justify-start' : 'justify-center',
+          width === 'narrow' ? 'max-w-sm' : width === 'wide' ? 'max-w-2xl' : 'max-w-4xl'
         )}
       >
         <header className="mb-6 flex flex-col items-center gap-3 text-center">

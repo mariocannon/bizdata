@@ -3,14 +3,22 @@ import { SESSION_COOKIE, gateMode, verifySessionToken } from '@/lib/auth'
 
 /**
  * The public forms and the endpoints they post to — a classified at /submit and
- * an event at /submit/event. Everything else in the app stays behind the
- * password.
+ * an event at /submit/event — plus the media kit at /media-kit, which is the
+ * page an advertiser is sent and so has to open without a password. Everything
+ * else in the app stays behind it.
+ *
+ * The media kit is the only public path that reads anything. It reads the
+ * reader survey and the rate card, both server-side, and publishes neither raw:
+ * every figure goes through `lib/media-kit.ts`, which bands and rounds it and
+ * refuses to publish a question fewer than 30 people answered. Nothing
+ * reader-identifying is in the shape it reads.
  */
 const PUBLIC_PATHS = new Set([
   '/submit',
   '/api/classifieds/submit',
   '/submit/event',
   '/api/events/submit',
+  '/media-kit',
 ])
 
 /**

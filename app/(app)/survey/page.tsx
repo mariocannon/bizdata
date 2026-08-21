@@ -1,6 +1,7 @@
 import * as React from 'react'
+import Link from 'next/link'
 import { unstable_noStore as noStore } from 'next/cache'
-import { AlertTriangle, Database, Info } from 'lucide-react'
+import { AlertTriangle, Database, ExternalLink, Info } from 'lucide-react'
 import {
   AGE_RANGES,
   AREAS,
@@ -26,6 +27,7 @@ import {
 } from '@/lib/survey'
 import { formatPercent } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
+import { Button } from '@/components/ui/button'
 import { KpiCard } from '@/components/dashboard/kpi-card'
 import { DistributionChart, ResponsesByDayChart } from '@/components/survey/charts'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -142,12 +144,27 @@ export default async function SurveyPage() {
   const load = await loadSurveyResponses()
   const refreshedAt = stampFormatter.format(new Date())
 
+  /**
+   * The advertiser-facing version of this page — public, and with every figure
+   * banded and rounded on the way out (lib/media-kit.ts). It opens in its own
+   * tab because the point of it is the link you paste into an email.
+   */
+  const mediaKit = (
+    <Button asChild variant="outline" size="sm">
+      <Link href="/media-kit" target="_blank" rel="noreferrer">
+        <ExternalLink />
+        Media kit
+      </Link>
+    </Button>
+  )
+
   if (load.status === 'unconfigured') {
     return (
       <>
         <PageHeader
           title="Reader survey"
           description="What readers tell us they want from The Tide"
+          actions={mediaKit}
         />
         <Notice icon={Database} title="Survey database is not connected">
           <p>
@@ -180,6 +197,7 @@ export default async function SurveyPage() {
         <PageHeader
           title="Reader survey"
           description="What readers tell us they want from The Tide"
+          actions={mediaKit}
         />
         <Notice icon={AlertTriangle} title="Couldn't read the survey database">
           <p className="font-mono text-xs">{load.message}</p>
@@ -203,6 +221,7 @@ export default async function SurveyPage() {
         <PageHeader
           title="Reader survey"
           description="What readers tell us they want from The Tide"
+          actions={mediaKit}
         />
         <EmptyState
           title="No survey responses yet"
@@ -289,6 +308,7 @@ export default async function SurveyPage() {
         description={`What readers tell us they want from The Tide · ${total} ${
           total === 1 ? 'response' : 'responses'
         } · refreshed ${refreshedAt}`}
+        actions={mediaKit}
       />
 
       {total < SMALL_SAMPLE ? (

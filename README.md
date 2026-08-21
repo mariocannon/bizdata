@@ -112,8 +112,9 @@ Two pages you can send to people, and the endpoints they post to:
 | `/submit` | `/api/classifieds/submit` | a `Classified` |
 | `/submit/event` | `/api/events/submit` | an `Event` |
 
-Those four paths are `PUBLIC_PATHS` in `middleware.ts`; everything else still
-needs the password.
+Those four paths are `PUBLIC_PATHS` in `middleware.ts`, along with `/media-kit`
+(see [Media kit](#media-kit) — public because an advertiser can't be asked for a
+password, and read-only). Everything else still needs the password.
 
 The page reads nothing from the database and renders no app chrome, so there is
 nothing on it to leak. The endpoint's only effect is to create one row:
@@ -200,6 +201,18 @@ variables:
 | `SUPABASE_URL` | `https://<project-ref>.supabase.co` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Settings → API → the **secret / `service_role`** key (must be revealed — the anon/publishable key will not work) |
 | `SUPABASE_STORAGE_BUCKET` | `creative` |
+
+Three more are optional, and only the media kit reads them:
+
+| Key | Value |
+|---|---|
+| `ADS_CONTACT_EMAIL` | Where the media kit's one button points. Unset and it says "reply to any issue" instead |
+| `MEDIA_KIT_SUBSCRIBERS` | Roughly how many people are on the list. Published as a band — `2431` shows as "2,000+" |
+| `MEDIA_KIT_OPEN_RATE` | The open rate, as a percentage or a fraction (`54` or `0.54`). Published rounded to the nearest 5% |
+
+Subscribers and opens are in beehiiv rather than in this app, which is why they
+are typed in by hand. Banding them is deliberate: a figure entered once should
+not still be quoted to the decimal a year later.
 
 It has to be the **service_role** key specifically. Supabase ships
 `storage.objects` with row-level security on and no policies, so only
@@ -305,6 +318,55 @@ build). One page load is one query.
   picked.
 - Under 30 responses the page says so: at that size one new response moves a
   share by several points.
+
+## Media kit
+
+`/media-kit` is the page you send a business that asks "who reads this?". It is
+public — advertisers can't be asked for a password — and it is the only public
+path that reads anything.
+
+### What it publishes, and what it won't
+
+`/survey` shows the survey as it is: exact counts, exact shares, every bucket.
+That is right for the person running the newsletter, who knows the sample and
+reads around it. It is wrong for a stranger deciding whether to spend money, so
+everything on the media kit goes through `lib/media-kit.ts` first, which is
+blunt on purpose:
+
+- **Grouped.** Eleven income brackets become three bands, eight age brackets
+  become four. An advertiser is choosing between "worth it" and "not".
+- **Rounded to 5%**, and phrased in plain words — "2 in 3 own their home" —
+  wherever a headline needs one. `<5%` and `>95%` stand in at the ends, so a
+  share is never reported as none or everybody when it is neither.
+- **Floored at 30 answers**, counted per question rather than per response.
+  Below that the question simply isn't published; below 30 responses in total
+  the whole audience section is replaced with "the survey is still collecting".
+- **Never a count.** No response totals and no per-option counts leave the
+  module. Suburbs are named in coast order rather than ranked, so the page
+  doesn't publish which suburbs the newsletter is weakest in.
+- **Not everything is in the shape at all.** `MediaKitRow` has no occupation,
+  gender, relationship status, investable assets or contact column — the media
+  kit can't publish what it can't see.
+
+`lib/media-kit.ts` imports no database and is not `server-only`: it is
+arithmetic over rows somebody else fetched, which is what lets
+`lib/media-kit.test.ts` hold it to the rules above — including a test that walks
+every option of every grouped question and fails if a band stopped covering one.
+
+### The rate card
+
+Prices come from **Settings** — the same defaults that pre-fill a booking — so
+the page an advertiser reads and the price you charge them can't drift apart.
+The capacity line ("about 10 ads an issue, 3 in the bulletin") is read from
+Settings too. If the database is unreachable the card falls back to the built-in
+defaults rather than showing a stranger a 500.
+
+### Caching
+
+The survey rollup is memoised per server instance for 15 minutes rather than
+re-read on every hit — this is the public page, and the survey moves slowly. A
+failed read is held for one minute instead, so a survey project that blinked
+doesn't cost the page its numbers for a quarter of an hour.
 
 ## Business rules
 
@@ -466,6 +528,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
 | `/submit` | **Public.** The form you send to customers to place a classified. No password, reads nothing, writes an unassigned draft |
 | `/submit/event` | **Public.** The same, for an event — plus when and where |
+| `/media-kit` | **Public.** The media kit you send an advertiser — the audience, banded and rounded from the reader survey, and the rate card |
 
 List filters and view toggles live in the URL, so any filtered view is a
 shareable link and the dashboard deep-links straight into one.
@@ -496,11 +559,12 @@ app/
   login/                the password gate
   submit/               the public classified form (no password)
     event/              the public event form
+  media-kit/            the public media kit — audience, rate card, one CTA
   api/classifieds/
     submit/             the endpoint the classified form posts to
   api/events/
     submit/             the endpoint the event form posts to
-middleware.ts           enforces the gate on every route bar the two public ones
+middleware.ts           enforces the gate on every route bar the public ones
 components/
   ui/                   shadcn/ui-style primitives
   dashboard/            KPI card, charts
@@ -516,7 +580,9 @@ lib/
   rate-limit.ts         fixed-window limiter for the public endpoint
   validation.ts         Zod schemas shared by forms and actions
   survey-db.ts          client for the separate survey Supabase project
-  survey.ts             survey option lists, roll-ups and distributions
+  survey-options.ts     the survey's option lists, shared and database-free
+  survey.ts             survey roll-ups and distributions
+  media-kit.ts          the same survey, banded and rounded for the public page
   csv.ts  upload.ts  settings.ts  rollups.ts  period.ts
 prisma/
   schema.prisma  seed.ts

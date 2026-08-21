@@ -780,6 +780,42 @@ whether people are willing to answer.
 If the page says the survey database isn't connected, that's a setup step, not a
 fault: see the Reader survey section of `README.md`.
 
+### The media kit — the version you can send out
+
+`/media-kit` is the same survey, written for somebody who wants to buy an ad.
+Unlike the rest of the app it needs **no password**, so you can put the link in
+an email, on the site or at the bottom of an issue.
+
+It shows four things:
+
+1. **At a glance** — weekly, free, opt-in, and (if you've set them up) roughly
+   how many people are on the list and how many open it.
+2. **Who reads The Tide** — the headline claims, in words: "2 in 3 own their
+   home", "1 in 3 have children at home".
+3. **The profile, the topics, the interests and the suburbs** — the same survey
+   answers, grouped into bands.
+4. **What you can book** — your ad types and your Settings prices, and one
+   button that opens an email to you.
+
+**Every number on it is deliberately rounded.** Shares are grouped into three or
+four bands, rounded to the nearest 5% and often written as "1 in 3" rather than
+a percentage, and nothing is published from a question fewer than 30 people have
+answered. That is the difference between the two pages: `/survey` is for you and
+tells you exactly where you stand; `/media-kit` is for an advertiser and only
+ever claims what the survey can carry. It publishes no response counts at all.
+
+If the survey is still thin, the page says so in as many words and shows the
+rate card anyway — so it is worth sending from day one.
+
+Three optional environment variables finish it off: `ADS_CONTACT_EMAIL` (where
+the button points — without it the page says "reply to any issue"),
+`MEDIA_KIT_SUBSCRIBERS` and `MEDIA_KIT_OPEN_RATE`. The last two are banded on
+the way out: 2,431 subscribers publishes as "2,000+". Setup is in `README.md`.
+
+**Prices come straight from Settings.** Change a default price there and the
+media kit changes with it, so what you quote and what you charge can't drift
+apart.
+
 ---
 
 ## 12. Settings
@@ -842,7 +878,9 @@ nothing.
 
 1. **Advertisers → New advertiser.** Name, category, status **Prospect**. Tick
    *Reviews checked* once you've looked them up.
-2. After pitching, move them to **Pitched** — drag the card on the Pipeline view.
+2. Send them `/media-kit` — who reads The Tide and what it costs, on one page,
+   no password. Then move them to **Pitched** — drag the card on the Pipeline
+   view.
 3. On a yes, open them and hit **New booking**. Pick the issue and ad type, set
    the price, save as **Reserved**.
 4. Move the advertiser to **Won**, then **Active** once the ad has run.
