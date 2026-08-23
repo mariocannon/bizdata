@@ -291,18 +291,21 @@ build). One page load is one query.
   Everything except suburb and topics is optional, so denominators differ from
   card to card — each card states its own `n`.
 - **Topics, pets and children's ages are multi-select**, so their shares add up
-  to more than 100%. **Hobby is not** — it is one choice per reader, with a
-  write-in captured in `hobby_other` when they pick "Other". The write-ins are
-  listed under the chart so "Other" isn't a dead end.
+  to more than 100%. **Hobby is not** — it is one choice per reader.
+- **Two questions carry a write-in**: topics (`topics_other`) and hobby
+  (`hobby_other`), each filled in when the reader picks "Other". The write-ins
+  are listed as chips under their chart so "Other" isn't a dead end.
 - **A question added after launch reads as heavily skipped**, because every
   response older than the question counts as a skip. Those cards carry an
   "asked since <date>" note so the skip count isn't mistaken for reluctance.
 - **Grey bars are "prefer not to say"** — kept in, because dropping them would
   inflate every other share, but drawn to recede and sorted last.
-- **Ordered scales** (age, income, home value, investable assets) keep the
-  survey's own order and show empty buckets, since a gap in a scale is itself a
-  finding. Unordered lists (suburbs, pets) rank by size and hide options nobody
-  picked.
+- **Ordered scales** (age, years on the Coast, income, home value, investable
+  assets) keep the survey's own order and show empty buckets, since a gap in a
+  scale is itself a finding. Unordered lists (suburbs, pets) rank by size and
+  hide options nobody picked. Buying-or-selling is ranked but keeps its empty
+  buckets too — "nobody is buying" is the answer a real-estate advertiser came
+  for.
 - Under 30 responses the page says so: at that size one new response moves a
   share by several points.
 

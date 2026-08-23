@@ -21,9 +21,22 @@ export const AREAS = [
   'Stillwater', 'Dairy Flat', 'Ōkura', 'None of the above',
 ] as const
 
+/**
+ * How long they have lived here. Ordered, so it keeps the survey's own order —
+ * the split between new arrivals and long-timers is the whole finding.
+ */
+export const YEARS_ON_COAST = [
+  'Less than a year', '1 year', '2 years', '3 years', '4 years', '5 years',
+  '6 years', '7 years', '8 years', '9 years', '10+ years', 'Prefer not to say',
+] as const
+
+/**
+ * Multi-choice, and `topics_other` carries the write-in when a reader picks
+ * "Other".
+ */
 export const TOPICS = [
   'Event coverage', 'Restaurant news', 'Government updates', 'School news',
-  'Real estate',
+  'Real estate', 'Other',
 ] as const
 
 export const AGE_RANGES = [
@@ -54,6 +67,15 @@ export const HOME_OWNERSHIP = [
   'I own my home', 'I own my home and am moving soon', 'I own more than one home',
   'I rent my home', 'I rent my home and am moving soon', 'Other',
   'Prefer not to say',
+] as const
+
+/**
+ * Whether a reader is actually in the property market — the question behind
+ * every real-estate booking. "Not right now" is a real answer, not a
+ * non-answer, so it keeps the accent colour and its place in the ranking.
+ */
+export const PROPERTY_PLANS = [
+  'Buying', 'Selling', 'Both', 'Not right now', 'Prefer not to say',
 ] as const
 
 export const HOME_VALUES = [
@@ -171,6 +193,8 @@ const SHORT_LABELS: Record<string, string> = {
 
   '18+ living at home': '18+ at home',
 
+  'Less than a year': 'Under a year',
+
   'Exercising (gym, running, yoga)': 'Exercising',
   'Photography, art or craft': 'Photo / art / craft',
   'DIY and home projects': 'DIY and home',
@@ -198,13 +222,17 @@ function shortLabel(option: string): string {
 export type SurveyResponse = {
   createdAt: string
   area: string | null
+  yearsOnCoast: string | null
   topics: string[]
+  /** Free text, and only ever set when "Other" is among `topics`. */
+  topicsOther: string | null
   occupation: string | null
   education: string | null
   ageRange: string | null
   gender: string | null
   relationshipStatus: string | null
   homeOwnership: string | null
+  propertyPlans: string | null
   homeValue: string | null
   householdIncome: string | null
   investments: string | null
@@ -220,13 +248,16 @@ export type SurveyResponse = {
 type Row = {
   created_at: string
   area: string | null
+  years_on_coast: string | null
   topics: string[] | null
+  topics_other: string | null
   occupation: string | null
   education: string | null
   age_range: string | null
   gender: string | null
   relationship_status: string | null
   home_ownership: string | null
+  property_plans: string | null
   home_value: string | null
   household_income: string | null
   investments: string | null
@@ -239,7 +270,7 @@ type Row = {
 }
 
 const COLUMNS =
-  'created_at, area, topics, occupation, education, age_range, gender, relationship_status, home_ownership, home_value, household_income, investments, children_at_home, children_ages, pets, hobby, hobby_other, email'
+  'created_at, area, years_on_coast, topics, topics_other, occupation, education, age_range, gender, relationship_status, home_ownership, property_plans, home_value, household_income, investments, children_at_home, children_ages, pets, hobby, hobby_other, email'
 
 // ── Distributions ────────────────────────────────────────────────────────────
 
@@ -501,13 +532,16 @@ export async function loadSurveyResponses(): Promise<SurveyLoad> {
       (row): SurveyResponse => ({
         createdAt: row.created_at,
         area: row.area,
+        yearsOnCoast: row.years_on_coast,
         topics: row.topics ?? [],
+        topicsOther: row.topics_other,
         occupation: row.occupation,
         education: row.education,
         ageRange: row.age_range,
         gender: row.gender,
         relationshipStatus: row.relationship_status,
         homeOwnership: row.home_ownership,
+        propertyPlans: row.property_plans,
         homeValue: row.home_value,
         householdIncome: row.household_income,
         investments: row.investments,

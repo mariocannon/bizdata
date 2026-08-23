@@ -14,8 +14,10 @@ import {
   HOUSEHOLD_INCOMES,
   INVESTMENTS,
   PETS,
+  PROPERTY_PLANS,
   RELATIONSHIP_STATUSES,
   TOPICS,
+  YEARS_ON_COAST,
   distribution,
   firstAnsweredAt,
   freeTextCounts,
@@ -23,6 +25,7 @@ import {
   multiDistribution,
   responsesByDay,
   type Distribution,
+  type TextCount,
 } from '@/lib/survey'
 import { formatPercent } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
@@ -103,6 +106,35 @@ function ChartCard({
         {footer}
       </CardContent>
     </Card>
+  )
+}
+
+/**
+ * The write-ins behind an "Other" bar. Two questions now carry one — topics and
+ * hobby — and a bar labelled "Other" with nothing under it is a dead end.
+ */
+function WriteIns({ entries }: { entries: TextCount[] }) {
+  if (entries.length === 0) return null
+
+  return (
+    <div className="mt-4 border-t border-border pt-3">
+      <p className="text-xs font-medium text-muted-foreground">
+        Written in under &ldquo;Other&rdquo;
+      </p>
+      <ul className="mt-2 flex flex-wrap gap-1.5">
+        {entries.map((entry) => (
+          <li
+            key={entry.label.toLowerCase()}
+            className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs"
+          >
+            {entry.label}
+            {entry.count > 1 ? (
+              <span className="tabular ml-1 text-muted-foreground">×{entry.count}</span>
+            ) : null}
+          </li>
+        ))}
+      </ul>
+    </div>
   )
 }
 
@@ -219,7 +251,12 @@ export default async function SurveyPage() {
   const topics = multiDistribution(rows, (row) => row.topics, TOPICS, {
     includeEmpty: true,
   })
+  const topicWriteIns = freeTextCounts(rows, (row) => row.topicsOther)
   const areas = distribution(rows, (row) => row.area, AREAS)
+  const yearsOnCoast = distribution(rows, (row) => row.yearsOnCoast, YEARS_ON_COAST, {
+    order: 'canonical',
+    includeEmpty: true,
+  })
   const ages = distribution(rows, (row) => row.ageRange, AGE_RANGES, {
     order: 'canonical',
     includeEmpty: true,
@@ -246,6 +283,12 @@ export default async function SurveyPage() {
     includeEmpty: true,
   })
   const homeOwnership = distribution(rows, (row) => row.homeOwnership, HOME_OWNERSHIP)
+  // Every bucket stays, empty ones included: "nobody is buying" is exactly what
+  // a real-estate advertiser is asking this page, and a missing bar doesn't
+  // answer it.
+  const propertyPlans = distribution(rows, (row) => row.propertyPlans, PROPERTY_PLANS, {
+    includeEmpty: true,
+  })
   const homeValues = distribution(rows, (row) => row.homeValue, HOME_VALUES, {
     order: 'canonical',
     includeEmpty: true,
@@ -260,6 +303,11 @@ export default async function SurveyPage() {
   // The hobby question was added after the survey went live, so most of the
   // "skipped" count is responses that predate it rather than people declining.
   const hobbyFrom = firstAnsweredAt(rows, (row) => row.hobby)
+
+  // Both of these were added later too, so most of their "skipped" count is
+  // responses that predate the question rather than readers declining it.
+  const yearsFrom = firstAnsweredAt(rows, (row) => row.yearsOnCoast)
+  const plansFrom = firstAnsweredAt(rows, (row) => row.propertyPlans)
 
   const byDay = responsesByDay(rows)
   const jobs = freeTextCounts(rows, (row) => row.occupation)
@@ -345,6 +393,7 @@ export default async function SurveyPage() {
           note="readers could pick several, so shares add to over 100%"
           data={topics}
           className="lg:col-span-2"
+          footer={<WriteIns entries={topicWriteIns} />}
         />
 
         <Card>
@@ -363,7 +412,17 @@ export default async function SurveyPage() {
       <SectionHeading>Where they are</SectionHeading>
       <section className="grid gap-4 lg:grid-cols-2">
         <ChartCard title="Suburb" data={areas} />
+        <ChartCard
+          title="Years on the Coast"
+          note={yearsFrom ? `asked since ${dateFormatter.format(yearsFrom)}` : undefined}
+          data={yearsOnCoast}
+        />
         <ChartCard title="Home ownership" data={homeOwnership} />
+        <ChartCard
+          title="Buying or selling"
+          note={plansFrom ? `asked since ${dateFormatter.format(plansFrom)}` : undefined}
+          data={propertyPlans}
+        />
       </section>
 
       <SectionHeading>Who they are</SectionHeading>
@@ -384,30 +443,7 @@ export default async function SurveyPage() {
           title="Hobbies"
           note={hobbyFrom ? `asked since ${dateFormatter.format(hobbyFrom)}` : undefined}
           data={hobbies}
-          footer={
-            hobbyWriteIns.length > 0 ? (
-              <div className="mt-4 border-t border-border pt-3">
-                <p className="text-xs font-medium text-muted-foreground">
-                  Written in under &ldquo;Other&rdquo;
-                </p>
-                <ul className="mt-2 flex flex-wrap gap-1.5">
-                  {hobbyWriteIns.map((entry) => (
-                    <li
-                      key={entry.label.toLowerCase()}
-                      className="rounded-full border border-border bg-muted/50 px-2.5 py-1 text-xs"
-                    >
-                      {entry.label}
-                      {entry.count > 1 ? (
-                        <span className="tabular ml-1 text-muted-foreground">
-                          ×{entry.count}
-                        </span>
-                      ) : null}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : null
-          }
+          footer={<WriteIns entries={hobbyWriteIns} />}
         />
 
         <Card className="lg:col-span-2">

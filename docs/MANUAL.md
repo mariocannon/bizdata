@@ -764,8 +764,11 @@ header.
 - **Topics readers want covered** — the headline. This is the one that should
   shape what goes in the newsletter.
 - **Responses per day** — is the survey still collecting, or has it gone quiet?
-- **Suburb** and **Home ownership** — where your readers are, and whether they
-  own or rent
+- **Suburb**, **Years on the Coast** and **Home ownership** — where your readers
+  are, how long they've been there, and whether they own or rent
+- **Buying or selling** — who is actually in the property market right now. With
+  **Home value** below, this is the pair to put in front of a real-estate
+  advertiser.
 - **Age, education, gender, relationship status, children, pets, hobbies,
   occupations** — the reader profile an advertiser asks for. Hobbies is the most
   directly sellable of these: it's what you point a golf club, a garden centre
@@ -783,8 +786,8 @@ Four things will trip you up if you don't know them:
    have different bases.
 2. **Topics, pets and children's ages let people pick more than one**, so those
    percentages add up to more than 100%. That's not a bug. Hobbies is one choice
-   each — anyone who picked "Other" typed their own answer, and those are listed
-   as chips under the chart.
+   each. On **topics** and **hobbies**, anyone who picked "Other" typed their own
+   answer, and those are listed as chips under the chart.
 3. **Grey bars are "prefer not to say."** They're left in on purpose — hiding
    them would quietly inflate every other percentage.
 4. **Small samples move fast.** Under 30 responses the page puts a note at the
