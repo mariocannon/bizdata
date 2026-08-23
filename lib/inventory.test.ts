@@ -1,6 +1,11 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { buildCapacityReport, checkCapacity, slotState } from './inventory'
+import {
+  buildCapacityReport,
+  buildCapacityReports,
+  checkCapacity,
+  slotState,
+} from './inventory'
 import type { BookingLike } from './inventory'
 
 const CAP = 3
@@ -181,5 +186,32 @@ describe('report totals', () => {
     assert.equal(slotState(0, 1), 'OPEN')
     assert.equal(slotState(1, 1), 'FULL')
     assert.equal(slotState(2, 1), 'OVERSOLD')
+  })
+})
+
+describe('batched reports', () => {
+  const bookings = [
+    { issueId: 'a', adType: 'HEADLINE', status: 'CONFIRMED', section: null },
+    { issueId: 'a', adType: 'FEATURE', status: 'CANCELLED', section: null },
+    { issueId: 'b', adType: 'BULLETIN_TAKEOVER', status: 'CONFIRMED', section: null },
+  ]
+
+  it('splits bookings across the issues they belong to', () => {
+    const reports = buildCapacityReports(bookings, ['a', 'b'], CAP)
+    assert.equal(reports.a.headline.sold, 1)
+    assert.equal(reports.a.feature.sold, 0) // cancelled never counts
+    assert.equal(reports.b.bulletin.sold, CAP)
+    assert.equal(reports.b.bulletin.takeover, true)
+  })
+
+  it('still reports an issue that has no bookings', () => {
+    const reports = buildCapacityReports([], ['empty'], CAP)
+    assert.equal(reports.empty.totalSold, 0)
+    assert.equal(reports.empty.totalCap, 12)
+  })
+
+  it('ignores bookings for issues that were not asked for', () => {
+    const reports = buildCapacityReports(bookings, ['a'], CAP)
+    assert.deepEqual(Object.keys(reports), ['a'])
   })
 })

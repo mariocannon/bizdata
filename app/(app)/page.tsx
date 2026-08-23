@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { AlertTriangle, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/db'
-import { getCapacityReports } from '@/lib/inventory'
+import { buildCapacityReports } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
 import { ADVERTISER_STATUSES, label } from '@/lib/enums'
 import { featuredEarnedOn, featuredTotals, type FeaturedTotals } from '@/lib/featured'
@@ -36,20 +36,44 @@ export default async function DashboardPage({
     issue: { select: { publishDate: true } },
   } as const
 
+  // This page is the heaviest read in the app — it is the only one that needs
+  // every booking — so it asks for columns rather than rows: `include` would
+  // drag every advertiser and issue field across the wire for each booking, and
+  // on a pooled connection that is the difference between a page and a timeout.
   const [issues, bookings, advertisers, settings, classifieds, events] =
     await Promise.all([
-      prisma.issue.findMany({ orderBy: { publishDate: 'asc' } }),
-      prisma.booking.findMany({
-        include: { advertiser: true, issue: true },
-        orderBy: { issue: { publishDate: 'asc' } },
+      prisma.issue.findMany({
+        orderBy: { publishDate: 'asc' },
+        select: { id: true, publishDate: true, status: true, theme: true },
       }),
-      prisma.advertiser.findMany(),
+      prisma.booking.findMany({
+        orderBy: { issue: { publishDate: 'asc' } },
+        select: {
+          id: true,
+          issueId: true,
+          adType: true,
+          section: true,
+          status: true,
+          paid: true,
+          price: true,
+          advertiser: { select: { name: true, category: true } },
+          issue: { select: { publishDate: true } },
+        },
+      }),
+      prisma.advertiser.findMany({ select: { status: true } }),
       getSettings(),
       prisma.classified.findMany({ where: { featured: true }, select: featuredSelect }),
       prisma.event.findMany({ where: { featured: true }, select: featuredSelect }),
     ])
 
-  const reports = await getCapacityReports(issues.map((issue) => issue.id))
+  // Built from the bookings already loaded above. `getCapacityReports` would
+  // re-read every booking and re-read settings — a second full scan and a
+  // second write, on the one page that can least afford them.
+  const reports = buildCapacityReports(
+    bookings,
+    issues.map((issue) => issue.id),
+    settings.bulletinCapacity
+  )
 
   // Revenue is attributed to the issue's publish date, and cancelled bookings
   // never count — anywhere on this page.

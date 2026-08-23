@@ -43,16 +43,25 @@ function parsePrices(raw: string): Record<AdType, number> {
 
 /** Reads the single settings row, creating it with defaults on first access. */
 export async function getSettings(): Promise<AppSettings> {
-  const row = await prisma.settings.upsert({
-    where: { id: 'settings' },
-    update: {},
-    create: {
-      id: 'settings',
-      bulletinCapacity: DEFAULT_BULLETIN_CAPACITY,
-      soldOutTarget: DEFAULT_SOLD_OUT_TARGET,
-      defaultPrices: JSON.stringify(DEFAULT_PRICES),
-    },
-  })
+  // Every page that prices or counts anything calls this, so it is the hottest
+  // read in the app. The row is written once and then only ever changed from
+  // the settings form, so read it plainly and keep the upsert for the one
+  // request in the app's lifetime that finds it missing: an upsert is a write
+  // wrapped in a transaction, and paying that on every render costs a round
+  // trip and a pooled connection for nothing.
+  const row =
+    (await prisma.settings.findUnique({ where: { id: 'settings' } })) ??
+    // Still an upsert rather than a create — two first requests can race here.
+    (await prisma.settings.upsert({
+      where: { id: 'settings' },
+      update: {},
+      create: {
+        id: 'settings',
+        bulletinCapacity: DEFAULT_BULLETIN_CAPACITY,
+        soldOutTarget: DEFAULT_SOLD_OUT_TARGET,
+        defaultPrices: JSON.stringify(DEFAULT_PRICES),
+      },
+    }))
 
   return {
     bulletinCapacity: row.bulletinCapacity,

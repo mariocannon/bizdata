@@ -130,12 +130,37 @@ export async function getCapacityReport(issueId: string): Promise<CapacityReport
   return buildCapacityReport(bookings, settings.bulletinCapacity)
 }
 
+/**
+ * Pure batched variant — many issues' reports from bookings already in hand.
+ *
+ * Kept free of I/O so a page that has read the bookings for its own reasons can
+ * build the reports from that array instead of paying for a second scan. An
+ * issue id with no bookings still gets a report, so a caller can index by id
+ * without checking for a gap.
+ */
+export function buildCapacityReports(
+  bookings: (BookingLike & { issueId: string })[],
+  issueIds: string[],
+  bulletinCap: number
+): Record<string, CapacityReport> {
+  const byIssue = new Map<string, BookingLike[]>()
+  for (const id of issueIds) byIssue.set(id, [])
+  for (const booking of bookings) {
+    byIssue.get(booking.issueId)?.push(booking)
+  }
+
+  const reports: Record<string, CapacityReport> = {}
+  for (const [issueId, issueBookings] of byIssue) {
+    reports[issueId] = buildCapacityReport(issueBookings, bulletinCap)
+  }
+  return reports
+}
+
 /** Batched variant — one query for many issues. */
 export async function getCapacityReports(
   issueIds: string[]
 ): Promise<Record<string, CapacityReport>> {
-  const reports: Record<string, CapacityReport> = {}
-  if (issueIds.length === 0) return reports
+  if (issueIds.length === 0) return {}
 
   const [bookings, settings] = await Promise.all([
     prisma.booking.findMany({
@@ -145,16 +170,7 @@ export async function getCapacityReports(
     getSettings(),
   ])
 
-  const byIssue = new Map<string, BookingLike[]>()
-  for (const id of issueIds) byIssue.set(id, [])
-  for (const booking of bookings) {
-    byIssue.get(booking.issueId)?.push(booking)
-  }
-
-  for (const [issueId, issueBookings] of byIssue) {
-    reports[issueId] = buildCapacityReport(issueBookings, settings.bulletinCapacity)
-  }
-  return reports
+  return buildCapacityReports(bookings, issueIds, settings.bulletinCapacity)
 }
 
 /**
