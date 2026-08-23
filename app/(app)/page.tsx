@@ -134,8 +134,12 @@ export default async function DashboardPage({
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  // An issue is still ahead of you until it has actually gone out. One whose
+  // publish date has passed but which is still being assembled is the issue
+  // being worked on right now, so it stays here rather than dropping off the
+  // dashboard the morning after its date and leaving the panel empty.
   const upcomingIssues = issues
-    .filter((issue) => issue.publishDate >= today)
+    .filter((issue) => issue.publishDate >= today || issue.status !== 'SENT')
     .slice(0, 6)
 
   const chaseList = live

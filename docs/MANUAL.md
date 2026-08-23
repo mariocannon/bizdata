@@ -731,7 +731,10 @@ Three things to know about how they count:
 
 ### The lists
 
-- **Upcoming issues** — next six, with sold/capacity and an oversold flag
+- **Upcoming issues** — next six, with sold/capacity and an oversold flag. An
+  issue counts as upcoming until it is marked **Sent**, so the one you are
+  still assembling stays on the dashboard even once its publish date has been
+  and gone
 - **Chase list** — biggest unpaid bookings, with the total owed underneath
 - **Pipeline** — how many advertisers sit at each stage
 
