@@ -100,7 +100,8 @@ export default async function ClassifiedsPage({
 
   const [classifieds, issues] = await Promise.all([
     prisma.classified.findMany({
-      include: { issue: true },
+      // A listing shows its issue's title and publish date, nothing more.
+      include: { issue: { select: { id: true, title: true, publishDate: true } } },
       orderBy: { createdAt: 'desc' },
     }),
     prisma.issue.findMany({

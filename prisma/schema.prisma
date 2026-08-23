@@ -9,6 +9,19 @@
 
 generator client {
   provider = "prisma-client-js"
+  // By default Prisma reads a relation with a *second* query: an `include` of
+  // an advertiser and an issue on a list of bookings is three round trips, not
+  // one. Over Supabase's pooler that is where this app's page time went. With
+  // this on, Postgres gets one statement with LATERAL joins instead, which took
+  // the issue detail page from four queries to two and the advertiser detail
+  // page from three to one.
+  //
+  // It is a Prisma preview feature (5.x). Rendered output was checked page by
+  // page against the previous behaviour and is identical, including listings
+  // with no issue assigned — the case a join would be most likely to change.
+  // If it ever misbehaves, deleting this line and re-running `prisma generate`
+  // restores the old per-relation queries with no other change.
+  previewFeatures = ["relationJoins"]
   // "native" is this machine; Netlify Functions run on Amazon Linux, which
   // needs the rhel engine. Without it the deployed app throws at the first
   // query — Prisma finds no engine it can load.

@@ -29,6 +29,7 @@ import {
   formatEventWhen,
   isUpcoming,
   requiresWordCount,
+  shouldAutoArchive,
 } from '@/lib/events'
 import { featuredOwing, isFeeOutstanding } from '@/lib/featured'
 import { cn, formatDate, formatMoney, toDateInput, toTimeInput } from '@/lib/utils'
@@ -113,14 +114,23 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   const sort = searchParams.sort ?? 'when'
   const dir = searchParams.dir === 'desc' ? 'desc' : 'asc'
 
-  // An event that has been is done with, so it retires itself before the list
-  // is read: anything past its date comes back Archived rather than sitting in
+  // An event that has been is done with, so it retires itself when the list is
+  // read: anything past its date comes back Archived rather than sitting in
   // Published waiting to be noticed. There is no scheduler on this deployment,
   // and this page is the only place events are read.
-  await archivePastEvents()
-
-  const [events, issues] = await Promise.all([
-    prisma.event.findMany({ include: { issue: true }, orderBy: { startsAt: 'asc' } }),
+  //
+  // The sweep runs *alongside* the reads rather than in front of them. It used
+  // to be awaited first, which put its two round trips on the critical path of
+  // every visit to this page — and the page doesn't actually need to wait for
+  // the write, because `shouldAutoArchive` below is the same rule the sweep
+  // applies, so the row renders as Archived either way.
+  const [, events, issues] = await Promise.all([
+    archivePastEvents(),
+    prisma.event.findMany({
+      // An event shows its issue's title and publish date, nothing more.
+      include: { issue: { select: { id: true, title: true, publishDate: true } } },
+      orderBy: { startsAt: 'asc' },
+    }),
     prisma.issue.findMany({
       orderBy: { publishDate: 'asc' },
       select: { id: true, title: true, publishDate: true },
@@ -132,8 +142,11 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   const rows = events
     .map((event) => {
       const words = countWords(event.body)
+      // Derived, not read: the sweep above may not have landed yet.
+      const status = shouldAutoArchive(event, now) ? 'ARCHIVED' : event.status
       return {
         ...event,
+        status,
         words,
         state: wordCountState(words),
         when: formatEventWhen(event.startsAt, event.endsAt),

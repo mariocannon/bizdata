@@ -11,14 +11,17 @@ import { DeleteBookingButton } from './delete-booking-button'
 export const dynamic = 'force-dynamic'
 
 export default async function EditBookingPage({ params }: { params: { id: string } }) {
-  const booking = await prisma.booking.findUnique({
-    where: { id: params.id },
-    include: { advertiser: true, issue: true },
-  })
-
-  if (!booking) notFound()
-
-  const [advertisers, issues, settings] = await Promise.all([
+  // The form's dropdowns and the default prices don't depend on the booking, so
+  // all four go out together rather than waiting on it first.
+  const [booking, advertisers, issues, settings] = await Promise.all([
+    prisma.booking.findUnique({
+      where: { id: params.id },
+      // The header shows the advertiser's name and the issue's date.
+      include: {
+        advertiser: { select: { name: true } },
+        issue: { select: { publishDate: true } },
+      },
+    }),
     prisma.advertiser.findMany({
       orderBy: { name: 'asc' },
       select: { id: true, name: true },
@@ -29,6 +32,8 @@ export default async function EditBookingPage({ params }: { params: { id: string
     }),
     getSettings(),
   ])
+
+  if (!booking) notFound()
 
   return (
     <>

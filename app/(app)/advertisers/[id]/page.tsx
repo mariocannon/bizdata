@@ -40,7 +40,8 @@ export default async function AdvertiserDetailPage({
     where: { id: params.id },
     include: {
       bookings: {
-        include: { issue: true },
+        // The booking history table shows the issue's title and publish date.
+        include: { issue: { select: { id: true, title: true, publishDate: true } } },
         orderBy: { issue: { publishDate: 'desc' } },
       },
     },

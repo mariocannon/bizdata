@@ -74,10 +74,21 @@ export default async function BookingsPage({
 
   const [bookings, issues] = await Promise.all([
     prisma.booking.findMany({
-      include: { advertiser: true, issue: true },
+      // `include: { advertiser: true, issue: true }` dragged every column of
+      // both related rows across for each booking — an advertiser's phone,
+      // email, website and notes on a page that shows their name. The relations
+      // are selected down to what actually renders.
+      include: {
+        advertiser: { select: { name: true } },
+        issue: { select: { title: true, publishDate: true } },
+      },
       orderBy: { issue: { publishDate: 'asc' } },
     }),
-    prisma.issue.findMany({ orderBy: { publishDate: 'asc' } }),
+    // Only the issue filter's dropdown, so only its label and value.
+    prisma.issue.findMany({
+      orderBy: { publishDate: 'asc' },
+      select: { id: true, title: true },
+    }),
   ])
 
   let rows = bookings.filter((booking) => {

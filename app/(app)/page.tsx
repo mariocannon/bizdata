@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { AlertTriangle, ArrowRight } from 'lucide-react'
 import { prisma } from '@/lib/db'
-import { getCapacityReports } from '@/lib/inventory'
+import { buildCapacityReports } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
 import { ADVERTISER_STATUSES, label } from '@/lib/enums'
 import { featuredEarnedOn, featuredTotals, type FeaturedTotals } from '@/lib/featured'
@@ -11,7 +11,7 @@ import { formatDate, formatMoney, formatPercent } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
 import { PeriodSelector } from '@/components/period-selector'
 import { KpiCard } from '@/components/dashboard/kpi-card'
-import { RevenueByIssueChart, BreakdownBarChart } from '@/components/dashboard/charts'
+import { RevenueByIssueChart, BreakdownBarChart } from '@/components/dashboard/charts-lazy'
 import { StatusPill } from '@/components/status-pill'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -36,20 +36,46 @@ export default async function DashboardPage({
     issue: { select: { publishDate: true } },
   } as const
 
+  // The dashboard renders totals, a chase list and three charts — never a
+  // booking's copy, creative or notes. Naming the columns keeps the page's
+  // largest query off the free-text fields, which are most of the row.
+  const bookingSelect = {
+    id: true,
+    issueId: true,
+    adType: true,
+    section: true,
+    price: true,
+    status: true,
+    paid: true,
+    advertiser: { select: { name: true, category: true } },
+    issue: { select: { publishDate: true } },
+  } as const
+
   const [issues, bookings, advertisers, settings, classifieds, events] =
     await Promise.all([
-      prisma.issue.findMany({ orderBy: { publishDate: 'asc' } }),
+      prisma.issue.findMany({
+        orderBy: { publishDate: 'asc' },
+        select: { id: true, publishDate: true, status: true, theme: true },
+      }),
       prisma.booking.findMany({
-        include: { advertiser: true, issue: true },
+        select: bookingSelect,
         orderBy: { issue: { publishDate: 'asc' } },
       }),
-      prisma.advertiser.findMany(),
+      // Only the pipeline counts are drawn from advertisers here.
+      prisma.advertiser.findMany({ select: { status: true } }),
       getSettings(),
       prisma.classified.findMany({ where: { featured: true }, select: featuredSelect }),
       prisma.event.findMany({ where: { featured: true }, select: featuredSelect }),
     ])
 
-  const reports = await getCapacityReports(issues.map((issue) => issue.id))
+  // Capacity is a pure function of the bookings above, so it is computed rather
+  // than fetched — asking the database for the same table a second time (and
+  // waiting for the first round trip before starting it) bought nothing.
+  const reports = buildCapacityReports(
+    issues.map((issue) => issue.id),
+    bookings,
+    settings.bulletinCapacity
+  )
 
   // Revenue is attributed to the issue's publish date, and cancelled bookings
   // never count — anywhere on this page.

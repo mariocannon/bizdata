@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import { ExternalLink, ImageOff, Plus } from 'lucide-react'
 import { prisma } from '@/lib/db'
 import { sumBookings } from '@/lib/rollups'
-import { getCapacityReport } from '@/lib/inventory'
+import { buildCapacityReport } from '@/lib/inventory'
 import { getSettings } from '@/lib/settings'
 import { label } from '@/lib/enums'
 import { formatDate, formatMoney, toDateInput } from '@/lib/utils'
@@ -53,22 +53,26 @@ export default async function IssueDetailPage({
 }) {
   const tab = searchParams.tab === 'checklist' ? 'checklist' : 'bookings'
 
-  const issue = await prisma.issue.findUnique({
-    where: { id: params.id },
-    include: {
-      bookings: {
-        include: { advertiser: true },
-        orderBy: [{ adType: 'asc' }, { createdAt: 'asc' }],
+  // Settings doesn't depend on the issue, so it goes out alongside rather than
+  // after it.
+  const [issue, settings] = await Promise.all([
+    prisma.issue.findUnique({
+      where: { id: params.id },
+      include: {
+        bookings: {
+          include: { advertiser: { select: { id: true, name: true } } },
+          orderBy: [{ adType: 'asc' }, { createdAt: 'asc' }],
+        },
       },
-    },
-  })
+    }),
+    getSettings(),
+  ])
 
   if (!issue) notFound()
 
-  const [report, settings] = await Promise.all([
-    getCapacityReport(issue.id),
-    getSettings(),
-  ])
+  // The bookings are already here — re-reading them to count slots was a whole
+  // extra round trip for a calculation this page can do in memory.
+  const report = buildCapacityReport(issue.bookings, settings.bulletinCapacity)
   const totals = sumBookings(issue.bookings)
 
   const csvRows = issue.bookings.map((booking) => ({

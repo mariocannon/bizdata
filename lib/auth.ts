@@ -55,14 +55,29 @@ function signingSecret(): string {
   return process.env.AUTH_SECRET || process.env.AUTH_PASSWORD || 'insecure-dev-secret'
 }
 
+/**
+ * Importing the key is cheap but not free, and middleware verifies a cookie on
+ * every single request the app serves. The secret comes from the environment
+ * and cannot change while the process lives, so the imported key is held for
+ * the life of the module — keyed by the secret so a test that swaps
+ * AUTH_PASSWORD mid-run still gets the right key.
+ */
+let cachedKey: { secret: string; key: Promise<CryptoKey> } | undefined
+
 async function hmacKey(): Promise<CryptoKey> {
-  return crypto.subtle.importKey(
+  const secret = signingSecret()
+  if (cachedKey?.secret === secret) return cachedKey.key
+
+  const key = crypto.subtle.importKey(
     'raw',
-    encoder().encode(signingSecret()),
+    encoder().encode(secret),
     { name: 'HMAC', hash: 'SHA-256' },
     false,
     ['sign', 'verify']
   )
+
+  cachedKey = { secret, key }
+  return key
 }
 
 async function sign(payload: string): Promise<string> {

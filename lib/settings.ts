@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { prisma } from '@/lib/db'
+import { requestCache } from '@/lib/request-cache'
 import { AD_TYPES, type AdType } from '@/lib/enums'
 
 export const DEFAULT_BULLETIN_CAPACITY = 3
@@ -41,25 +42,43 @@ function parsePrices(raw: string): Record<AdType, number> {
   return prices
 }
 
-/** Reads the single settings row, creating it with defaults on first access. */
-export async function getSettings(): Promise<AppSettings> {
-  const row = await prisma.settings.upsert({
-    where: { id: 'settings' },
-    update: {},
-    create: {
-      id: 'settings',
-      bulletinCapacity: DEFAULT_BULLETIN_CAPACITY,
-      soldOutTarget: DEFAULT_SOLD_OUT_TARGET,
-      defaultPrices: JSON.stringify(DEFAULT_PRICES),
-    },
-  })
+/**
+ * Reads the single settings row, creating it with defaults on first access.
+ *
+ * Read first, write only when the row is genuinely missing. The obvious
+ * spelling of this is `upsert({ update: {} })`, but that is a write on every
+ * call — a transaction, a WAL record and a round trip on the pooled connection,
+ * on a row that changes about once a year. Every page in the app reads settings,
+ * so that one line put a write in front of every render.
+ *
+ * `requestCache` then collapses the repeat calls within a single render: the
+ * dashboard asks for settings directly and again through the capacity report,
+ * and both now share one query.
+ */
+export const getSettings = requestCache(async function getSettings(): Promise<AppSettings> {
+  const existing = await prisma.settings.findUnique({ where: { id: 'settings' } })
+
+  const row =
+    existing ??
+    // First run on a fresh database. `create` can lose a race with a concurrent
+    // first request, so fall back to re-reading rather than failing the page.
+    (await prisma.settings
+      .create({
+        data: {
+          id: 'settings',
+          bulletinCapacity: DEFAULT_BULLETIN_CAPACITY,
+          soldOutTarget: DEFAULT_SOLD_OUT_TARGET,
+          defaultPrices: JSON.stringify(DEFAULT_PRICES),
+        },
+      })
+      .catch(() => prisma.settings.findUniqueOrThrow({ where: { id: 'settings' } })))
 
   return {
     bulletinCapacity: row.bulletinCapacity,
     soldOutTarget: row.soldOutTarget,
     defaultPrices: parsePrices(row.defaultPrices),
   }
-}
+})
 
 export async function saveSettings(input: AppSettings): Promise<AppSettings> {
   const data = settingsSchema.parse(input)

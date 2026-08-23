@@ -27,7 +27,7 @@ import {
 import { formatPercent } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
 import { KpiCard } from '@/components/dashboard/kpi-card'
-import { DistributionChart, ResponsesByDayChart } from '@/components/survey/charts'
+import { DistributionChart, ResponsesByDayChart } from '@/components/survey/charts-lazy'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { EmptyState } from '@/components/ui/empty-state'
 

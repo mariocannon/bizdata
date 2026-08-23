@@ -31,6 +31,32 @@ export function sumBookings(bookings: BookingMoney[]): MoneyTotals {
   return totals
 }
 
+/**
+ * Pure grouped rollup. Cancelled bookings are skipped here rather than in a
+ * `where` clause, so a caller that already holds the whole booking list — the
+ * issues page needs the cancelled ones for capacity — can group it without a
+ * second query.
+ */
+export function rollupBy<T extends BookingMoney>(
+  bookings: T[],
+  keyOf: (booking: T) => string
+): Map<string, MoneyTotals> {
+  const totals = new Map<string, MoneyTotals>()
+
+  for (const booking of bookings) {
+    if (booking.status === 'CANCELLED') continue
+    const key = keyOf(booking)
+    const current = totals.get(key) ?? { ...ZERO_TOTALS }
+    current.bookings += 1
+    current.booked += booking.price
+    if (booking.paid === 'PAID') current.paid += booking.price
+    else current.outstanding += booking.price
+    totals.set(key, current)
+  }
+
+  return totals
+}
+
 /** Rollup totals per advertiser, in one query. */
 export async function getAdvertiserTotals(): Promise<Map<string, MoneyTotals>> {
   const bookings = await prisma.booking.findMany({
@@ -38,17 +64,7 @@ export async function getAdvertiserTotals(): Promise<Map<string, MoneyTotals>> {
     select: { advertiserId: true, price: true, paid: true, status: true },
   })
 
-  const totals = new Map<string, MoneyTotals>()
-  for (const booking of bookings) {
-    const current = totals.get(booking.advertiserId) ?? { ...ZERO_TOTALS }
-    current.bookings += 1
-    current.booked += booking.price
-    if (booking.paid === 'PAID') current.paid += booking.price
-    else current.outstanding += booking.price
-    totals.set(booking.advertiserId, current)
-  }
-
-  return totals
+  return rollupBy(bookings, (booking) => booking.advertiserId)
 }
 
 /** Rollup totals per issue, in one query. */
@@ -58,15 +74,5 @@ export async function getIssueTotals(): Promise<Map<string, MoneyTotals>> {
     select: { issueId: true, price: true, paid: true, status: true },
   })
 
-  const totals = new Map<string, MoneyTotals>()
-  for (const booking of bookings) {
-    const current = totals.get(booking.issueId) ?? { ...ZERO_TOTALS }
-    current.bookings += 1
-    current.booked += booking.price
-    if (booking.paid === 'PAID') current.paid += booking.price
-    else current.outstanding += booking.price
-    totals.set(booking.issueId, current)
-  }
-
-  return totals
+  return rollupBy(bookings, (booking) => booking.issueId)
 }

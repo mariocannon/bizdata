@@ -118,6 +118,29 @@ export function totalCapacityPerIssue(bulletinCap: number): number {
   )
 }
 
+/**
+ * Pure batched variant. Callers that have already loaded the bookings — the
+ * dashboard, the issues list, the issue detail page — build their reports from
+ * those rows instead of asking the database for the same table a second time.
+ */
+export function buildCapacityReports(
+  issueIds: string[],
+  bookings: (BookingLike & { issueId: string })[],
+  bulletinCap: number
+): Record<string, CapacityReport> {
+  const byIssue = new Map<string, BookingLike[]>()
+  for (const id of issueIds) byIssue.set(id, [])
+  for (const booking of bookings) {
+    byIssue.get(booking.issueId)?.push(booking)
+  }
+
+  const reports: Record<string, CapacityReport> = {}
+  for (const [issueId, issueBookings] of byIssue) {
+    reports[issueId] = buildCapacityReport(issueBookings, bulletinCap)
+  }
+  return reports
+}
+
 /** Loads an issue's bookings and builds its report. */
 export async function getCapacityReport(issueId: string): Promise<CapacityReport> {
   const [bookings, settings] = await Promise.all([
@@ -134,8 +157,7 @@ export async function getCapacityReport(issueId: string): Promise<CapacityReport
 export async function getCapacityReports(
   issueIds: string[]
 ): Promise<Record<string, CapacityReport>> {
-  const reports: Record<string, CapacityReport> = {}
-  if (issueIds.length === 0) return reports
+  if (issueIds.length === 0) return {}
 
   const [bookings, settings] = await Promise.all([
     prisma.booking.findMany({
@@ -145,16 +167,7 @@ export async function getCapacityReports(
     getSettings(),
   ])
 
-  const byIssue = new Map<string, BookingLike[]>()
-  for (const id of issueIds) byIssue.set(id, [])
-  for (const booking of bookings) {
-    byIssue.get(booking.issueId)?.push(booking)
-  }
-
-  for (const [issueId, issueBookings] of byIssue) {
-    reports[issueId] = buildCapacityReport(issueBookings, settings.bulletinCapacity)
-  }
-  return reports
+  return buildCapacityReports(issueIds, bookings, settings.bulletinCapacity)
 }
 
 /**

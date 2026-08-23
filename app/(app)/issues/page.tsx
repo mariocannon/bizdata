@@ -2,8 +2,9 @@ import Link from 'next/link'
 import { format } from 'date-fns'
 import { AlertTriangle } from 'lucide-react'
 import { prisma } from '@/lib/db'
-import { getIssueTotals, ZERO_TOTALS } from '@/lib/rollups'
-import { getCapacityReports } from '@/lib/inventory'
+import { rollupBy, ZERO_TOTALS } from '@/lib/rollups'
+import { buildCapacityReports } from '@/lib/inventory'
+import { getSettings } from '@/lib/settings'
 import { ISSUE_STATUSES, label } from '@/lib/enums'
 import { formatDate, formatMoney, toDateInput } from '@/lib/utils'
 import { PageHeader } from '@/components/page-header'
@@ -53,11 +54,32 @@ export default async function IssuesPage({ searchParams }: { searchParams: Searc
   const sort = searchParams.sort ?? 'publishDate'
   const dir = searchParams.dir === 'desc' ? 'desc' : 'asc'
 
-  const issues = await prisma.issue.findMany({ orderBy: { publishDate: 'asc' } })
-  const [totals, reports] = await Promise.all([
-    getIssueTotals(),
-    getCapacityReports(issues.map((issue) => issue.id)),
+  // Money and capacity are both functions of the same booking rows, so the page
+  // reads that table once and derives both. Fetching the issues first and only
+  // then starting the booking queries also cost a round trip that nothing needed
+  // — the bookings don't depend on the issue list.
+  const [issues, bookings, settings] = await Promise.all([
+    prisma.issue.findMany({ orderBy: { publishDate: 'asc' } }),
+    prisma.booking.findMany({
+      select: {
+        id: true,
+        issueId: true,
+        adType: true,
+        section: true,
+        status: true,
+        price: true,
+        paid: true,
+      },
+    }),
+    getSettings(),
   ])
+
+  const totals = rollupBy(bookings, (booking) => booking.issueId)
+  const reports = buildCapacityReports(
+    issues.map((issue) => issue.id),
+    bookings,
+    settings.bulletinCapacity
+  )
 
   const rows = issues
     .map((issue) => ({
