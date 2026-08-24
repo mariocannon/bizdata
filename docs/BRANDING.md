@@ -96,12 +96,66 @@ Shipped as the `.brand-wash` class and the `--brand-wash` custom property.
 ### The tide
 
 Two layered waves in Sea Glass, the back one at 45% opacity and the front at
-full, anchored to the foot of the viewport. Path data lives in
+full, anchored to the foot of the page. Path data lives in
 `components/brand/tide-waves.tsx` and is copied verbatim from the guide.
 
-Copy must never sit on top of the waves. `BrandShell` reserves
-`clamp(7rem, 20vh, 11rem)` of bottom padding for exactly this reason — if you
-build a public page by hand, reserve the same.
+Copy must never sit on top of the waves. Whatever holds the copy reserves more
+bottom padding than the waves are tall, for exactly this reason —
+`BrandShell` reserves `clamp(7rem, 20vh, 11rem)` against `<TideWaves>`'
+`clamp(80px, 14vh, 150px)`. If you build a public page by hand, copy the
+*pairing*, not the number on its own: a reserve only clears the wave height it
+was sized against, and the two are easy to drift apart. See below.
+
+#### Which foot — viewport or document (extension)
+
+> The source guide says "the foot of the viewport," which it could, because it
+> was transcribed from a signup page short enough to fit without scrolling. On
+> a page that scrolls, viewport foot and document foot are different pixels,
+> and `position: fixed` puts the waves over the copy. This spells out which one
+> the guide meant.
+
+Anchor the waves to the foot of the **document**, not the viewport:
+`position: absolute; inset: auto 0 0` on a `position: relative` parent that is
+free to grow (`min-height: 100%`, not `height: 100%`). On a page that fits,
+this renders identically to `fixed`. On a page that scrolls, it is the
+difference between the waves sitting under the last line of copy and floating
+across it.
+
+`position: fixed` is only ever correct while a page fits, so treat it as a
+thing to prove rather than assume: check the longest state a page can reach —
+a validation note added, an archive list populated, a long headline wrapping —
+not the state it happens to be in today.
+
+#### Sizing the reserve against the waves (extension)
+
+Declare the wave height once and derive the reserve from it, so the two cannot
+drift apart:
+
+```css
+--wave-height: clamp(90px, 18vh, 220px);
+padding-block-end: calc(var(--wave-height) + 2rem);
+```
+
+Constant clearance at every viewport height, and the reserve is defined in
+terms of the thing it has to clear.
+
+Two independent clamps look like they do the same job and don't. It is
+tempting to reason "the reserve grows at `20vh`, the waves at `18vh`, so the
+reserve always wins" — that only holds while neither clamp is biting. A
+reserve of `clamp(7rem, 20vh, 11rem)` stops growing at 176px once the viewport
+passes ~880px tall, while waves of `clamp(90px, 18vh, 220px)` keep growing to
+220px; past roughly 978px the wave box is taller than the reserve. If you do
+keep two literals, the constraint to check is the **maximum** — the reserve's
+max must exceed the waves' max. Comparing the `vh` middles tells you nothing.
+
+A fixed rem reserve can't work at all: it holds at small heights and fails once
+the viewport grows past it.
+
+**The two implementations use different wave heights**, so check the pair in
+front of you rather than assuming there is one number. `<TideWaves>` is
+`clamp(80px, 14vh, 150px)` and clears the `clamp(7rem, 20vh, 11rem)` reserve at
+every height — 150px against 176px. The landing page's waves are taller,
+`clamp(90px, 18vh, 220px)`, and that same reserve does not cover them.
 
 ---
 
@@ -247,6 +301,33 @@ Four principles:
 The internal ad manager is denser than the public pages by necessity, but the
 voice doesn't change: empty states, errors and confirmations are written the
 same way.
+
+### Place names (extension)
+
+> The source guide names the audience but never the map. Search-facing copy
+> forced the question, and the codebase had already answered it two different
+> ways.
+
+Reader-facing copy uses the official macronised spelling — **Ōrewa**,
+**Whangaparāoa**, **Ōkura**. URL slugs, file names and database keys stay
+ASCII: `/orewa-best-coffee` is correct and shouldn't move. Search engines fold
+diacritics for NZ queries, so spelling a place properly costs nothing and is
+the whole of the argument.
+
+"**The Coast**" is the insider shorthand and holds the identity lines — the
+eyebrow, the tagline, anywhere the page is saying who it is for. "Coasties"
+derives from it, and swapping in the map name breaks that tie and reads a
+half-step more official. "**Hibiscus Coast**" is for explanatory and
+search-facing copy — meta titles and descriptions, a sentence telling somebody
+what this is. Both are in voice; they are not interchangeable.
+
+Suburb names earn their place in a sentence, not a list. Once per page is
+plenty: the same four suburbs in the title, the description and the body reads
+as keyword stuffing however warm the words are.
+
+Meta titles and descriptions are reader-facing copy, not backend metadata —
+they surface verbatim as the search snippet and the social card. They are held
+to everything above.
 
 ---
 
