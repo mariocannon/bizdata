@@ -6,6 +6,8 @@ import {
   bookingStatusSchema,
   classifiedCategorySchema,
   classifiedStatusSchema,
+  directoryCategorySchema,
+  directoryTownSchema,
   eventCategorySchema,
   eventStatusSchema,
   issueStatusSchema,
@@ -401,6 +403,37 @@ export const publicEventSchema = z
   })
 
 export type PublicEventValues = z.output<typeof publicEventSchema>
+
+/**
+ * A business directory listing (app/(app)/directory). Unlike Classified/Event
+ * there is no status or source here — no draft/approval workflow, no public
+ * submission path, everything the operator adds is meant to go live.
+ *
+ * The 10-per-category cap and the one-featured-per-category invariant are
+ * enforced in the server action against the database, not here — a schema
+ * can't see the rest of the table.
+ *
+ * `blurb` has a 61-character floor rather than the usual "no minimum": it
+ * mirrors thetidelanding's own Playwright suite, which rejects anything at or
+ * under 60 characters as too short to read as a recommendation. Keeping the
+ * same floor here means a listing typed in never fails thetidelanding's build.
+ */
+export const directoryListingSchema = z.object({
+  id: z.string().optional(),
+  name: z.string().trim().min(1, 'Name is required').max(160),
+  category: directoryCategorySchema,
+  town: directoryTownSchema,
+  blurb: z
+    .string()
+    .trim()
+    .min(61, 'Write at least 61 characters — anything shorter reads as too thin to be a recommendation')
+    .max(600, 'Keep the blurb to 600 characters or fewer'),
+  phone: optionalText,
+  url: optionalUrl,
+  featured: z.boolean().default(false),
+})
+
+export type DirectoryListingValues = z.output<typeof directoryListingSchema>
 
 export const advertiserStatusChangeSchema = z.object({
   id: z.string().min(1),

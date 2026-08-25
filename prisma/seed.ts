@@ -42,6 +42,7 @@ async function main() {
   await prisma.booking.deleteMany()
   await prisma.issue.deleteMany()
   await prisma.advertiser.deleteMany()
+  await prisma.directoryListing.deleteMany()
 
   const realty = await prisma.advertiser.create({
     data: {
@@ -262,20 +263,210 @@ async function main() {
     },
   })
 
+  // Business directory: the hand-curated listings that used to live in
+  // thetidelanding's static category files, carried over so nothing written
+  // there is lost now that the listings (not the categories) live here.
+  // All start unfeatured — the operator picks one per category from /directory
+  // once there is one worth leading with, rather than the seed guessing.
+  await prisma.directoryListing.createMany({
+    data: [
+      // Cafés & coffee
+      {
+        name: 'Cafe Hibiscus',
+        category: 'cafes',
+        town: 'Stanmore Bay',
+        blurb:
+          'A house roaster on Whangaparāoa Road, open from half six in the morning until four — early enough for the people who are actually up then. Generous breakfasts, quick service, outdoor seating.',
+      },
+      {
+        name: 'Beans N Bites',
+        category: 'cafes',
+        town: 'Stanmore Bay',
+        blurb:
+          'All-day brunch, which is the useful kind — no cut-off at eleven for anybody who got the morning wrong. Table service inside and out.',
+      },
+      {
+        name: 'At 719 Coffee and Eatery',
+        category: 'cafes',
+        town: 'Whangaparāoa',
+        blurb:
+          'Organic and locally sourced where they can get it, with baking done in-house. Weekdays and weekends both from eight until half two, so it is a morning place rather than a late-lunch one.',
+      },
+      {
+        name: 'Local Cafe',
+        category: 'cafes',
+        town: 'Manly',
+        blurb:
+          'Tiny, on Rawhiti Road, and reckoned by a lot of people to be the best on the Coast. Everything is prepared on site with local produce, and the coffee has its own following. Weekdays only, seven until four.',
+      },
+      {
+        name: 'Spinnakers Cafe & Bar',
+        category: 'cafes',
+        town: 'Gulf Harbour',
+        blurb:
+          'Inside the marina, looking out at the boats — licensed, so it works for a coffee after a haul-out or a beer after a day on the water. The obvious meeting point if you are down that end of the peninsula.',
+      },
+
+      // Plumbers
+      {
+        name: 'Grouse Plumbing',
+        category: 'plumbers',
+        town: 'Whangaparāoa',
+        url: 'https://grouseplumbing.co.nz/',
+        phone: '021 0663 802',
+        blurb:
+          'Residential and light commercial work the length of the peninsula — kitchens, bathrooms, hot water cylinders, spouting — with 24/7 call-outs for the things that will not wait. Master Plumbers and Site Safe members, which matters as much on a renovation as on an emergency.',
+      },
+      {
+        name: 'Laser Plumbing Silverdale',
+        category: 'plumbers',
+        town: 'Silverdale',
+        url: 'https://silverdale.laserplumbing.co.nz/',
+        blurb:
+          'On the Coast since 2009, covering plumbing, gasfitting and drainage from Silverdale out to Gulf Harbour. The Laser network behind them means a written quote and a guarantee on the work, which is the trade-off for not being the cheapest number you will get.',
+      },
+      {
+        name: 'Flowpro Plumbers & Gasfitters',
+        category: 'plumbers',
+        town: 'Silverdale',
+        url: 'https://flowpro.co.nz/location/plumbers-hibiscus-coast-nz/',
+        blurb:
+          'Certified plumbers and gasfitters working out of Emirali Road, close enough to most of the Coast to make a same-day call realistic. General maintenance and gas work alike.',
+      },
+      {
+        name: 'FlowFix Plumbing',
+        category: 'plumbers',
+        town: 'Hatfields Beach',
+        url: 'https://www.flowfix.co.nz/',
+        phone: '027 265 4949',
+        blurb:
+          'A family-run outfit going since 2017, covering the Albany-to-Warkworth run. Bathroom and kitchen renovations, hot water cylinders, CCTV drain inspections, and the Dux Quest pipe replacement a lot of older Coast houses still need. Free quotes on the bigger jobs.',
+      },
+      {
+        name: 'Millwater Plumbing',
+        category: 'plumbers',
+        town: 'Millwater',
+        url: 'https://www.millwaterplumbing.co.nz/',
+        phone: '021 750 686',
+        blurb:
+          'Certified plumber and licensed gasfitter working out of Millwater, minutes from Silverdale and the newer subdivisions — handy if you are in Milldale or Arra Hills and want someone who knows how those houses are put together. Eleven years on the Coast.',
+      },
+      {
+        name: 'Orewa Plumber',
+        category: 'plumbers',
+        town: 'Orewa',
+        url: 'https://orewaplumber.co.nz/',
+        phone: '027 248 4935',
+        blurb:
+          'Fifteen years working Orewa and the surrounding beaches, from Orewa Point and Red Beach through to Gulf Harbour and Milldale. Homes and businesses both, with 24/7 availability.',
+      },
+
+      // Electricians
+      {
+        name: 'Laser Electrical Silverdale',
+        category: 'electricians',
+        town: 'Silverdale',
+        url: 'https://www.lasergroup.co.nz/m/laser-electrical-silverdale',
+        phone: '09 426 3852',
+        blurb:
+          'On Peters Way since 1986, back when it was Fairgray Electrical — fourteen staff including ten qualified sparkies and apprentices, which is enough depth to take a new build or a shop fitout as well as a dead socket. Registered Master Electricians, with EV chargers, solar and heat pumps alongside the everyday work.',
+      },
+      {
+        name: 'PERL Electrical',
+        category: 'electricians',
+        town: 'Silverdale',
+        url: 'https://perlelectrical.co.nz/hibiscus/electrical-services/',
+        phone: '021 298 1756',
+        blurb:
+          'Residential work out of Galbraith Greens, covering Silverdale to Puhoi and Whangaparāoa to Wainui — which is most of the Coast and a fair way past it. Handy if you are in one of the smaller bays that other firms treat as a detour.',
+      },
+      {
+        name: 'AJ Electrical Services',
+        category: 'electricians',
+        town: 'Red Beach',
+        url: 'https://www.ajelectricalservices.co.nz/',
+        phone: '09 390 9884',
+        blurb:
+          'A family-run team of Registered Master Electricians doing both sides of the work — rewires, switchboards, kitchen and bathroom upgrades at home, and three-phase, test-and-tag and emergency lighting for businesses. Useful to know if you run something as well as live here.',
+      },
+      {
+        name: 'Lavelle Electrical & Heating',
+        category: 'electricians',
+        town: 'Red Beach',
+        url: 'https://www.lavelle.co.nz/page/electrical-work/',
+        phone: '021 349 449',
+        blurb:
+          'James Lavelle, registered, working Red Beach through to Whangaparāoa. Underfloor heating is the speciality alongside the usual lighting, cylinders and renovation wiring — and the hourly rate is published on the website, which is rarer than it should be.',
+      },
+      {
+        name: "Frosty's Electrical",
+        category: 'electricians',
+        town: 'Red Beach',
+        url: 'https://www.frostyselectrical.co.nz/',
+        blurb:
+          'Residential work across Red Beach, Orewa, Silverdale, Stanmore Bay and Whangaparāoa. The sort of outfit worth having the number for before the job is urgent.',
+      },
+
+      // Mechanics & auto repair
+      {
+        name: 'Orewa Car Services',
+        category: 'mechanics',
+        town: 'Orewa',
+        url: 'https://orewacarservices.co.nz/',
+        blurb:
+          'Family-owned since 1977, which on a peninsula this size means they have probably worked on the car before you owned it. General repair and servicing, covering Orewa out to Millwater, Silverdale, Waiwera and Whangaparāoa.',
+      },
+      {
+        name: 'Silverdale Car Services',
+        category: 'mechanics',
+        town: 'Silverdale',
+        url: 'https://www.silverdalecarservices.co.nz/',
+        blurb:
+          'European cars are the specialty — Andrew has been working on them for more than thirty-five years — but the shop covers WOFs, servicing, brakes, diagnostics, air conditioning, batteries, tyres and wheel alignments for everything else. The place to take a car that a general workshop has already had a look at.',
+      },
+      {
+        name: 'Auto Super Shoppe Silverdale',
+        category: 'mechanics',
+        town: 'Silverdale',
+        url: 'https://www.autosupershoppes.co.nz/mechanic/silverdale',
+        blurb:
+          'Ryan and Kellie Tremayne have been on the Coast thirty years and own the workshop, so the person quoting the job is the person who lives with the result. WOF inspections come as part of a routine service rather than as a separate trip.',
+      },
+      {
+        name: 'Pit Stop Silverdale',
+        category: 'mechanics',
+        town: 'Silverdale',
+        url: 'https://www.pitstop.co.nz/branch/silverdale',
+        blurb:
+          'WOFs, servicing and repairs with the backing of a national chain — bookable online, and with finance options if a repair lands at the wrong end of the month. Covers Silverdale, Orewa, Red Beach and Whangaparāoa.',
+      },
+      {
+        name: 'Coast Mechanical',
+        category: 'mechanics',
+        town: 'Whangaparāoa',
+        url: 'https://www.coastmechanical.co.nz/',
+        blurb:
+          'Mobile, so the work happens in your driveway. Derek has twenty years in the trade and takes heavy diesel as well as cars, plus tractor and boat-trailer repairs — a combination that makes more sense here than most places.',
+      },
+    ],
+  })
+
   // Settings are left alone — getSettings() creates the single row with
   // defaults on first access, so a re-seed never clobbers edited settings.
 
-  const [advertisers, issues, bookings, classifieds, events] = await Promise.all([
-    prisma.advertiser.count(),
-    prisma.issue.count(),
-    prisma.booking.count(),
-    prisma.classified.count(),
-    prisma.event.count(),
-  ])
+  const [advertisers, issues, bookings, classifieds, events, directoryListings] =
+    await Promise.all([
+      prisma.advertiser.count(),
+      prisma.issue.count(),
+      prisma.booking.count(),
+      prisma.classified.count(),
+      prisma.event.count(),
+      prisma.directoryListing.count(),
+    ])
 
   console.log(
     `Seeded ${advertisers} advertisers, ${issues} issues, ${bookings} bookings, ` +
-      `${classifieds} classifieds, ${events} events.`
+      `${classifieds} classifieds, ${events} events, ${directoryListings} directory listings.`
   )
 }
 

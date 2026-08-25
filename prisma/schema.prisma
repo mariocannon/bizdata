@@ -151,6 +151,40 @@ model Event {
   @@index([startsAt])
 }
 
+// A single business listing in the Hibiscus Coast business directory
+// (thetidelanding's /hibiscus-coast-business-directory). Categories and towns
+// are hand-kept unions (lib/enums.ts) that must match thetidelanding's slugs
+// and copy exactly — thetidelanding's Astro build reads this table at build
+// time over PostgREST (anon key, same Supabase project) and does not import
+// from this app, so the field names here are the contract between the two.
+//
+// Deliberately no `status` or `source`: unlike Classified/Event there is no
+// draft/approval workflow and no public submission path — everything the
+// operator adds here is meant to go live. Two invariants are enforced
+// server-side rather than in the schema, because Prisma/Postgres can't
+// express either as a constraint without a trigger:
+//
+//   - at most 10 listings per category (an add/edit that would exceed it is
+//     rejected outright, never silently truncated)
+//   - at most one `featured` listing per category, kept true by unsetting
+//     every other listing in the category inside the same transaction as the
+//     write that sets this one — see lib/directory.ts and
+//     app/(app)/directory/actions.ts.
+model DirectoryListing {
+  id        String   @id @default(cuid())
+  name      String
+  category  String // DirectoryCategory union (lib/enums.ts) — matches thetidelanding's category slugs exactly
+  town      String // DirectoryTown union (lib/enums.ts) — matches thetidelanding's towns list exactly
+  blurb     String
+  phone     String?
+  url       String?
+  featured  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+}
+
 // Single-row settings (id is always "settings").
 model Settings {
   id               String   @id @default("settings")

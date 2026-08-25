@@ -10,6 +10,7 @@ import {
   ClipboardList,
   ScrollText,
   CalendarDays,
+  Store,
   Settings as SettingsIcon,
 } from 'lucide-react'
 import { TideMark } from '@/components/brand/tide-waves'
@@ -22,6 +23,7 @@ const NAV = [
   { href: '/issues', label: 'Issues', icon: Newspaper },
   { href: '/classifieds', label: 'Classifieds', icon: ScrollText },
   { href: '/events', label: 'Events', icon: CalendarDays },
+  { href: '/directory', label: 'Directory', icon: Store },
   { href: '/survey', label: 'Reader survey', icon: ClipboardList },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
 ]

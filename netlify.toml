@@ -8,7 +8,7 @@
   # Must satisfy @netlify/plugin-nextjs, which requires Node 22+.
   NODE_VERSION = "22"
   # Secrets scanning would otherwise flag the DB URL that Prisma reads at build.
-  SECRETS_SCAN_OMIT_KEYS = "DATABASE_URL,DIRECT_URL,SUPABASE_SERVICE_ROLE_KEY,AUTH_PASSWORD,AUTH_SECRET"
+  SECRETS_SCAN_OMIT_KEYS = "DATABASE_URL,DIRECT_URL,SUPABASE_SERVICE_ROLE_KEY,AUTH_PASSWORD,AUTH_SECRET,THETIDELANDING_BUILD_HOOK_URL"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"

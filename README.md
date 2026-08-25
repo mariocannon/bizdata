@@ -30,7 +30,7 @@ Then:
 npm install
 cp .env.example .env       # set DATABASE_URL and DIRECT_URL
 npx prisma migrate dev     # applies the schema
-npm run seed               # sample advertisers, issues, bookings, classifieds, events
+npm run seed               # sample advertisers, issues, bookings, classifieds, events, directory listings
 npm run dev                # http://localhost:3000
 ```
 
@@ -223,10 +223,16 @@ npm run preflight
 ```
 
 Then `prisma migrate deploy` runs, which creates the
-six tables (`Advertiser`, `Issue`, `Booking`, `Classified`, `Event`, `Settings`) in your Supabase
+seven tables (`Advertiser`, `Issue`, `Booking`, `Classified`, `Event`, `DirectoryListing`, `Settings`) in your Supabase
 database and enables row-level security on each. If the project already holds
 other tables, these sit alongside them — Prisma only touches what's in this
 schema.
+
+`DirectoryListing` is the one exception to "no legitimate PostgREST caller":
+thetidelanding's Astro build reads it at build time over PostgREST with the
+anon key, so unlike every other table here it needs an actual `SELECT` policy
+for `anon` on top of RLS being enabled — that policy is added on
+thetidelanding's side of the integration, not by this app's migrations.
 
 Supabase exposes every `public` table through PostgREST, reachable with the anon
 key that ships in client bundles. The migration turns RLS on with no policies,
@@ -244,8 +250,13 @@ npm run seed
 ```
 
 Skip this if you're going straight to entering real advertisers. **`npm run seed`
-deletes all existing advertisers, issues, bookings, classifieds and events** before inserting the
-samples — never point it at a database you care about.
+deletes all existing advertisers, issues, bookings, classifieds, events and
+directory listings** before inserting the samples — never point it at a
+database you care about. Directory listings are the one exception to
+"sample": the seeded rows are the real, currently-published cafés/plumbers/
+electricians/mechanics listings, not placeholder data — but re-running the
+seed still replaces the *table*, so any listing added through `/directory`
+since the last seed is lost along with the samples.
 
 ## Reader survey
 
@@ -440,6 +451,35 @@ link have to be changed together.
 Only an absolute `http(s)` image URL is printed in the beehiiv block — the
 local-disk driver's `/uploads/…` path would be a broken image in an inbox.
 
+### Business directory
+
+`/directory` owns the *listings* inside thetidelanding's hand-kept Hibiscus
+Coast business directory (`/hibiscus-coast-business-directory`) — categories,
+taxonomy and SEO copy stay hand-kept there; only the businesses inside each
+category live in `DirectoryListing` here. thetidelanding's Astro build reads
+the table at build time over PostgREST (anon key, this project), which is why
+`category` and `town` are plain strings matching thetidelanding's slugs and
+towns list exactly (`lib/enums.ts`, `DIRECTORY_CATEGORIES` /
+`DIRECTORY_TOWNS`) rather than a normal `UPPER_SNAKE` union.
+
+Unlike Classified/Event there is no `status` and no `source` — no draft/
+approval workflow, no public submission path, everything the operator adds is
+meant to go live. Two invariants are enforced server-side instead, both in
+the same transaction as the write:
+
+- **Max 10 listings per category.** An add or edit that would exceed it is
+  rejected outright, never silently truncated.
+- **At most one `featured` listing per category**, and it leads that
+  category's block on the public page. Setting `featured=true` atomically
+  unsets it on every other listing in the same category, so two sequential
+  saves can never leave two listings featured at once.
+
+Saving or deleting a listing best-effort POSTs to
+`THETIDELANDING_BUILD_HOOK_URL` (a Netlify build hook on thetidelanding's
+site) to trigger a rebuild, so a change goes live without a manual redeploy.
+It's optional — unset, the save/delete still succeeds locally and in
+production, the public site just catches up at its next build instead.
+
 ### Content-to-ad ratio
 
 Target 3:1 content-to-ad. Informational only: the issue detail shows ads sold
@@ -465,6 +505,7 @@ against a soft target (default 10 slots ≈ sold out). It never blocks anything.
 | `/issues/[id]` | Capacity panel, content-to-ad indicator, bookings, and a publish checklist (the build sheet for send day) |
 | `/classifieds` | Reader classifieds — headline, up to 70 words, contact. Table and copy views, filters, CSV export |
 | `/events` | Community events — the same shape plus when and where. Opens in date order, filterable to Upcoming, CSV and beehiiv exports |
+| `/directory` | Business directory listings — grouped by category, feeding thetidelanding's hand-kept Hibiscus Coast business directory pages over PostgREST. Max 10 listings per category, at most one featured per category |
 | `/survey` | Reader survey — what readers say they want, plus where they live and who they are. Read live from a separate Supabase project on every load. |
 | `/settings` | Bulletin capacity, soft sold-out target, default price per ad type |
 | `/submit` | **Public.** The form you send to customers to place a classified. No password, reads nothing, writes an unassigned draft |
@@ -494,6 +535,7 @@ app/
     issues/             list, detail (capacity + checklist), server actions
     classifieds/        list, form + word-count rules, server actions
     events/             list, form + dates, server actions
+    directory/          business directory listings, grouped by category, server actions
     survey/             reader survey charts (reads the survey Supabase project)
     settings/
   login/                the password gate
@@ -516,6 +558,7 @@ lib/
   classifieds.ts        word counting and the 70-word cap
   events.ts             event dates: formatting, upcoming, the no-time rule
   beehiiv.ts            renders published listings as pasteable HTML
+  directory.ts          business directory cap + featured-uniqueness rules
   rate-limit.ts         fixed-window limiter for the public endpoint
   validation.ts         Zod schemas shared by forms and actions
   survey-db.ts          client for the separate survey Supabase project

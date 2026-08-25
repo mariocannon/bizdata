@@ -75,6 +75,56 @@ export const EVENT_CATEGORIES = [
 /** Same shape as classifieds: draft, approved, published, archived. */
 export const EVENT_STATUSES = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'] as const
 
+/**
+ * The Hibiscus Coast business directory (thetidelanding's
+ * /hibiscus-coast-business-directory). Deliberately lowercase-hyphen slugs
+ * rather than this file's usual UPPER_SNAKE — these are used as-is as
+ * thetidelanding's URL segment for each category page and stored on
+ * DirectoryListing.category verbatim, so don't transform them. Categories,
+ * taxonomy and SEO copy stay hand-kept in thetidelanding; this list only has
+ * to match its slugs, not own them. Order is display order.
+ */
+export const DIRECTORY_CATEGORIES = [
+  'cafes',
+  'plumbers',
+  'electricians',
+  'mechanics',
+  'hairdressers',
+  'restaurants',
+  'builders',
+  'painters',
+  'landscaping',
+  'real-estate',
+  'dentists',
+  'beauty',
+  'physio',
+  'vets',
+  'gyms',
+  'childcare',
+  'cleaners',
+  'movers',
+  'accountants',
+] as const
+
+/**
+ * Towns a directory listing can be tagged with, matching thetidelanding's
+ * towns list exactly — coast order (not alphabetical, not north-to-south).
+ * Already display-ready, so unlike the other unions here there is no LABELS
+ * entry for these.
+ */
+export const DIRECTORY_TOWNS = [
+  'Orewa',
+  'Whangaparāoa',
+  'Silverdale',
+  'Red Beach',
+  'Millwater',
+  'Stanmore Bay',
+  'Manly',
+  'Gulf Harbour',
+  'Arkles Bay',
+  'Hatfields Beach',
+] as const
+
 export type AdType = (typeof AD_TYPES)[number]
 export type SectionSlot = (typeof SECTION_SLOTS)[number]
 export type AdvertiserCategory = (typeof ADVERTISER_CATEGORIES)[number]
@@ -87,6 +137,8 @@ export type ClassifiedStatus = (typeof CLASSIFIED_STATUSES)[number]
 export type ClassifiedSource = (typeof CLASSIFIED_SOURCES)[number]
 export type EventCategory = (typeof EVENT_CATEGORIES)[number]
 export type EventStatus = (typeof EVENT_STATUSES)[number]
+export type DirectoryCategory = (typeof DIRECTORY_CATEGORIES)[number]
+export type DirectoryTown = (typeof DIRECTORY_TOWNS)[number]
 
 export const adTypeSchema = z.enum(AD_TYPES)
 export const sectionSlotSchema = z.enum(SECTION_SLOTS)
@@ -100,6 +152,8 @@ export const classifiedStatusSchema = z.enum(CLASSIFIED_STATUSES)
 export const classifiedSourceSchema = z.enum(CLASSIFIED_SOURCES)
 export const eventCategorySchema = z.enum(EVENT_CATEGORIES)
 export const eventStatusSchema = z.enum(EVENT_STATUSES)
+export const directoryCategorySchema = z.enum(DIRECTORY_CATEGORIES)
+export const directoryTownSchema = z.enum(DIRECTORY_TOWNS)
 
 /** Human-readable labels for every enumerated value, keyed by raw value. */
 export const LABELS: Record<string, string> = {
@@ -181,6 +235,28 @@ export const LABELS: Record<string, string> = {
   APPROVED: 'Approved',
   PUBLISHED: 'Published',
   ARCHIVED: 'Archived',
+
+  // Directory categories — labels only; the raw values are thetidelanding's
+  // URL slugs and must not change to match a label edit.
+  cafes: 'Cafés & coffee',
+  plumbers: 'Plumbers',
+  electricians: 'Electricians',
+  mechanics: 'Mechanics & auto repair',
+  hairdressers: 'Hairdressers & barbers',
+  restaurants: 'Restaurants & takeaways',
+  builders: 'Builders & renovations',
+  painters: 'Painters & decorators',
+  landscaping: 'Landscaping & lawn care',
+  'real-estate': 'Real estate agents',
+  dentists: 'Dentists',
+  beauty: 'Beauty & day spas',
+  physio: 'Physio, chiro & massage',
+  vets: 'Vets & pet care',
+  gyms: 'Gyms & fitness',
+  childcare: 'Childcare & early learning',
+  cleaners: 'Cleaners',
+  movers: 'Movers & storage',
+  accountants: 'Accountants & bookkeepers',
 }
 
 /** Safe label lookup — falls back to the raw value if it isn't a known enum. */
