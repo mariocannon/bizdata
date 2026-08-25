@@ -184,6 +184,35 @@ Personality comes from scale, weight and the eyebrow.
 Numbers stay on `.tabular` everywhere — this app is mostly money and counts, and
 they have to line up column to column.
 
+### Print/PDF products (extension)
+
+> The source guide never anticipated a distributed PDF. This extends the
+> local-font exception already in effect for `design/banner/` and
+> `design/billboard/` to cover it, on the same rationale: a Playwright-rendered,
+> pre-baked file, never HTML served live to a browser.
+
+`thetidelanding/design/gardening-guide/` — the monthly Local Gardening Guide
+PDF, sent as a Beehiiv attachment — is rendered once and shipped as a static
+file, the same situation `design/banner/` and `design/billboard/` are already
+in, so it inherits their exception to the no-web-fonts rule on the same terms.
+Reuse the fonts already checked in under `design/billboard/` rather than
+adding new ones, in the same roles they already play there: **Baloo 2** for
+headlines and section titles, **Archivo Black** for short tags/labels,
+**Inter** for everything else, including body copy.
+
+Flag, not a silent substitution: the checked-in Baloo 2 and Archivo Black
+files are single heavy display cuts (Baloo 2 at 800-weight only, Archivo
+Black a black-only face) — right for a headline or a short tag, wrong for
+paragraphs. Across several pages of tips, planting-calendar entries and swap
+listings, that reads as shouting, not a display font doing its job. Body copy
+on this product should be Inter, the same as the "everything else" role it
+already has in `billboard.html`, and Baloo 2 / Archivo Black should stay
+display-only exactly as they are there.
+
+The exception is fonts only. Nothing else moves: the §1 palette tokens apply
+with no new colours, and §7 voice and tone — warm, local, "Coasties," calm
+over loud — carry over unchanged.
+
 ---
 
 ## 4. The logo
