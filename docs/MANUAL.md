@@ -463,10 +463,11 @@ the card — no empty space around it.
 
 Inside it: a *Classifieds* heading, then the listings grouped under their
 category (For sale, Wanted, Services…), each one a bold headline, the copy, and
-the contact line with the email as a clickable link. Each category sits under a
-bold heading with a hairline beneath it, and a gap of white separates one
-category from the next. Categories only appear when there's more than one, so a
-run of three For sale listings doesn't get a pointless header.
+the contact line with the email as a clickable link. Each category is its own
+padded Foam panel under a bold heading, with a gap of white before the next one,
+so it reads as a section. Categories only appear when there's more than one, so
+a run of three For sale listings doesn't get a pointless header — or a panel it
+doesn't need.
 
 **Featured listings lead the block**, which is what the $1.99 buys, and they
 bring their category heading up with them — a listing is never printed away from
@@ -651,10 +652,12 @@ and `Start time` as plain `yyyy-MM-dd` and `HH:mm` columns for sorting in a
 spreadsheet, plus a `When` column with the printed line.
 
 **Export for beehiiv** gives you the published events as a *What's on* block,
-**grouped by category** — Markets, Music, Community and the rest — each category
-under a bold heading with a hairline under it, and a clear gap of white before
-the next one starts. Inside a category the events run **in date order**, soonest
-first, each with its when-and-where line under the title.
+**grouped by category** — Markets, Music, Community and the rest. Each category
+is its own panel: a bold heading with a hairline under it, the listings padded
+inside a soft Foam block, and a gap of white before the next one starts, so a
+category reads as a section rather than a run of listings with a header on it.
+Inside a category the events run **in date order**, soonest first, each with its
+when-and-where line under the title.
 
 The date order in the block is its own: it doesn't matter which column you last
 sorted the table by, the export is always the diary. Categories only appear when

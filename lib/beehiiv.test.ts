@@ -299,16 +299,28 @@ describe('event listings', () => {
     assert.ok(html.indexOf('Gig in August') < html.indexOf('Gig in September'))
   })
 
-  it('separates categories with a gap rather than a rule', () => {
+  it('gives each category its own panel, with a gap between them', () => {
     const html = toBeehiivHtml([
       listing({ category: 'Markets' }),
       listing({ headline: 'Gig', category: 'Music' }),
     ])
 
-    // One rule under the title, and none between the two categories — two
+    // A padded Foam panel per category...
+    assert.equal(html.match(/background:#faf5ea/g)?.length, 2)
+    // ...and one gap: between the two, not under the last.
+    assert.equal(html.match(/padding:0 0 20px;/g)?.length, 1)
+    // One rule under the title, and none between the categories — two
     // single-listing categories mean no in-category dividers either.
     assert.equal(html.match(/<hr/g)?.length, 1)
-    assert.equal(html.match(/padding:32px 0 0;/g)?.length, 1)
+  })
+
+  it('leaves the panel off a block that has no categories to separate', () => {
+    // One category, and grouping off entirely: neither is a set of sections.
+    assert.doesNotMatch(toBeehiivHtml([listing(), listing()]), /background:#faf5ea/)
+    assert.doesNotMatch(
+      toBeehiivHtml([listing(), listing({ category: 'Wanted' })], { groupByCategory: false }),
+      /background:#faf5ea/
+    )
   })
 
   it('keeps date order instead of grouping when grouping is off', () => {

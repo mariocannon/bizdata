@@ -103,11 +103,24 @@ const STYLES = {
    */
   categoryTitle: `font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.steelBlue};margin:0 0 14px;padding:0 0 8px;border-bottom:1px solid ${BRAND.rule};`,
   /**
-   * The air between one category and the next. Padding rather than margin:
-   * adjacent margins collapse in some clients and are stripped outright by
-   * others, and the gap is the whole of what separates the categories.
+   * A category reads as a section of its own: its own Foam panel on the card's
+   * Paper, outlined and padded, so the eye meets a block per category rather
+   * than one long column with headings in it.
    */
-  categoryGap: 'padding:32px 0 0;',
+  categorySection: [
+    'box-sizing:border-box',
+    `background:${BRAND.foam}`,
+    `border:1px solid ${BRAND.rule}`,
+    'border-radius:10px',
+    'padding:22px',
+  ].join(';') + ';',
+  /**
+   * The gap between one panel and the next, as padding on a wrapper rather
+   * than a margin on the panel: adjacent margins collapse in some clients and
+   * are stripped outright by others, and the gap is half of what makes the
+   * panels read as separate sections.
+   */
+  categoryGap: 'padding:0 0 20px;',
   headline: `font-size:17px;font-weight:700;color:${BRAND.deepHarbor};margin:0 0 4px;`,
   // When and where, sitting between the title and the copy.
   meta: `font-size:14px;font-weight:600;color:${BRAND.steelBlue};margin:0 0 6px;`,
@@ -293,13 +306,18 @@ export function toBeehiivHtml(
     const items = group
       .map((listing) => `<div>\n      ${listingHtml(listing)}\n    </div>`)
       .join(`\n    <hr style="${STYLES.rule}" />\n    `)
-    // Categories are held apart by air, not by a rule: the rule is what tells
-    // one listing from the next inside a category, and repeating it between
-    // categories would say the two breaks are the same size when they aren't.
-    // The first category needs no gap — the accent rule under the title is
-    // already sitting above it.
-    const gap = showCategories && index > 0 ? ` style="${STYLES.categoryGap}"` : ''
-    return `  <div${gap}>\n    ${heading}${items}\n  </div>`
+    // Categories are held apart by a panel and a gap, not by a rule: the rule
+    // is what tells one listing from the next inside a category, and repeating
+    // it between categories would say the two breaks are the same size when
+    // they aren't. Ungrouped blocks get neither — a single run of listings is
+    // not a section of anything.
+    if (!showCategories) return `  <div>\n    ${items}\n  </div>`
+
+    const panel = `<div style="${STYLES.categorySection}">\n    ${heading}${items}\n  </div>`
+    // The last panel needs no gap under it; the card's own padding is there.
+    return index === groups.length - 1
+      ? `  ${panel}`
+      : `  <div style="${STYLES.categoryGap}">\n  ${panel}\n  </div>`
   })
 
   const body = sections.join('\n')
