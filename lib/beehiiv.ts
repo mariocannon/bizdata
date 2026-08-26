@@ -95,8 +95,19 @@ const STYLES = {
   intro: `font-size:14px;color:${BRAND.slate};margin:0 0 16px;`,
   // The Sea Glass accent, used once, under the title.
   titleRule: `border:0;border-top:2px solid ${BRAND.seaGlass};margin:0 0 20px;`,
-  // Eyebrow: 700, uppercase, 0.18em tracking, Steel Blue.
-  categoryTitle: `font-size:12px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.steelBlue};margin:24px 0 12px;`,
+  /**
+   * A category heading. The guide's eyebrow — 700, uppercase, 0.18em tracking,
+   * Steel Blue — a step up in size with a hairline under it, so a reader
+   * scanning a grouped block can see at a glance where one category ends and
+   * the next begins.
+   */
+  categoryTitle: `font-size:13px;font-weight:700;letter-spacing:0.18em;text-transform:uppercase;color:${BRAND.steelBlue};margin:0 0 14px;padding:0 0 8px;border-bottom:1px solid ${BRAND.rule};`,
+  /**
+   * The air between one category and the next. Padding rather than margin:
+   * adjacent margins collapse in some clients and are stripped outright by
+   * others, and the gap is the whole of what separates the categories.
+   */
+  categoryGap: 'padding:32px 0 0;',
   headline: `font-size:17px;font-weight:700;color:${BRAND.deepHarbor};margin:0 0 4px;`,
   // When and where, sitting between the title and the copy.
   meta: `font-size:14px;font-weight:600;color:${BRAND.steelBlue};margin:0 0 6px;`,
@@ -250,9 +261,10 @@ export type BeehiivOptions = {
   /** Line under the heading — the issue it was built for, usually. */
   subtitle?: string
   /**
-   * Group listings under a category heading. On by default, and right for
-   * classifieds. Events pass false: they are already in date order, and
-   * chopping them into categories breaks the one thing a reader scans for.
+   * Group listings under a category heading, each group separated by a gap. On
+   * by default — both blocks want it. Order inside a group is the caller's, so
+   * a caller handing over listings in date order gets categories that read as
+   * diaries.
    */
   groupByCategory?: boolean
 }
@@ -274,17 +286,23 @@ export function toBeehiivHtml(
   // section heading hasn't already said.
   const showCategories = grouped && groups.length > 1
 
-  const sections = groups.map(([category, group]) => {
+  const sections = groups.map(([category, group], index) => {
     const heading = showCategories
-      ? `<p style="${STYLES.categoryTitle}">${escapeHtml(category)}</p>\n      `
+      ? `<p style="${STYLES.categoryTitle}">${escapeHtml(category)}</p>\n    `
       : ''
     const items = group
       .map((listing) => `<div>\n      ${listingHtml(listing)}\n    </div>`)
       .join(`\n    <hr style="${STYLES.rule}" />\n    `)
-    return `    ${heading}${items}`
+    // Categories are held apart by air, not by a rule: the rule is what tells
+    // one listing from the next inside a category, and repeating it between
+    // categories would say the two breaks are the same size when they aren't.
+    // The first category needs no gap — the accent rule under the title is
+    // already sitting above it.
+    const gap = showCategories && index > 0 ? ` style="${STYLES.categoryGap}"` : ''
+    return `  <div${gap}>\n    ${heading}${items}\n  </div>`
   })
 
-  const body = sections.join(`\n    <hr style="${STYLES.rule}" />\n`)
+  const body = sections.join('\n')
 
   return `<!doctype html>
 <html lang="en-NZ">

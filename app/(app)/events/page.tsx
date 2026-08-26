@@ -234,6 +234,11 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
   // What goes into the newsletter: published events, in the order shown.
   const publishedListings = rows
     .filter((row) => row.status === 'PUBLISHED')
+    // The block groups by category and prints each group in the order it is
+    // handed over, so the export sorts by date here regardless of how the table
+    // above happens to be sorted — What's On reads as a diary inside every
+    // category, whichever column the operator last clicked.
+    .sort((a, b) => a.startsAt.getTime() - b.startsAt.getTime())
     .map((row) => ({
       headline: row.title,
       body: row.body,
@@ -339,8 +344,6 @@ export default async function EventsPage({ searchParams }: { searchParams: Searc
               title="What's on"
               filenameBase="the-tide-events"
               noun="event"
-              // Events read as a diary; category headings break the date order.
-              groupByCategory={false}
               note={
                 pastPublished > 0
                   ? `${pastPublished} ${

@@ -284,6 +284,33 @@ describe('event listings', () => {
     assert.ok(html.indexOf('Plain wanted') < html.indexOf('Plain for sale'))
   })
 
+  it('keeps each category in the order it was handed over', () => {
+    const html = toBeehiivHtml([
+      listing({ headline: 'Market in August', category: 'Markets' }),
+      listing({ headline: 'Gig in August', category: 'Music' }),
+      listing({ headline: 'Market in September', category: 'Markets' }),
+      listing({ headline: 'Gig in September', category: 'Music' }),
+    ])
+
+    // Each heading collects its own listings, and inside a category the diary
+    // order the caller sorted into survives the grouping.
+    assert.ok(html.indexOf('Market in August') < html.indexOf('Market in September'))
+    assert.ok(html.indexOf('Market in September') < html.indexOf('Gig in August'))
+    assert.ok(html.indexOf('Gig in August') < html.indexOf('Gig in September'))
+  })
+
+  it('separates categories with a gap rather than a rule', () => {
+    const html = toBeehiivHtml([
+      listing({ category: 'Markets' }),
+      listing({ headline: 'Gig', category: 'Music' }),
+    ])
+
+    // One rule under the title, and none between the two categories — two
+    // single-listing categories mean no in-category dividers either.
+    assert.equal(html.match(/<hr/g)?.length, 1)
+    assert.equal(html.match(/padding:32px 0 0;/g)?.length, 1)
+  })
+
   it('keeps date order instead of grouping when grouping is off', () => {
     const html = toBeehiivHtml(
       [

@@ -463,9 +463,10 @@ the card — no empty space around it.
 
 Inside it: a *Classifieds* heading, then the listings grouped under their
 category (For sale, Wanted, Services…), each one a bold headline, the copy, and
-the contact line with the email as a clickable link. Categories only appear when
-there's more than one, so a run of three For sale listings doesn't get a
-pointless header.
+the contact line with the email as a clickable link. Each category sits under a
+bold heading with a hairline beneath it, and a gap of white separates one
+category from the next. Categories only appear when there's more than one, so a
+run of three For sale listings doesn't get a pointless header.
 
 **Featured listings lead the block**, which is what the $1.99 buys, and they
 bring their category heading up with them — a listing is never printed away from
@@ -650,13 +651,22 @@ and `Start time` as plain `yyyy-MM-dd` and `HH:mm` columns for sorting in a
 spreadsheet, plus a `When` column with the printed line.
 
 **Export for beehiiv** gives you the published events as a *What's on* block,
-**in date order**, each with its when-and-where line under the title. Unlike
-classifieds they aren't grouped by category — a diary reads by date.
+**grouped by category** — Markets, Music, Community and the rest — each category
+under a bold heading with a hairline under it, and a clear gap of white before
+the next one starts. Inside a category the events run **in date order**, soonest
+first, each with its when-and-where line under the title.
+
+The date order in the block is its own: it doesn't matter which column you last
+sorted the table by, the export is always the diary. Categories only appear when
+there's more than one, so a night of nothing but markets doesn't get a pointless
+header.
 
 **Featured events lead the block**, ahead of the date order, which is what the
-$4.99 buys: a reader meets the paid listing and its image first. Several
-featured events keep their own date order among themselves, and everything
-behind them is the diary exactly as it was.
+$4.99 buys: a reader meets the paid listing and its image first. A featured
+event brings its category heading up with it — a listing is never printed away
+from the heading it belongs under — so a featured *Markets* event puts
+**Markets** first, itself at the top of it, and the other categories follow.
+Several featured events keep their own date order among themselves.
 
 A **featured** event carries its image into the block too, full width of the
 column and above the copy. One thing to know: the image has to be at a public
