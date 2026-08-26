@@ -157,32 +157,60 @@ model Event {
 // and copy exactly — thetidelanding's Astro build reads this table at build
 // time over PostgREST (anon key, same Supabase project) and does not import
 // from this app, so the field names here are the contract between the two.
+// thetidelanding's build query must filter to `status = 'PUBLISHED'` — a
+// PENDING row is a submission awaiting review, not yet public.
 //
-// Deliberately no `status` or `source`: unlike Classified/Event there is no
-// draft/approval workflow and no public submission path — everything the
-// operator adds here is meant to go live. Two invariants are enforced
-// server-side rather than in the schema, because Prisma/Postgres can't
-// express either as a constraint without a trigger:
+// Two states only, unlike Classified/Event's four — this is evergreen
+// website content with no issue/newsletter lifecycle to move through:
 //
-//   - at most 10 listings per category (an add/edit that would exceed it is
-//     rejected outright, never silently truncated)
+//   - PENDING   a public submission (source=PUBLIC) awaiting operator review.
+//     Not shown on the public site. There is no REJECTED status — rejecting
+//     one is just deleting the row (deleteDirectoryListing).
+//   - PUBLISHED live on the public site. The default for every row, so a
+//     staff-added listing (source=STAFF) goes live immediately, exactly as
+//     before this column existed.
+//
+// `featured` stays staff-only regardless of source: a public submission can
+// never set itself featured (enforced by the insert policy on thetidelanding's
+// side, not by this schema), and approving a PENDING row never sets it either
+// — the operator turns it on afterwards, same flow as it works today.
+//
+// Three invariants are enforced server-side rather than in the schema,
+// because Prisma/Postgres can't express any of them as a constraint without a
+// trigger:
+//
+//   - at most 10 PUBLISHED listings per category (an add, an edit, or an
+//     approval that would exceed it is rejected outright, never silently
+//     truncated — PENDING rows don't count towards this, so a backlog of
+//     submissions can't block the operator's live slots or its own approval)
 //   - at most one `featured` listing per category, kept true by unsetting
 //     every other listing in the category inside the same transaction as the
 //     write that sets this one — see lib/directory.ts and
 //     app/(app)/directory/actions.ts.
+//   - saving an existing row (staff or a pending public one) never changes its
+//     status or source — only approveDirectoryListing moves PENDING to
+//     PUBLISHED.
 model DirectoryListing {
-  id        String   @id @default(cuid())
-  name      String
-  category  String // DirectoryCategory union (lib/enums.ts) — matches thetidelanding's category slugs exactly
-  town      String // DirectoryTown union (lib/enums.ts) — matches thetidelanding's towns list exactly
-  blurb     String
-  phone     String?
-  url       String?
-  featured  Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  category     String // DirectoryCategory union (lib/enums.ts) — matches thetidelanding's category slugs exactly
+  town         String // DirectoryTown union (lib/enums.ts) — matches thetidelanding's towns list exactly
+  blurb        String
+  phone        String?
+  url          String?
+  featured     Boolean  @default(false)
+  status       String   @default("PUBLISHED") // PENDING | PUBLISHED — see comment above
+  source       String   @default("STAFF") // ClassifiedSource union — STAFF or PUBLIC (public submission form, built separately)
+  contactName  String? // public submitter only — so the operator can follow up before/instead of approving
+  contactEmail String?
+  contactPhone String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   @@index([category])
+  // The "awaiting review" queue and thetidelanding's build query both filter
+  // on this.
+  @@index([status])
 }
 
 // Single-row settings (id is always "settings").

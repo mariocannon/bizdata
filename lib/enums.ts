@@ -107,6 +107,22 @@ export const DIRECTORY_CATEGORIES = [
 ] as const
 
 /**
+ * DirectoryListing's workflow — two states, not Classified/Event's four:
+ * this is evergreen website content with no issue/newsletter lifecycle to
+ * move through.
+ *
+ *   PENDING   a public submission awaiting operator review. Not shown on
+ *             the public site. There is no REJECTED — rejecting one is
+ *             just deleting the row.
+ *   PUBLISHED live on the public site. The default, so a staff-added
+ *             listing goes live immediately, same as before this existed.
+ *
+ * Source reuses `CLASSIFIED_SOURCES` below rather than a duplicate enum —
+ * "who added this" is the same STAFF/PUBLIC choice on every listing type.
+ */
+export const DIRECTORY_LISTING_STATUSES = ['PENDING', 'PUBLISHED'] as const
+
+/**
  * Towns a directory listing can be tagged with, matching thetidelanding's
  * towns list exactly — coast order (not alphabetical, not north-to-south).
  * Already display-ready, so unlike the other unions here there is no LABELS
@@ -138,6 +154,7 @@ export type ClassifiedSource = (typeof CLASSIFIED_SOURCES)[number]
 export type EventCategory = (typeof EVENT_CATEGORIES)[number]
 export type EventStatus = (typeof EVENT_STATUSES)[number]
 export type DirectoryCategory = (typeof DIRECTORY_CATEGORIES)[number]
+export type DirectoryListingStatus = (typeof DIRECTORY_LISTING_STATUSES)[number]
 export type DirectoryTown = (typeof DIRECTORY_TOWNS)[number]
 
 export const adTypeSchema = z.enum(AD_TYPES)
@@ -153,6 +170,7 @@ export const classifiedSourceSchema = z.enum(CLASSIFIED_SOURCES)
 export const eventCategorySchema = z.enum(EVENT_CATEGORIES)
 export const eventStatusSchema = z.enum(EVENT_STATUSES)
 export const directoryCategorySchema = z.enum(DIRECTORY_CATEGORIES)
+export const directoryListingStatusSchema = z.enum(DIRECTORY_LISTING_STATUSES)
 export const directoryTownSchema = z.enum(DIRECTORY_TOWNS)
 
 /** Human-readable labels for every enumerated value, keyed by raw value. */
@@ -235,6 +253,9 @@ export const LABELS: Record<string, string> = {
   APPROVED: 'Approved',
   PUBLISHED: 'Published',
   ARCHIVED: 'Archived',
+
+  // DirectoryListing status (PUBLISHED reuses the label above)
+  PENDING: 'Awaiting review',
 
   // Directory categories — labels only; the raw values are thetidelanding's
   // URL slugs and must not change to match a label edit.

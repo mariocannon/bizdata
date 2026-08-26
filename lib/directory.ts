@@ -23,6 +23,8 @@ export type DirectoryListingLike = {
   id?: string | null
   category: string
   featured?: boolean
+  /** PENDING or PUBLISHED (lib/enums.ts's DIRECTORY_LISTING_STATUSES). */
+  status: string
 }
 
 /**
@@ -30,6 +32,14 @@ export type DirectoryListingLike = {
  * `existing` should already be every listing in that category — the
  * candidate's own id (when editing) is excluded from the count, so an edit
  * that leaves the category unchanged is never blocked by counting itself.
+ *
+ * Only PUBLISHED rows count towards the cap: a PENDING submission is not
+ * shown on the public site and doesn't hold a live slot, so a backlog of
+ * submissions awaiting review can never block the operator's 10 live slots
+ * in a category, or block more submissions from arriving in a category that
+ * already has a full pending queue. The caller decides *when* this needs
+ * checking at all — see saveDirectoryListing and approveDirectoryListing in
+ * app/(app)/directory/actions.ts.
  */
 export function checkDirectoryCapacity(
   existing: DirectoryListingLike[],
@@ -37,7 +47,10 @@ export function checkDirectoryCapacity(
   cap = DIRECTORY_LISTING_CAP
 ): { ok: boolean; reason?: string } {
   const count = existing.filter(
-    (listing) => listing.category === candidate.category && listing.id !== candidate.id
+    (listing) =>
+      listing.category === candidate.category &&
+      listing.id !== candidate.id &&
+      listing.status === 'PUBLISHED'
   ).length
 
   if (count >= cap) {

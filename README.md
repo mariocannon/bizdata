@@ -232,7 +232,13 @@ schema.
 thetidelanding's Astro build reads it at build time over PostgREST with the
 anon key, so unlike every other table here it needs an actual `SELECT` policy
 for `anon` on top of RLS being enabled — that policy is added on
-thetidelanding's side of the integration, not by this app's migrations.
+thetidelanding's side of the integration, not by this app's migrations. The
+build's `SELECT` must filter to `status = 'PUBLISHED'`, and if/when
+thetidelanding's public directory submission form inserts rows directly (the
+`PENDING`/`PUBLIC` path this app's `/directory` reviews and approves), that
+`INSERT` policy lives there too — scoped tightly enough that `anon` can only
+ever land a row with `status = 'PENDING'`, `source = 'PUBLIC'` and
+`featured = false`, never anything else.
 
 Supabase exposes every `public` table through PostgREST, reachable with the anon
 key that ships in client bundles. The migration turns RLS on with no policies,
@@ -462,17 +468,37 @@ the table at build time over PostgREST (anon key, this project), which is why
 towns list exactly (`lib/enums.ts`, `DIRECTORY_CATEGORIES` /
 `DIRECTORY_TOWNS`) rather than a normal `UPPER_SNAKE` union.
 
-Unlike Classified/Event there is no `status` and no `source` — no draft/
-approval workflow, no public submission path, everything the operator adds is
-meant to go live. Two invariants are enforced server-side instead, both in
-the same transaction as the write:
+`status` and `source` exist, but the workflow is deliberately simpler than
+Classified/Event's four-state one: a directory listing is evergreen website
+content, not tied to a weekly newsletter send, so there are only two states.
+`status` is `PENDING` (a public submission awaiting operator review — not
+shown on the public site) or `PUBLISHED` (live), defaulting to `PUBLISHED` so
+a listing the operator adds through `/directory`'s form still goes live
+immediately, unchanged. `source` is `STAFF` or `PUBLIC`, reusing
+`CLASSIFIED_SOURCES`. There is no `REJECTED`/`ARCHIVED` — rejecting a
+submission is just deleting the row. The public submission form itself lives
+on thetidelanding (a separate app); this project only owns the table shape
+and the review/approve step. `contactName`/`contactEmail`/`contactPhone` hold
+a public submitter's details so the operator can follow up — always empty on
+a staff-added listing.
 
-- **Max 10 listings per category.** An add or edit that would exceed it is
-  rejected outright, never silently truncated.
+Saving an existing row (through the add/edit dialog, staff-added or a
+still-pending public one) never changes its `status` or `source` — only
+`approveDirectoryListing` moves a `PENDING` row to `PUBLISHED`, from the
+Approve button next to a pending row on `/directory`. Three invariants are
+enforced server-side, in the same transaction as the write:
+
+- **Max 10 *published* listings per category.** An add, an edit that changes
+  category, or an approval that would exceed it is rejected outright, never
+  silently truncated. `PENDING` rows don't count towards this, so a backlog
+  of submissions can't block the operator's live slots or block itself from
+  filling up.
 - **At most one `featured` listing per category**, and it leads that
   category's block on the public page. Setting `featured=true` atomically
   unsets it on every other listing in the same category, so two sequential
-  saves can never leave two listings featured at once.
+  saves can never leave two listings featured at once. `featured` stays a
+  staff-only placement choice made after approving — a public submission can
+  never set itself featured.
 
 Saving or deleting a listing best-effort POSTs to
 `THETIDELANDING_BUILD_HOOK_URL` (a Netlify build hook on thetidelanding's

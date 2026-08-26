@@ -10,9 +10,10 @@ import type { DirectoryListingLike } from './directory'
 function listing(
   id: string,
   category = 'cafes',
-  featured = false
+  featured = false,
+  status = 'PUBLISHED'
 ): DirectoryListingLike {
-  return { id, category, featured }
+  return { id, category, featured, status }
 }
 
 describe('checkDirectoryCapacity', () => {
@@ -63,6 +64,50 @@ describe('checkDirectoryCapacity', () => {
     const three = Array.from({ length: 3 }, (_, i) => listing(`c${i}`))
     assert.equal(checkDirectoryCapacity(three, { category: 'cafes' }, 3).ok, false)
     assert.equal(checkDirectoryCapacity(three, { category: 'cafes' }, 4).ok, true)
+  })
+
+  it('ignores PENDING rows entirely — a full backlog of submissions never fills a category on its own', () => {
+    const tenPending = Array.from({ length: DIRECTORY_LISTING_CAP }, (_, i) =>
+      listing(`p${i}`, 'cafes', false, 'PENDING')
+    )
+    // Ten PENDING rows plus one more arriving: none of them are published, so
+    // there is still room for all ten live slots.
+    const result = checkDirectoryCapacity(tenPending, { category: 'cafes' })
+    assert.equal(result.ok, true)
+  })
+
+  it('still rejects once PUBLISHED rows alone reach the cap, regardless of a PENDING backlog on top', () => {
+    const tenPublished = Array.from({ length: DIRECTORY_LISTING_CAP }, (_, i) => listing(`c${i}`))
+    const fivePending = Array.from({ length: 5 }, (_, i) =>
+      listing(`p${i}`, 'cafes', false, 'PENDING')
+    )
+    const result = checkDirectoryCapacity([...tenPublished, ...fivePending], { category: 'cafes' })
+    assert.equal(result.ok, false)
+  })
+
+  it('approval framing: a PENDING row moving into a category already at 10 PUBLISHED is rejected', () => {
+    const tenPublished = Array.from({ length: DIRECTORY_LISTING_CAP }, (_, i) => listing(`c${i}`))
+    const pending = listing('pending-1', 'cafes', false, 'PENDING')
+    // What approveDirectoryListing checks before flipping status: the
+    // pending row itself, plus everything already published in its category.
+    const result = checkDirectoryCapacity([...tenPublished, pending], {
+      id: pending.id,
+      category: pending.category,
+    })
+    assert.equal(result.ok, false)
+  })
+
+  it('approval framing: a PENDING row moving into a category under the cap is allowed, and the check never depends on rows outside that category', () => {
+    const ninePublished = Array.from({ length: 9 }, (_, i) => listing(`c${i}`))
+    const pending = listing('pending-1', 'cafes', false, 'PENDING')
+    const unrelated = listing('other-1', 'plumbers', false, 'PUBLISHED')
+    const existing = [...ninePublished, pending, unrelated]
+    const result = checkDirectoryCapacity(existing, { id: pending.id, category: pending.category })
+    assert.equal(result.ok, true)
+    // The check is a pure read over `existing` — approving this row only ever
+    // updates the one id the caller passes; nothing here inspects, or gives
+    // the caller any reason to touch, any other row.
+    assert.deepEqual(existing, [...ninePublished, pending, unrelated])
   })
 })
 
