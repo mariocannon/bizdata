@@ -11,10 +11,15 @@ import {
   eventCategorySchema,
   eventStatusSchema,
   issueStatusSchema,
+  jobCategorySchema,
+  jobStatusSchema,
+  jobTierSchema,
+  jobTypeSchema,
   paidStatusSchema,
   sectionSlotSchema,
 } from '@/lib/enums'
 import { isUpcoming, requiresWordCount as eventRequiresWordCount } from '@/lib/events'
+import { JOB_WORD_MAX, requiresWordCount as jobRequiresWordCount } from '@/lib/jobs'
 import { parseDateTimeInput } from '@/lib/utils'
 import {
   CLASSIFIED_WORD_MAX,
@@ -434,6 +439,153 @@ export const directoryListingSchema = z.object({
 })
 
 export type DirectoryListingValues = z.output<typeof directoryListingSchema>
+
+/**
+ * A job listing (app/(app)/jobs). Column for column a Classified with a hire on
+ * it — same word cap, flagged on drafts and enforced on approval — so what's
+ * new is the hire (employer, jobType, town, pay, applyUrl), the run (closesAt),
+ * and that the base listing is paid: one `tier`, one snapshotted `price` (set
+ * in the action from lib/jobs.ts priceForTier, never from the form), one
+ * `paid`. See prisma/schema.prisma.
+ *
+ * The FEATURED tier's logo, like a featured classified's image, is checked in
+ * the server action rather than here — a File can't be validated as text, and a
+ * staff draft is allowed to not have one yet.
+ */
+export const jobSchema = z
+  .object({
+    id: z.string().optional(),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Title is required')
+      .max(120, 'Keep the title to 120 characters or fewer'),
+    employer: z
+      .string()
+      .trim()
+      .min(1, "Say who's hiring")
+      .max(120, 'That employer name is too long'),
+    body: z.string().trim().min(1, 'Write the listing copy'),
+    category: jobCategorySchema,
+    jobType: jobTypeSchema,
+    town: directoryTownSchema,
+    pay: optionalText.refine(
+      (v) => v === undefined || v.length <= 60,
+      'Keep the pay line short'
+    ),
+    applyUrl: optionalUrl,
+    status: jobStatusSchema,
+    tier: jobTierSchema,
+    paid: paidStatusSchema,
+    logoUrl: optionalText,
+    closesAt: z.string().trim().min(1, 'A close date is required'),
+    contactName: optionalText,
+    contactEmail: optionalEmail,
+    contactPhone: optionalText,
+    issueId: optionalText,
+    notes: optionalText,
+  })
+  .superRefine((data, ctx) => {
+    // A listing nobody can reply to is not worth printing.
+    if (!data.contactEmail && !data.contactPhone) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contactEmail'],
+        message: 'Add an email or a phone number so applicants can reply',
+      })
+    }
+
+    // Drafts may run long; approving or publishing enforces the cap.
+    if (jobRequiresWordCount(data.status)) {
+      const words = countWords(data.body)
+      if (!isWordCountValid(words)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['body'],
+          message: wordCountError(words, data.status),
+        })
+      }
+    }
+  })
+
+export type JobValues = z.output<typeof jobSchema>
+
+/**
+ * What the public "post a role" form accepts. Separate from `jobSchema` on
+ * purpose — this is the contract with strangers, so it is narrower and mirrors
+ * `publicClassifiedSchema`:
+ *
+ *   - No status, source, issue, price or close date. The server sets those:
+ *     an unassigned DRAFT from PUBLIC, priced from the tier via lib/jobs.ts,
+ *     closing 30 days out. Nothing off a Stripe redirect gets to set its own
+ *     state or its own price.
+ *   - No logo. A public FEATURED submission lands without one; the operator
+ *     adds it when the employer sends it through (v1 — the public upload path
+ *     is a later addition, the way it was for featured classifieds).
+ *   - The word cap is enforced outright rather than only on approval.
+ *   - Lengths are capped so a hostile payload can't be huge.
+ *
+ * `tier` is the submitter's to state — they reached this form from a paid
+ * Stripe link for that tier — but the money is settled by the operator against
+ * the Stripe dashboard, so the row always lands `paid = 'UNPAID'`.
+ */
+export const publicJobSchema = z
+  .object({
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Give the role a title')
+      .max(120, 'Keep the title to 120 characters or fewer'),
+    employer: z
+      .string()
+      .trim()
+      .min(1, "Tell us who's hiring")
+      .max(120, 'That employer name is too long'),
+    body: z
+      .string()
+      .trim()
+      .min(1, 'Describe the role')
+      .max(2000, 'That is longer than a listing can be'),
+    category: jobCategorySchema,
+    jobType: jobTypeSchema,
+    town: directoryTownSchema,
+    pay: optionalText.refine(
+      (v) => v === undefined || v.length <= 60,
+      'Keep the pay line short'
+    ),
+    applyUrl: optionalUrl,
+    contactName: z
+      .string()
+      .trim()
+      .min(1, 'Tell us who applicants should contact')
+      .max(120, 'That name is too long'),
+    contactEmail: optionalEmail,
+    contactPhone: optionalText.refine(
+      (v) => v === undefined || v.length <= 40,
+      'That phone number is too long'
+    ),
+    tier: jobTierSchema,
+  })
+  .superRefine((data, ctx) => {
+    if (!data.contactEmail && !data.contactPhone) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['contactEmail'],
+        message: 'Add an email or a phone number so applicants can reply',
+      })
+    }
+
+    const words = countWords(data.body)
+    if (!isWordCountValid(words)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['body'],
+        message: `Listings run to ${JOB_WORD_MAX} words at most. ${wordCountMessage(words)}.`,
+      })
+    }
+  })
+
+export type PublicJobValues = z.output<typeof publicJobSchema>
 
 export const advertiserStatusChangeSchema = z.object({
   id: z.string().min(1),

@@ -141,6 +141,47 @@ export const DIRECTORY_TOWNS = [
   'Hatfields Beach',
 ] as const
 
+/**
+ * "Hibiscus Coast Jobs" — a paid job listing (model Job). A Job reuses
+ * CLASSIFIED_SOURCES for source, PAID_STATUSES for paid, and DIRECTORY_TOWNS
+ * for town; only the hire-specific unions are new.
+ *
+ * There is deliberately no childcare / babysitting / in-home-care category:
+ * those roles are excluded from the board (operator decision, 8 Sep 2026), so
+ * the taxonomy gives them no home and moderation catches anything filed under
+ * OTHER or HEALTH.
+ */
+export const JOB_CATEGORIES = [
+  'HOSPITALITY',
+  'RETAIL',
+  'TRADES',
+  'CONSTRUCTION',
+  'OFFICE_ADMIN',
+  'HEALTH',
+  'EDUCATION',
+  'DRIVING_LOGISTICS',
+  'PROFESSIONAL',
+  'OTHER',
+] as const
+
+export const JOB_TYPES = [
+  'CASUAL',
+  'PART_TIME',
+  'FULL_TIME',
+  'FIXED_TERM',
+  'CONTRACT',
+] as const
+
+/** Same four-step lifecycle as a classified. */
+export const JOB_STATUSES = ['DRAFT', 'APPROVED', 'PUBLISHED', 'ARCHIVED'] as const
+
+/**
+ * What the employer bought. The tier picks the default price (lib/jobs.ts
+ * JOB_PRICES / priceForTier), which is then snapshotted onto Job.price — the
+ * tier is "which product", Job.price is "what they were charged".
+ */
+export const JOB_TIERS = ['STANDARD', 'FEATURED', 'COMMUNITY'] as const
+
 export type AdType = (typeof AD_TYPES)[number]
 export type SectionSlot = (typeof SECTION_SLOTS)[number]
 export type AdvertiserCategory = (typeof ADVERTISER_CATEGORIES)[number]
@@ -156,6 +197,10 @@ export type EventStatus = (typeof EVENT_STATUSES)[number]
 export type DirectoryCategory = (typeof DIRECTORY_CATEGORIES)[number]
 export type DirectoryListingStatus = (typeof DIRECTORY_LISTING_STATUSES)[number]
 export type DirectoryTown = (typeof DIRECTORY_TOWNS)[number]
+export type JobCategory = (typeof JOB_CATEGORIES)[number]
+export type JobType = (typeof JOB_TYPES)[number]
+export type JobStatus = (typeof JOB_STATUSES)[number]
+export type JobTier = (typeof JOB_TIERS)[number]
 
 export const adTypeSchema = z.enum(AD_TYPES)
 export const sectionSlotSchema = z.enum(SECTION_SLOTS)
@@ -172,6 +217,10 @@ export const eventStatusSchema = z.enum(EVENT_STATUSES)
 export const directoryCategorySchema = z.enum(DIRECTORY_CATEGORIES)
 export const directoryListingStatusSchema = z.enum(DIRECTORY_LISTING_STATUSES)
 export const directoryTownSchema = z.enum(DIRECTORY_TOWNS)
+export const jobCategorySchema = z.enum(JOB_CATEGORIES)
+export const jobTypeSchema = z.enum(JOB_TYPES)
+export const jobStatusSchema = z.enum(JOB_STATUSES)
+export const jobTierSchema = z.enum(JOB_TIERS)
 
 /** Human-readable labels for every enumerated value, keyed by raw value. */
 export const LABELS: Record<string, string> = {
@@ -256,6 +305,28 @@ export const LABELS: Record<string, string> = {
 
   // DirectoryListing status (PUBLISHED reuses the label above)
   PENDING: 'Awaiting review',
+
+  // Job categories (TRADES, OTHER reuse the labels above)
+  HOSPITALITY: 'Hospitality',
+  RETAIL: 'Retail',
+  CONSTRUCTION: 'Construction',
+  OFFICE_ADMIN: 'Office & admin',
+  HEALTH: 'Health',
+  EDUCATION: 'Education',
+  DRIVING_LOGISTICS: 'Driving & logistics',
+  PROFESSIONAL: 'Professional & technical',
+
+  // Job types
+  CASUAL: 'Casual',
+  PART_TIME: 'Part-time',
+  FULL_TIME: 'Full-time',
+  FIXED_TERM: 'Fixed-term',
+  CONTRACT: 'Contract',
+
+  // Job tiers (COMMUNITY reuses the label above; Job statuses reuse
+  // DRAFT/APPROVED/PUBLISHED/ARCHIVED above)
+  STANDARD: 'Standard',
+  FEATURED: 'Featured',
 
   // Directory categories — labels only; the raw values are thetidelanding's
   // URL slugs and must not change to match a label edit.

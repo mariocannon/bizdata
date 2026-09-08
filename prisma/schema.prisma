@@ -50,6 +50,7 @@ model Issue {
   bookings    Booking[]
   classifieds Classified[]
   events      Event[]
+  jobs        Job[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 }
@@ -211,6 +212,63 @@ model DirectoryListing {
   // The "awaiting review" queue and thetidelanding's build query both filter
   // on this.
   @@index([status])
+}
+
+// A paid job listing for "Hibiscus Coast Jobs" — an employer's open role, run
+// on thetidelanding's /hibiscus-coast-jobs page and in the newsletter's Jobs
+// block for 30 days. Column for column this is a Classified with a hire on it:
+// same DRAFT→APPROVED→PUBLISHED→ARCHIVED lifecycle, same STAFF/PUBLIC source,
+// same optional issueId + contact columns. What's new is the hire itself
+// (employer, jobType, town, pay, applyUrl, closesAt) and that the base listing
+// is *paid* — so unlike Classified's separate featured-fee track, a Job carries
+// one `tier` + one snapshotted `price` + one `paid` state, the same three-state
+// chase a Booking uses. See lib/jobs.ts for pricing and lib/enums.ts for the
+// unions.
+//
+// closesAt is required and always set: the public form defaults it to 30 days
+// out (lib/jobs.ts defaultClosesAt), the operator can shorten it. thetidelanding's
+// build query filters to status = 'PUBLISHED' AND closesAt > now(); the Jobs
+// block and every list order by it.
+//
+// logoUrl is the FEATURED tier's upgrade, exactly as Classified.imageUrl is the
+// featured classified's — staff-only, checked in the server action (a File
+// can't reach the schema), never set by a public submission.
+//
+// There is deliberately no childcare / in-home-care JobCategory: those roles
+// are excluded from the board (operator decision, 8 Sep 2026), so the taxonomy
+// gives them no bucket and moderation catches anything filed under OTHER.
+model Job {
+  id           String    @id @default(cuid())
+  title        String // the role, e.g. "Weekend barista"
+  employer     String // the hiring business or organisation
+  body         String // up to 70 words, enforced once approved (lib/jobs.ts)
+  category     String // JobCategory union
+  jobType      String // JobType union — CASUAL | PART_TIME | FULL_TIME | FIXED_TERM | CONTRACT
+  town         String // DirectoryTown union — reuses the directory's town list
+  pay          String? // free text, e.g. "$24–$27/hr" — optional
+  applyUrl     String? // "apply online" link — optional
+  status       String    @default("DRAFT") // JobStatus union
+  source       String    @default("STAFF") // ClassifiedSource union — STAFF or PUBLIC (/submit/job)
+  tier         String    @default("STANDARD") // JobTier union — STANDARD | FEATURED | COMMUNITY
+  price        Float     @default(0) // what was charged for this listing, at the time it was charged
+  paid         String    @default("UNPAID") // PaidStatus union
+  logoUrl      String? // employer logo — FEATURED listings only
+  closesAt     DateTime // applications close / the listing drops off the board
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  issue        Issue?    @relation(fields: [issueId], references: [id])
+  issueId      String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([issueId])
+  // The "awaiting review" queue and thetidelanding's build query both filter
+  // on this.
+  @@index([status])
+  // Every list, the export and the public page order by it.
+  @@index([closesAt])
 }
 
 // Single-row settings (id is always "settings").
