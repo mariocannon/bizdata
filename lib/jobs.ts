@@ -74,6 +74,64 @@ export function isFeeOutstanding(paid: string): boolean {
   return paid !== 'PAID'
 }
 
+/**
+ * What a set of listings still owes, in dollars. Added in cents and divided
+ * once at the end so three $19.99 fees come to $59.97 rather than floating
+ * point's $59.970000000000005 — the same discipline lib/featured.ts uses.
+ * Status is deliberately not consulted: a fee is owed from the moment the
+ * listing is taken, draft or archived alike.
+ */
+export function jobsOwing(jobs: { price: number; paid: string }[]): number {
+  let cents = 0
+  for (const job of jobs) {
+    if (isFeeOutstanding(job.paid)) cents += Math.round(job.price * 100)
+  }
+  return cents / 100
+}
+
+// ---------------------------------------------------------------------------
+// Paying for a listing — Stripe Payment Links, one per tier
+// ---------------------------------------------------------------------------
+
+/**
+ * The Stripe Payment Link each tier is paid through — a plain URL rather than
+ * a Stripe integration, exactly as lib/featured.ts does it: nothing here holds
+ * an API key, opens a webhook, or adds an unauthenticated write path. The trade
+ * is that Stripe never tells us a payment happened — `paid` is still set by
+ * hand off the Stripe dashboard.
+ *
+ * OPERATOR TO DO: create three fixed-amount Payment Links in Stripe — Standard
+ * ($19.99 launch → $49), Featured ($89), Community ($14.99) — and paste each
+ * URL in below, replacing the placeholder. The same three links are used on
+ * thetidelanding's /hibiscus-coast-jobs/post pricing buttons, so set them once
+ * and reuse. The amount is fixed at Stripe's end; JOB_PRICES / priceForTier and
+ * these links have to be changed together.
+ */
+export const STRIPE_LINK_STANDARD = 'https://buy.stripe.com/REPLACE_WITH_STANDARD_LINK'
+export const STRIPE_LINK_FEATURED = 'https://buy.stripe.com/REPLACE_WITH_FEATURED_LINK'
+export const STRIPE_LINK_COMMUNITY = 'https://buy.stripe.com/REPLACE_WITH_COMMUNITY_LINK'
+
+const STRIPE_LINK_BY_TIER: Record<JobTier, string> = {
+  STANDARD: STRIPE_LINK_STANDARD,
+  FEATURED: STRIPE_LINK_FEATURED,
+  COMMUNITY: STRIPE_LINK_COMMUNITY,
+}
+
+/** Stripe accepts letters, digits, `-` and `_` here, up to 200 characters. */
+const CLIENT_REFERENCE = /^[A-Za-z0-9_-]{1,200}$/
+
+/**
+ * Where to send an employer to pay for a listing. Passing the job's id tags the
+ * payment with `client_reference_id`, which Stripe shows against it in the
+ * dashboard, so a payment matches back to the listing it belongs to rather than
+ * being guessed at. An id Stripe would reject is dropped rather than sent.
+ */
+export function jobPaymentUrl(tier: JobTier, jobId?: string | null): string {
+  const base = STRIPE_LINK_BY_TIER[tier] ?? STRIPE_LINK_STANDARD
+  if (!jobId || !CLIENT_REFERENCE.test(jobId)) return base
+  return `${base}?client_reference_id=${jobId}`
+}
+
 // ---------------------------------------------------------------------------
 // The 30-day run
 // ---------------------------------------------------------------------------
