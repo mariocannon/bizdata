@@ -18,13 +18,14 @@ it, that's the [README](../README.md).
 7. [Inventory rules](#7-inventory-rules)
 8. [Classifieds](#8-classifieds)
 9. [Events](#9-events)
-10. [The dashboard](#10-the-dashboard)
-11. [Reader survey](#11-reader-survey)
-12. [Settings](#12-settings)
-13. [Exporting to CSV](#13-exporting-to-csv)
-14. [Recipes](#14-recipes)
-15. [Troubleshooting](#15-troubleshooting)
-16. [Limits and things to know](#16-limits-and-things-to-know)
+10. [Jobs](#10-jobs)
+11. [The dashboard](#11-the-dashboard)
+12. [Reader survey](#12-reader-survey)
+13. [Settings](#13-settings)
+14. [Exporting to CSV](#14-exporting-to-csv)
+15. [Recipes](#15-recipes)
+16. [Troubleshooting](#16-troubleshooting)
+17. [Limits and things to know](#17-limits-and-things-to-know)
 
 ---
 
@@ -687,7 +688,133 @@ you at the Upcoming filter. It doesn't stop you: sometimes a recap is the point.
 
 ---
 
-## 10. The dashboard
+## 10. Jobs
+
+**Hibiscus Coast Jobs** — paid job listings that run on the site at
+`/hibiscus-coast-jobs` and in the **Jobs** block of every Thursday issue while
+they're live. **Jobs** in the sidebar.
+
+A job is a classified with a hire on it: same copy rules (up to 70 words,
+flagged on drafts, enforced on approval), same Draft → Approved → Published →
+Archived lifecycle, same two views. What's different is that a job listing is
+**paid** — an employer buys it — and that it **runs for 30 days** and then drops
+off on its own.
+
+### The tiers and what they cost
+
+All prices **GST-inclusive**.
+
+| Tier | Price | What it is |
+|---|---|---|
+| **Standard** | **$49** | On the site + in the Jobs block of every issue while live (~4 issues) |
+| **Featured** | **$89** | Standard, plus the employer logo, top of the block, and bolded in the issue |
+| **Community** | **$14.99** | Same as Standard — for school, not-for-profit and community roles |
+| **Launch** | **$19.99** | The Standard tier for everyone from go-live (1 Dec 2026) until **28 Jan 2027**. After that Standard reverts to $49. Featured and Community are never discounted. |
+
+The price is **snapshotted onto the listing** when it's created or approved, from
+the tier — never from anything the employer's browser sends. A later price
+change never rewrites what someone was already charged. If you change a
+listing's tier, it re-prices to the new tier at that point.
+
+### The fields
+
+| Field | Notes |
+|---|---|
+| **Role title** | Required, up to 120 characters |
+| **Employer** | Required — the hiring business or organisation |
+| **Listing copy** | Required. Up to 70 words, counted live |
+| **Category** | Hospitality, Retail, Trades, Construction, Office & admin, Health, Education, Driving & logistics, Professional & technical, Other |
+| **Job type** | Casual, Part-time, Full-time, Fixed-term, Contract |
+| **Town** | The coast's towns — reuses the directory list |
+| **Pay** | Optional free text, e.g. `$24–$27/hr` |
+| **Apply online** | Optional link — becomes a *More info* button in the issue |
+| **Tier** | Standard, Featured, Community — sets the price |
+| **Closes** | Applications close / the listing drops off. Defaults to a 30-day run; you can bring it forward, not push it out |
+| **Fee paid** | **Unpaid → Invoiced → Paid** — set by you off the Stripe dashboard |
+| **Status** | Draft → Approved → Published, plus Archived |
+| **Issue** | Optional — leave unassigned to keep it in the queue |
+| **Employer logo URL** | **Featured only.** A hosted image URL. Add it while moderating — a Featured listing can't be Approved or Published without one |
+| **Contact name / Email / Phone** | **Email or phone required** — a listing nobody can reply to isn't worth printing |
+| **Notes** | Internal only, never printed |
+
+### Excluded roles
+
+**Childcare, babysitting and in-home care roles are not allowed on the board.**
+There's deliberately no category for them, and the decision (8 Sep 2026) is that
+we can't stand behind the vetting. If one comes in through the site form,
+**delete it** — a short note to the sender is enough. Also turn away MLM,
+"work from home $$$", commission-only "opportunities" and crypto.
+
+Licence-required trades (driving, electrical, gas) and live-in roles **are**
+allowed — normal moderation, no special handling.
+
+### Approving from the queue
+
+Listings sent in through the site arrive as **Draft**, **Unassigned**, tagged
+**Submitted**, with `Fee paid` **Unpaid**. The count waiting on you shows under
+the page title — **"3 submitted, awaiting review"** — and clicking it filters to
+exactly those. The **Source** filter separates what came in from what you typed.
+
+For each one:
+
+1. **Read it.** Trim the copy to 70 words if it runs long, check the category
+   and town, and check it isn't an excluded role.
+2. For a **Featured** submission, paste the **employer logo URL** in — it arrives
+   without one, and it can't go live without one.
+3. Hit **Approve** on the row (Submitted drafts only). That moves it to
+   **Approved** and snapshots the tier price if it's still sitting at $0.
+4. **Place it in an issue** — use the issue dropdown on the row, or the Issue
+   field in the form.
+5. When you're building that issue, set it to **Published**.
+
+### Marking a listing paid
+
+Payment is a **Stripe Payment Link per tier** — the same three links the pricing
+buttons on the site use. **Stripe doesn't tell the app anything**: `Fee paid`
+stays **Unpaid → Invoiced → Paid**, set by you off the Stripe dashboard.
+
+Any listing with the fee still outstanding carries two small controls on its
+row. **Pay link** opens that listing's payment page in a new tab — how you check
+the link is live. The **copy** icon puts the URL on your clipboard, for the
+email you send confirming the issue. The link is tagged with the listing's id,
+which Stripe records as `client_reference_id`, so a payment in the dashboard
+matches back to the listing it paid for.
+
+> **The tier prices live in two places.** The numbers in the app
+> (`JOB_PRICES` / launch price in `lib/jobs.ts`) and the amounts on the Stripe
+> links are set separately. A new price needs new payment links too.
+
+Under the page title you get **"$X to collect"** — every listing not yet marked
+Paid, Invoiced included — as a link that filters the list. The **Fee** filter
+does the same from the filter bar.
+
+### Putting them in the newsletter
+
+**Export for beehiiv** downloads the **Published** listings you're currently
+looking at as a *Jobs* block — same Paper card and brand styling as the
+classifieds and events blocks. **Featured listings lead the block** and carry
+their logo; the rest follow **by closing date**, soonest first. Filter to an
+issue first and you get exactly that issue's listings. It exports Published
+only, so mark listings **Published** before exporting.
+
+### Closed listings archive themselves
+
+Once a listing's **Closes** date has passed, it archives itself the next time
+you open **Jobs** — the same backstop the events page runs. The public site
+already filters closed listings off `/hibiscus-coast-jobs` regardless. Closed
+rows show dimmed and marked **Closed**. To run a role again, edit the listing to
+a new close date and set the status back to **Approved** or **Published**.
+
+### The public page
+
+Employers post through **`/hibiscus-coast-jobs/post`** on the site — the pricing
+page with the three tier buttons and the submit form. It's not part of this app;
+the **Public form** button in the top right opens it. A submission lands here as
+a Draft with the fee Unpaid, exactly as above.
+
+---
+
+## 11. The dashboard
 
 The home page. Everything respects the **period selector** at the top right:
 **This month · This quarter · This year · All time**.
@@ -750,7 +877,7 @@ Three things to know about how they count:
 
 ---
 
-## 11. Reader survey
+## 12. Reader survey
 
 What readers told us they want. **Reader survey** in the sidebar. This is the
 page to open before planning coverage, and the one to quote from when selling to
@@ -819,7 +946,7 @@ fault: see the Reader survey section of `README.md`.
 
 ---
 
-## 12. Settings
+## 13. Settings
 
 Three things, all optional to change.
 
@@ -847,10 +974,10 @@ Changing a default doesn't touch existing bookings.
 
 ---
 
-## 13. Exporting to CSV
+## 14. Exporting to CSV
 
-**Export CSV** on Advertisers, Bookings, Issues, Classifieds and Events, plus on each
-issue's detail page for just that issue's bookings.
+**Export CSV** on Advertisers, Bookings, Issues, Classifieds, Events and Jobs,
+plus on each issue's detail page for just that issue's bookings.
 
 The export respects whatever you've filtered to. Filter to unpaid, export, and
 you get exactly that list.
@@ -862,10 +989,11 @@ you get exactly that list.
 | **Issues** | Title, Publish date, Status, Ads sold, Revenue, Theme |
 | **Classifieds** | Headline, Copy, Words, Category, Status, Source, Issue, Publish date, Featured, Fee, Fee paid, Image URL, Contact name, Email, Phone, Notes |
 | **Events** | Event, Start date, Start time, End date, End time, When, Where, Copy, Words, Category, Status, Source, Issue, Featured, Fee, Fee paid, Image URL, Tickets URL, Contact name, Email, Phone, Notes |
+| **Jobs** | Role, Employer, Copy, Words, Category, Job type, Town, Pay, Apply URL, Tier, Price, Fee paid, Status, Source, Issue, Closes, Logo URL, Contact name, Email, Phone, Notes |
 
-The Classifieds page also has **Export for beehiiv**, which is a different
-thing: an HTML block of the published listings for pasting into a post, rather
-than a spreadsheet. See [Classifieds](#8-classifieds).
+The Classifieds, Events and Jobs pages also have **Export for beehiiv**, which
+is a different thing: an HTML block of the published listings for pasting into a
+post, rather than a spreadsheet. See [Classifieds](#8-classifieds).
 
 Files open cleanly in Excel, Numbers and Google Sheets. These column sets mirror
 the underlying data deliberately, so moving to a dedicated tool later loses
@@ -873,7 +1001,7 @@ nothing.
 
 ---
 
-## 14. Recipes
+## 15. Recipes
 
 ### Selling a new advertiser their first ad
 
@@ -924,7 +1052,7 @@ the takeover into a different issue.
 
 ---
 
-## 15. Troubleshooting
+## 16. Troubleshooting
 
 **"This issue already has a Headline booking"**
 Working as intended — one Headline per issue. Cancel the existing one, pick a
@@ -959,7 +1087,7 @@ Netlify → Deploys → your deploy → Functions.
 
 ---
 
-## 16. Limits and things to know
+## 17. Limits and things to know
 
 **One password, not accounts.** Everyone shares it, and the app can't tell who
 did what. Fine for one operator; if more people need access, that's the point to
