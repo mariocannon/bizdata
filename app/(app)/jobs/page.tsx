@@ -41,6 +41,7 @@ import { SortHeader } from '@/components/sort-header'
 import { StatusPill } from '@/components/status-pill'
 import { ExportCsvButton } from '@/components/export-csv-button'
 import { ExportBeehiivButton } from '@/components/export-beehiiv-button'
+import { jobsToBeehiivListings } from '@/lib/beehiiv'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -230,26 +231,13 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   }))
 
   // What goes into the newsletter: published listings, from whatever the page
-  // is filtered to. Featured first (the beehiiv renderer floats them up), then
-  // by closing date — the next role to close reads first.
-  const publishedListings = rows
-    .filter((row) => row.status === 'PUBLISHED')
-    .sort((a, b) => a.closesAt.getTime() - b.closesAt.getTime())
-    .map((row) => ({
-      headline: row.title,
-      body: row.body,
-      category: label(row.category),
-      meta: jobMeta(row),
-      // "Apply online" becomes the More info button under the copy.
-      url: row.applyUrl,
-      // Only a featured listing carries its logo into the newsletter, and only
-      // a featured listing leads the block.
-      imageUrl: row.tier === 'FEATURED' ? row.logoUrl : null,
-      featured: row.tier === 'FEATURED',
-      contactName: row.contactName,
-      contactEmail: row.contactEmail,
-      contactPhone: row.contactPhone,
-    }))
+  // is filtered to. jobsToBeehiivListings sorts them (featured first, then by
+  // closing date) and maps category labels + the jobMeta line.
+  const publishedListings = jobsToBeehiivListings(
+    rows
+      .filter((row) => row.status === 'PUBLISHED')
+      .map((row) => ({ ...row, category: label(row.category) }))
+  )
 
   const approvedInView = rows.filter((row) => row.status === 'APPROVED').length
 

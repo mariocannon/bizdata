@@ -1,6 +1,6 @@
 /**
- * Renders published listings — classifieds or events — as a block of HTML to
- * drop into a beehiiv post.
+ * Renders published listings — classifieds, events or jobs — as a block of HTML
+ * to drop into a beehiiv post.
  *
  * beehiiv has no listings importer, so the file is built to suit the two
  * ways anything gets into a post: open it in a browser and copy the rendered
@@ -14,14 +14,17 @@
  * nowhere and is harmless if it gets pasted along with the markup.
  */
 
+import { jobMeta } from '@/lib/jobs'
+
 export type BeehiivListing = {
   headline: string
   body: string
   /** Display label, e.g. "For sale". */
   category: string
   /**
-   * A line under the headline: for an event, when and where. Classifieds leave
-   * it out.
+   * A line under the headline: for an event, when and where; for a job, the
+   * employer, town, type and pay (lib/jobs.ts `jobMeta`). Classifieds leave it
+   * out.
    */
   meta?: string | null
   /**
@@ -358,4 +361,57 @@ ${body}
 /** `the-tide-classifieds-2026-08-05.html` */
 export function beehiivFilename(base: string, now = new Date()): string {
   return `${base}-${now.toISOString().slice(0, 10)}.html`
+}
+
+// ---------------------------------------------------------------------------
+// The Jobs block
+// ---------------------------------------------------------------------------
+
+/**
+ * A job listing, in the shape the Jobs block needs it. `category` is already a
+ * display label; `closesAt` drives the order.
+ */
+export type JobForBeehiiv = {
+  title: string
+  body: string
+  /** Display label, e.g. "Hospitality". */
+  category: string
+  employer: string
+  town: string
+  jobType: string
+  pay?: string | null
+  applyUrl?: string | null
+  logoUrl?: string | null
+  /** JobTier — only FEATURED leads the block and carries its logo. */
+  tier: string
+  closesAt: Date
+  contactName: string | null
+  contactEmail: string | null
+  contactPhone: string | null
+}
+
+/**
+ * The Jobs block, as `BeehiivListing[]` ready for `toBeehiivHtml`. Featured
+ * listings first (the renderer's `leadWithFeatured` floats them up), then by
+ * `closesAt` ascending — the next role to close reads first. Only a FEATURED
+ * listing carries its employer logo into the inbox, exactly as only a featured
+ * event carries its image. The caller passes only `status = 'PUBLISHED'`
+ * listings attached to the issue; grouping is off, so the block is one run
+ * under a single "Jobs" heading rather than split by category.
+ */
+export function jobsToBeehiivListings(jobs: JobForBeehiiv[]): BeehiivListing[] {
+  return [...jobs]
+    .sort((left, right) => left.closesAt.getTime() - right.closesAt.getTime())
+    .map((job) => ({
+      headline: job.title,
+      body: job.body,
+      category: job.category,
+      meta: jobMeta(job),
+      url: job.applyUrl ?? null,
+      imageUrl: job.tier === 'FEATURED' ? (job.logoUrl ?? null) : null,
+      featured: job.tier === 'FEATURED',
+      contactName: job.contactName,
+      contactEmail: job.contactEmail,
+      contactPhone: job.contactPhone,
+    }))
 }

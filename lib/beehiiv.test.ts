@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { beehiivFilename, escapeHtml, toBeehiivHtml, type BeehiivListing } from './beehiiv'
+import {
+  beehiivFilename,
+  escapeHtml,
+  jobsToBeehiivListings,
+  toBeehiivHtml,
+  type BeehiivListing,
+  type JobForBeehiiv,
+} from './beehiiv'
 
 function listing(overrides: Partial<BeehiivListing> = {}): BeehiivListing {
   return {
@@ -338,6 +345,104 @@ describe('event listings', () => {
       html.indexOf('First up') < html.indexOf('Then this') &&
         html.indexOf('Then this') < html.indexOf('Last')
     )
+  })
+})
+
+describe('job listings', () => {
+  function job(overrides: Partial<JobForBeehiiv> = {}): JobForBeehiiv {
+    return {
+      title: 'Weekend barista',
+      body: 'Saturday and Sunday mornings, 6am–noon. Experience on a two-group machine preferred.',
+      category: 'Hospitality',
+      employer: 'Coastline Coffee',
+      town: 'Orewa',
+      jobType: 'CASUAL',
+      pay: '$24–$27/hr',
+      applyUrl: null,
+      logoUrl: null,
+      tier: 'STANDARD',
+      closesAt: new Date('2026-12-20T00:00:00+13:00'),
+      contactName: 'Jo Ngata',
+      contactEmail: 'jobs@example.co.nz',
+      contactPhone: null,
+      ...overrides,
+    }
+  }
+
+  it('builds the meta line from employer, town, type and pay', () => {
+    const html = toBeehiivHtml(jobsToBeehiivListings([job()]), { title: 'Jobs' })
+    // Ōrewa is macronised on the way out; CASUAL becomes "Casual".
+    assert.match(html, /Coastline Coffee · Ōrewa · Casual · \$24–\$27\/hr/)
+    const title = html.indexOf('Weekend barista')
+    const meta = html.indexOf('Coastline Coffee · Ōrewa')
+    const body = html.indexOf('Saturday and Sunday')
+    assert.ok(title < meta && meta < body, 'meta should sit between the title and the copy')
+  })
+
+  it('drops the pay segment when none was given', () => {
+    const html = toBeehiivHtml(jobsToBeehiivListings([job({ pay: null })]), { title: 'Jobs' })
+    assert.match(html, /Coastline Coffee · Ōrewa · Casual</)
+    assert.doesNotMatch(html, /\$24/)
+  })
+
+  it('orders by closing date, soonest first', () => {
+    const html = toBeehiivHtml(
+      jobsToBeehiivListings([
+        job({ title: 'Closes later', closesAt: new Date('2027-01-15T00:00:00+13:00') }),
+        job({ title: 'Closes sooner', closesAt: new Date('2026-12-10T00:00:00+13:00') }),
+      ]),
+      { title: 'Jobs' }
+    )
+    assert.ok(html.indexOf('Closes sooner') < html.indexOf('Closes later'))
+  })
+
+  it('leads with the featured listing, wherever it falls in the date order', () => {
+    const html = toBeehiivHtml(
+      jobsToBeehiivListings([
+        job({ title: 'Plain, closes first', closesAt: new Date('2026-12-05T00:00:00+13:00') }),
+        job({
+          title: 'Featured, closes last',
+          tier: 'FEATURED',
+          logoUrl: 'https://cdn.example.co.nz/logo.png',
+          closesAt: new Date('2027-02-01T00:00:00+13:00'),
+        }),
+      ]),
+      { title: 'Jobs' }
+    )
+    assert.ok(html.indexOf('Featured, closes last') < html.indexOf('Plain, closes first'))
+  })
+
+  it('carries the employer logo only for a featured listing', () => {
+    const featured = toBeehiivHtml(
+      jobsToBeehiivListings([
+        job({ tier: 'FEATURED', logoUrl: 'https://cdn.example.co.nz/logo.png' }),
+      ]),
+      { title: 'Jobs' }
+    )
+    assert.match(featured, /<img src="https:\/\/cdn\.example\.co\.nz\/logo\.png"/)
+
+    const standard = toBeehiivHtml(
+      jobsToBeehiivListings([job({ logoUrl: 'https://cdn.example.co.nz/logo.png' })]),
+      { title: 'Jobs' }
+    )
+    assert.doesNotMatch(standard, /<img/)
+  })
+
+  it('turns an apply link into a More info button', () => {
+    const html = toBeehiivHtml(
+      jobsToBeehiivListings([job({ applyUrl: 'https://example.co.nz/careers' })]),
+      { title: 'Jobs' }
+    )
+    assert.match(html, /<a href="https:\/\/example\.co\.nz\/careers"[^>]*>More info<\/a>/)
+  })
+
+  it('escapes copy that came in off the public form', () => {
+    const html = toBeehiivHtml(
+      jobsToBeehiivListings([job({ title: 'Barista & host', body: '<b>great</b> team' })]),
+      { title: 'Jobs' }
+    )
+    assert.match(html, /Barista &amp; host/)
+    assert.doesNotMatch(html, /<b>great<\/b>/)
   })
 })
 
