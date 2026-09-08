@@ -62,7 +62,7 @@ describe('defaultClosesAt', () => {
     const closes = defaultClosesAt(from)
     const days = Math.round((closes.getTime() - from.getTime()) / (24 * 60 * 60 * 1000))
     assert.equal(days, JOB_RUN_DAYS)
-    assert.equal(JOB_RUN_DAYS, 30)
+    assert.equal(JOB_RUN_DAYS, 90)
   })
 })
 

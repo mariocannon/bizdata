@@ -133,10 +133,10 @@ export function jobPaymentUrl(tier: JobTier, jobId?: string | null): string {
 }
 
 // ---------------------------------------------------------------------------
-// The 30-day run
+// The 90-day run
 // ---------------------------------------------------------------------------
 
-export const JOB_RUN_DAYS = 30
+export const JOB_RUN_DAYS = 90
 
 /**
  * A listing runs for JOB_RUN_DAYS from the day it's taken. The public form

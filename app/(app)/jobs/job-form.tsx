@@ -295,7 +295,7 @@ export function JobForm({
               htmlFor="closesAt"
               required
               error={errors.closesAt}
-              hint="Defaults to a 30-day run."
+              hint="Defaults to a 90-day run."
             >
               <Input
                 id="closesAt"

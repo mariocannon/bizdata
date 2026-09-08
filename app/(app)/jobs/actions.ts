@@ -55,7 +55,7 @@ export async function archivePastJobs(): Promise<number> {
 
 export async function saveJob(form: FormData): Promise<ActionResult<{ id: string }>> {
   // closesAt is required by the schema, but a blank one from the form defaults
-  // to a 30-day run rather than bouncing back as an error (lib/jobs.ts).
+  // to a 90-day run rather than bouncing back as an error (lib/jobs.ts).
   const closesAtInput = text(form, 'closesAt') || toDateInput(defaultClosesAt())
 
   const parsed = jobSchema.safeParse({
@@ -148,7 +148,7 @@ export async function saveJob(form: FormData): Promise<ActionResult<{ id: string
 
 /**
  * Moves a listing from the queue to Approved: snapshots the tier price if the
- * row is still at $0, defaults a missing close date to a 30-day run, and holds
+ * row is still at $0, defaults a missing close date to a 90-day run, and holds
  * the line on a featured listing needing its logo first.
  */
 export async function approveJob(id: string): Promise<ActionResult> {

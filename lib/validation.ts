@@ -517,11 +517,13 @@ export type JobValues = z.output<typeof jobSchema>
  *
  *   - No status, source, issue, price or close date. The server sets those:
  *     an unassigned DRAFT from PUBLIC, priced from the tier via lib/jobs.ts,
- *     closing 30 days out. Nothing off a Stripe redirect gets to set its own
- *     state or its own price.
- *   - No logo. A public FEATURED submission lands without one; the operator
- *     adds it when the employer sends it through (v1 — the public upload path
- *     is a later addition, the way it was for featured classifieds).
+ *     closing JOB_RUN_DAYS out. Nothing off a Stripe redirect gets to set its
+ *     own state or its own price.
+ *   - `logoUrl` is optional and only meaningful for the FEATURED tier — the
+ *     form uploads the employer logo straight to storage and passes the URL.
+ *     A Featured listing without one is still fine; the operator adds it later.
+ *     The public submission RLS policy pins a non-null value to our own
+ *     storage bucket, the same way featured classifieds/events do their photo.
  *   - The word cap is enforced outright rather than only on approval.
  *   - Lengths are capped so a hostile payload can't be huge.
  *
@@ -565,6 +567,7 @@ export const publicJobSchema = z
       'That phone number is too long'
     ),
     tier: jobTierSchema,
+    logoUrl: optionalUrl,
   })
   .superRefine((data, ctx) => {
     if (!data.contactEmail && !data.contactPhone) {
@@ -572,6 +575,16 @@ export const publicJobSchema = z
         code: z.ZodIssueCode.custom,
         path: ['contactEmail'],
         message: 'Add an email or a phone number so applicants can reply',
+      })
+    }
+
+    // A logo belongs to the FEATURED tier only — mirrors the submission RLS
+    // policy, which lets a non-null logoUrl through solely for FEATURED.
+    if (data.logoUrl && data.tier !== 'FEATURED') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['logoUrl'],
+        message: 'Only a featured listing carries an employer logo',
       })
     }
 

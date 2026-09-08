@@ -697,7 +697,7 @@ they're live. **Jobs** in the sidebar.
 A job is a classified with a hire on it: same copy rules (up to 70 words,
 flagged on drafts, enforced on approval), same Draft → Approved → Published →
 Archived lifecycle, same two views. What's different is that a job listing is
-**paid** — an employer buys it — and that it **runs for 30 days** and then drops
+**paid** — an employer buys it — and that it **runs for 90 days** and then drops
 off on its own.
 
 ### The tiers and what they cost
@@ -706,7 +706,7 @@ All prices **GST-inclusive**.
 
 | Tier | Price | What it is |
 |---|---|---|
-| **Standard** | **$49** | On the site + in the Jobs block of every issue while live (~4 issues) |
+| **Standard** | **$49** | On the site + in the Jobs block of every issue while live (~12 issues) |
 | **Featured** | **$89** | Standard, plus the employer logo, top of the block, and bolded in the issue |
 | **Community** | **$14.99** | Same as Standard — for school, not-for-profit and community roles |
 | **Launch** | **$19.99** | The Standard tier for everyone from go-live (1 Dec 2026) until **28 Jan 2027**. After that Standard reverts to $49. Featured and Community are never discounted. |
@@ -729,7 +729,7 @@ listing's tier, it re-prices to the new tier at that point.
 | **Pay** | Optional free text, e.g. `$24–$27/hr` |
 | **Apply online** | Optional link — becomes a *More info* button in the issue |
 | **Tier** | Standard, Featured, Community — sets the price |
-| **Closes** | Applications close / the listing drops off. Defaults to a 30-day run; you can bring it forward, not push it out |
+| **Closes** | Applications close / the listing drops off. Defaults to a 90-day run; you can bring it forward, not push it out |
 | **Fee paid** | **Unpaid → Invoiced → Paid** — set by you off the Stripe dashboard |
 | **Status** | Draft → Approved → Published, plus Archived |
 | **Issue** | Optional — leave unassigned to keep it in the queue |
