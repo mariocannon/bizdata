@@ -23,6 +23,26 @@ function revalidateEvents() {
 }
 
 /**
+ * Best-effort trigger of thetidelanding's Netlify build hook, so a published
+ * event reaches the public `/events` page without the operator having to
+ * remember to redeploy that site by hand. Same pattern as
+ * `triggerDirectoryRebuild` in `app/(app)/directory/actions.ts` — deliberately
+ * outside the database write and never allowed to fail the save/delete it
+ * follows: the row the operator just wrote is the thing that actually
+ * matters. Netlify build hooks fire on a plain, bodyless POST.
+ */
+async function triggerEventsRebuild() {
+  const hookUrl = process.env.THETIDELANDING_BUILD_HOOK_URL
+  if (!hookUrl) return
+
+  try {
+    await fetch(hookUrl, { method: 'POST' })
+  } catch (error) {
+    console.error('thetidelanding build hook failed', error)
+  }
+}
+
+/**
  * Archive everything that has been and gone. The events page runs this before
  * it reads, so a listing retires itself the first time anyone looks at the
  * list after its date — there is no scheduler on this deployment, and a
@@ -176,6 +196,7 @@ export async function saveEvent(form: FormData): Promise<ActionResult<{ id: stri
     }
 
     revalidateEvents()
+    await triggerEventsRebuild()
     return actionOk({ id: event.id }, id ? 'Event updated.' : 'Event added.')
   } catch (error) {
     console.error('saveEvent failed', error)
@@ -189,6 +210,7 @@ export async function deleteEvent(id: string): Promise<ActionResult> {
     const event = await prisma.event.delete({ where: { id } })
     await deleteFile(event.imageUrl)
     revalidateEvents()
+    await triggerEventsRebuild()
     return actionOk(undefined, 'Event deleted.')
   } catch (error) {
     console.error('deleteEvent failed', error)
